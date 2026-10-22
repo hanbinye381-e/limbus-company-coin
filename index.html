@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRPG 정신력 코인 판정 시뮬레이터</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #121214;
+      color: #eeeeee;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+      padding: 1rem;
+    }
+    .card {
+      background-color: #1e1e24;
+      padding: 1.8rem;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7);
+      width: 100%;
+      max-width: 880px;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: #ff4757;
+    }
+    .arena {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.2rem;
+      margin-bottom: 1.2rem;
+    }
+    @media (max-width: 650px) {
+      .arena { grid-template-columns: 1fr; }
+    }
+    .side-box {
+      background: #25252e;
+      padding: 1.2rem;
+      border-radius: 10px;
+      border-top: 4px solid #555;
+      text-align: left;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .side-box.player { border-color: #2ed573; }
+    .side-box.enemy { border-color: #ff4757; }
+    
+    .side-title {
+      font-size: 1.2rem;
+      font-weight: bold;
+      margin-bottom: 0.8rem;
+      text-align: center;
+    }
+    .player .side-title { color: #2ed573; }
+    .enemy .side-title { color: #ff4757; }
+
+    /* 스킬 슬롯 창 및 클릭 선택 스타일 */
+    .slot-container {
+      width: 100%;
+      background: #18181c;
+      border: 2px solid #333;
+      border-radius: 8px;
+      padding: 0.6rem;
+      margin-bottom: 0.8rem;
+      text-align: center;
+    }
+    .slot-header {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 0.4rem;
+    }
+    .slots-wrapper {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      min-height: 40px;
+    }
+    .skill-badge {
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 0.85rem;
+      background: #333;
+      color: #fff;
+      border: 2px solid #555;
+      cursor: pointer;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .skill-badge:hover { transform: translateY(-2px); }
+    .skill-badge.s1 { background: #2f3542; color: #70a1ff; border-color: #1e90ff; }
+    .skill-badge.s2 { background: #1e3799; color: #6a89cc; border-color: #4a69bd; }
+    .skill-badge.s3 { background: #b71540; color: #ffffff; border-color: #ff6b81; }
+    
+    /* 선택된 스킬 하이라이트 */
+    .skill-badge.selected {
+      border-color: #ffa502 !important;
+      box-shadow: 0 0 10px #ffa502;
+      transform: scale(1.05);
+    }
+    .skill-badge.roulette { animation: pulse 0.1s infinite alternate; }
+
+    @keyframes pulse {
+      0% { opacity: 0.5; transform: scale(0.95); }
+      100% { opacity: 1; transform: scale(1.05); }
+    }
+
+    .skill-names-box {
+      width: 100%;
+      background: #18181c;
+      padding: 0.6rem;
+      border-radius: 6px;
+      margin-bottom: 0.8rem;
+    }
+    .skill-names-title {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin-bottom: 0.4rem;
+    }
+    .skill-input-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 4px;
+    }
+    .skill-input-grid input {
+      font-size: 0.75rem !important;
+      padding: 0.35rem !important;
+      text-align: center;
+    }
+
+    .control-group {
+      width: 100%;
+      margin-bottom: 0.8rem;
+    }
+    label {
+      display: block;
+      font-size: 0.85rem;
+      margin-bottom: 0.3rem;
+      color: #ccc;
+    }
+    input[type="number"], input[type="text"] {
+      width: 100%;
+      padding: 0.55rem;
+      background: #18181c;
+      border: 1px solid #444;
+      color: #fff;
+      border-radius: 6px;
+      font-size: 0.95rem;
+    }
+    input[type="number"]:focus, input[type="text"]:focus {
+      border-color: #ff4757;
+      outline: none;
+    }
+    
+    .info-badge {
+      width: 100%;
+      background: #18181c;
+      padding: 0.5rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      margin-top: 0.3rem;
+      text-align: center;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 0.5rem;
+    }
+    button {
+      flex: 1;
+      padding: 0.9rem;
+      font-size: 1rem;
+      font-weight: bold;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .btn-roulette { background-color: #ffa502; color: #121214; }
+    .btn-roulette:hover { background-color: #ffbe76; }
+    .btn-clash { background-color: #ff4757; }
+    .btn-clash:hover { background-color: #ff6b81; }
+    button:disabled { background-color: #555 !important; color: #888; cursor: not-allowed; }
+
+    .clash-display {
+      margin-top: 1.2rem;
+      padding: 1.2rem;
+      background-color: #18181c;
+      border-radius: 10px;
+      min-height: 180px;
+    }
+    .result-banner {
+      font-size: 1.3rem;
+      font-weight: bold;
+      margin-bottom: 0.8rem;
+    }
+    .result-banner.player { color: #2ed573; }
+    .result-banner.enemy { color: #ff4757; }
+    .result-banner.draw { color: #ffa502; }
+
+    .coins-wrapper {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 0.5rem;
+    }
+    .coin {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-weight: bold;
+      font-size: 0.75rem;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.4);
+    }
+    .coin.flipping {
+      animation: coinFlip 0.4s infinite linear;
+      background-color: #ffa502;
+      color: #121214;
+    }
+    .coin.heads { background-color: #2ed573; color: #121214; }
+    .coin.tails { background-color: #747d8c; color: #ffffff; }
+    
+    @keyframes coinFlip {
+      0% { transform: rotateY(0deg); }
+      50% { transform: rotateY(180deg); }
+      100% { transform: rotateY(360deg); }
+    }
+    .coin-sub { font-size: 0.6rem; opacity: 0.85; margin-top: 2px; }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <h1>⚔️ TRPG 코인 판정 시뮬레이터</h1>
+
+    <div class="arena">
+      <!-- 아군 설정 -->
+      <div class="side-box player">
+        <div class="side-title">🛡️ 아군 (Player)</div>
+        
+        <!-- 스킬 슬롯 (클릭 선택 가능) -->
+        <div class="slot-container">
+          <div class="slot-header">현재 보유 스킬 슬롯 (클릭하여 선택)</div>
+          <div class="slots-wrapper" id="p-slots-display"></div>
+        </div>
+
+        <!-- 스킬 이름 직접 설정 -->
+        <div class="skill-names-box">
+          <div class="skill-names-title">스킬 이름 설정</div>
+          <div class="skill-input-grid">
+            <input type="text" id="p-s1-name" value="1스킬" onchange="renderSlots()">
+            <input type="text" id="p-s2-name" value="2스킬" onchange="renderSlots()">
+            <input type="text" id="p-s3-name" value="3스킬" onchange="renderSlots()">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="p-sanity">정신력 (-45 ~ +45)</label>
+          <input type="number" id="p-sanity" value="0" min="-45" max="45" onchange="validateInputs(); updateInfo();">
+        </div>
+
+        <div class="control-group">
+          <label for="p-count">사용 코인 개수 (1 ~ 9개)</label>
+          <input type="number" id="p-count" value="2" min="1" max="9" onchange="validateInputs();">
+        </div>
+
+        <div class="info-badge" id="p-info">앞면 확률: 50%</div>
+      </div>
+
+      <!-- 적군 설정 -->
+      <div class="side-box enemy">
+        <div class="side-title">⚔️ 적군 (Enemy)</div>
+        
+        <!-- 스킬 슬롯 (클릭 선택 가능) -->
+        <div class="slot-container">
+          <div class="slot-header">현재 보유 스킬 슬롯 (클릭하여 선택)</div>
+          <div class="slots-wrapper" id="e-slots-display"></div>
+        </div>
+
+        <!-- 스킬 이름 직접 설정 -->
+        <div class="skill-names-box">
+          <div class="skill-names-title">스킬 이름 설정</div>
+          <div class="skill-input-grid">
+            <input type="text" id="e-s1-name" value="1스킬" onchange="renderSlots()">
+            <input type="text" id="e-s2-name" value="2스킬" onchange="renderSlots()">
+            <input type="text" id="e-s3-name" value="3스킬" onchange="renderSlots()">
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="e-sanity">정신력 (-45 ~ +45)</label>
+          <input type="number" id="e-sanity" value="0" min="-45" max="45" onchange="validateInputs(); updateInfo();">
+        </div>
+
+        <div class="control-group">
+          <label for="e-count">사용 코인 개수 (1 ~ 9개)</label>
+          <input type="number" id="e-count" value="2" min="1" max="9" onchange="validateInputs();">
+        </div>
+
+        <div class="info-badge" id="e-info">앞면 확률: 50%</div>
+      </div>
+    </div>
+
+    <div class="btn-group">
+      <button class="btn-roulette" id="roulette-btn" onclick="spinRoulette()">🎰 스킬 룰렛 보충</button>
+      <button class="btn-clash" id="clash-btn" onclick="startClash()">⚔️ 선택된 스킬로 판정 진행</button>
+    </div>
+
+    <div class="clash-display" id="result-box">
+      <span style="color: #888;">원하는 스킬을 클릭하여 선택한 후 판정을 진행하세요.</span>
+    </div>
+  </div>
+
+  <script>
+    const baseCycle = [1, 1, 1, 2, 2, 3];
+    let playerPool = [...baseCycle];
+    let enemyPool = [...baseCycle];
+    
+    let playerSlots = [1, 2];
+    let enemySlots = [1, 2];
+
+    let pSelectedIndex = 0;
+    let eSelectedIndex = 0;
+
+    function calculateHeadsChance(sanity) {
+      let s = Number(sanity) || 0;
+      let chance = 50 + s;
+      if (chance > 95) chance = 95;
+      if (chance < 5) chance = 5;
+      return chance;
+    }
+
+    function validateInputs() {
+      let ps = document.getElementById('p-sanity');
+      let es = document.getElementById('e-sanity');
+      let pc = document.getElementById('p-count');
+      let ec = document.getElementById('e-count');
+
+      if (ps.value === '') ps.value = 0;
+      if (es.value === '') es.value = 0;
+      if (pc.value === '') pc.value = 2;
+      if (ec.value === '') ec.value = 2;
+
+      if (ps.value > 45) ps.value = 45;
+      if (ps.value < -45) ps.value = -45;
+      if (es.value > 45) es.value = 45;
+      if (es.value < -45) es.value = -45;
+
+      if (pc.value > 9) pc.value = 9;
+      if (pc.value < 1) pc.value = 1;
+      if (ec.value > 9) ec.value = 9;
+      if (ec.value < 1) ec.value = 1;
+    }
+
+    function getSkillName(isPlayer, skillType) {
+      const prefix = isPlayer ? 'p' : 'e';
+      const inputVal = document.getElementById(`${prefix}-s${skillType}-name`)?.value;
+      return inputVal && inputVal.trim() !== '' ? inputVal : `${skillType}스킬`;
+    }
+
+    function updateInfo() {
+      validateInputs();
+      const pSanity = document.getElementById('p-sanity').value;
+      const eSanity = document.getElementById('e-sanity').value;
+
+      document.getElementById('p-info').innerText = `앞면 확률: ${calculateHeadsChance(pSanity)}%`;
+      document.getElementById('e-info').innerText = `앞면 확률: ${calculateHeadsChance(eSanity)}%`;
+
+      renderSlots();
+    }
+
+    function selectSkill(isPlayer, index) {
+      if (isPlayer) pSelectedIndex = index;
+      else eSelectedIndex = index;
+      renderSlots();
+    }
+
+    function getRandomSkillFromPool(isPlayer) {
+      let pool = isPlayer ? playerPool : enemyPool;
+      if (pool.length === 0) {
+        pool = [...baseCycle];
+      }
+      const idx = Math.floor(Math.random() * pool.length);
+      const drawn = pool.splice(idx, 1)[0];
+
+      if (isPlayer) playerPool = pool;
+      else enemyPool = pool;
+
+      return drawn;
+    }
+
+    function renderSlots() {
+      const pWrapper = document.getElementById('p-slots-display');
+      const eWrapper = document.getElementById('e-slots-display');
+
+      pWrapper.innerHTML = playerSlots.map((s, idx) => {
+        const isSelected = idx === pSelectedIndex ? 'selected' : '';
+        const name = getSkillName(true, s);
+        return `<span class="skill-badge s${s} ${isSelected}" onclick="selectSkill(true, ${idx})">${name}</span>`;
+      }).join('');
+
+      eWrapper.innerHTML = enemySlots.map((s, idx) => {
+        const isSelected = idx === eSelectedIndex ? 'selected' : '';
+        const name = getSkillName(false, s);
+        return `<span class="skill-badge s${s} ${isSelected}" onclick="selectSkill(false, ${idx})">${name}</span>`;
+      }).join('');
+    }
+
+    function spinRoulette() {
+      const btnR = document.getElementById('roulette-btn');
+      const btnC = document.getElementById('clash-btn');
+      btnR.disabled = true;
+      btnC.disabled = true;
+
+      const pWrapper = document.getElementById('p-slots-display');
+      const eWrapper = document.getElementById('e-slots-display');
+
+      pWrapper.innerHTML = `<span class="skill-badge roulette">🎰 룰렛 보충 중...</span>`;
+      eWrapper.innerHTML = `<span class="skill-badge roulette">🎰 룰렛 보충 중...</span>`;
+
+      setTimeout(() => {
+        const pNew = getRandomSkillFromPool(true);
+        const eNew = getRandomSkillFromPool(false);
+
+        playerSlots[pSelectedIndex] = pNew;
+        enemySlots[eSelectedIndex] = eNew;
+
+        renderSlots();
+
+        btnR.disabled = false;
+        btnC.disabled = false;
+      }, 600);
+    }
+
+    function startClash() {
+      validateInputs();
+
+      const btnR = document.getElementById('roulette-btn');
+      const btnC = document.getElementById('clash-btn');
+      const resultBox = document.getElementById('result-box');
+
+      btnR.disabled = true;
+      btnC.disabled = true;
+
+      const pSanity = parseInt(document.getElementById('p-sanity').value) || 0;
+      const playerCount = parseInt(document.getElementById('p-count').value) || 2;
+      const pChance = calculateHeadsChance(pSanity);
+
+      const eSanity = parseInt(document.getElementById('e-sanity').value) || 0;
+      const enemyCount = parseInt(document.getElementById('e-count').value) || 2;
+      const eChance = calculateHeadsChance(eSanity);
+
+      const pUsedType = playerSlots[pSelectedIndex];
+      const eUsedType = enemySlots[eSelectedIndex];
+
+      const pSkillName = getSkillName(true, pUsedType);
+      const eSkillName = getSkillName(false, eUsedType);
+
+      let playerCoins = [];
+      let playerHeads = 0;
+      for (let i = 0; i < playerCount; i++) {
+        const roll = Math.random() * 100;
+        const isHeads = roll < pChance;
+        if (isHeads) playerHeads++;
+        playerCoins.push({ isHeads, roll: roll.toFixed(1) });
+      }
+
+      let enemyCoins = [];
+      let enemyHeads = 0;
+      for (let i = 0; i < enemyCount; i++) {
+        const roll = Math.random() * 100;
+        const isHeads = roll < eChance;
+        if (isHeads) enemyHeads++;
+        enemyCoins.push({ isHeads, roll: roll.toFixed(1) });
+      }
+
+      // 앞면 개수 기준 승패 판정
+      let resultText = "무승부 (DRAW)";
+      let winner = "draw";
+      if (playerHeads > enemyHeads) {
+        resultText = "아군 승리! (PLAYER WIN)";
+        winner = "player";
+      } else if (enemyHeads > playerHeads) {
+        resultText = "적군 승리! (ENEMY WIN)";
+        winner = "enemy";
+      }
+
+      let pSpinningCoins = Array(playerCount).fill('<div class="coin flipping">?</div>').join('');
+      let eSpinningCoins = Array(enemyCount).fill('<div class="coin flipping">?</div>').join('');
+
+      resultBox.innerHTML = `
+        <div style="color: #ffa502; font-weight: bold; margin-bottom: 0.8rem;">코인이 회전하는 중...</div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <div>
+            <div><span class="skill-badge s${pUsedType}">${pSkillName} 사용</span></div>
+            <div class="coins-wrapper">${pSpinningCoins}</div>
+          </div>
+          <div>
+            <div><span class="skill-badge s${eUsedType}">${eSkillName} 사용</span></div>
+            <div class="coins-wrapper">${eSpinningCoins}</div>
+          </div>
+        </div>
+      `;
+
+      setTimeout(() => {
+        const pCoinsHTML = playerCoins.map(c => `
+          <div class="coin ${c.isHeads ? 'heads' : 'tails'}">
+            ${c.isHeads ? '앞면' : '뒷면'}
+            <span class="coin-sub">${c.roll}%</span>
+          </div>
+        `).join('');
+
+        const eCoinsHTML = enemyCoins.map(c => `
+          <div class="coin ${c.isHeads ? 'heads' : 'tails'}">
+            ${c.isHeads ? '앞면' : '뒷면'}
+            <span class="coin-sub">${c.roll}%</span>
+          </div>
+        `).join('');
+
+        resultBox.innerHTML = `
+          <div class="result-banner ${winner}">${resultText}</div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 5px;">
+            <div>
+              <div><span class="skill-badge s${pUsedType}">${pSkillName}</span></div>
+              <div style="font-size: 0.85rem; color: #aaa; margin-top: 4px;">앞면 ${playerHeads} / ${playerCount}</div>
+              <div class="coins-wrapper">${pCoinsHTML}</div>
+            </div>
+            <div>
+              <div><span class="skill-badge s${eUsedType}">${eSkillName}</span></div>
+              <div style="font-size: 0.85rem; color: #aaa; margin-top: 4px;">앞면 ${enemyHeads} / ${enemyCount}</div>
+              <div class="coins-wrapper">${eCoinsHTML}</div>
+            </div>
+          </div>
+        `;
+
+        playerSlots[pSelectedIndex] = getRandomSkillFromPool(true);
+        enemySlots[eSelectedIndex] = getRandomSkillFromPool(false);
+
+        renderSlots();
+
+        btnR.disabled = false;
+        btnC.disabled = false;
+      }, 800);
+    }
+
+    updateInfo();
+  </script>
+</body>
+</html>
