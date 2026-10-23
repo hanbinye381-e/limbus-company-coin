@@ -1129,12 +1129,13 @@
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
       
       /* 
-        🪙 [핵심 수정] 
-        코인 개수가 1개이든 9개이든 상관없이, 전체 판정 시간(총 소요 시간)이 
-        합 수가 늘어날수록 점점 빨라지되(가속) 항상 고정된 짧은 호흡(최대 ~350ms) 내에 
-        모든 코인의 결과가 거의 동시에 촤르륵 펼쳐지도록 고정했습니다!
+        ⚡ [가속 로직 상향]
+        1합 초기 기준 420ms에서 합이 진행될 때마다 110ms씩 크게 감소합니다.
+        최대 2배속(최소 210ms)에 도달하면 더 이상 빨라지지 않고 속도가 유지됩니다.
       */
-      const fixedTotalDuration = Math.max(120, 350 - (currentClashRound * 35));
+      const initialDuration = 420;
+      const minDuration = 210; // 2배 속도 캡(Cap)
+      const fixedTotalDuration = Math.max(minDuration, initialDuration - ((currentClashRound - 1) * 110));
 
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
@@ -1161,7 +1162,7 @@
         }, fixedTotalDuration);
       }
 
-      const totalAnimTime = fixedTotalDuration + 150;
+      const totalAnimTime = fixedTotalDuration + 140;
 
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
@@ -1170,14 +1171,15 @@
         document.getElementById('p-power-score').innerText = `위력: ${playerFinalPower}`;
         document.getElementById('e-power-score').innerText = `위력: ${enemyFinalPower}`;
 
-        // 합 판정 종료 시점에만 불꽃 이펙트 폭발
         triggerSparks();
 
+        // 🤝 무승부(비김) 발생 시에도 n합 카운터 +1 합산
         if (playerFinalPower === enemyFinalPower) {
           document.getElementById('clash-status-text').innerHTML = `
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
-            <div style="font-size: 0.9rem; color: #fbc531;">위력이 같아 코인이 파괴되지 않고 다시 맞붙습니다!</div>
+            <div style="font-size: 0.9rem; color: #fbc531;">위력이 동일합니다! (${currentClashRound + 1}합 진행)</div>
           `;
+          currentClashRound++;
           setTimeout(() => { runClashRound(); }, 750);
 
         } else if (playerFinalPower > enemyFinalPower) {
