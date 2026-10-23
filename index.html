@@ -356,7 +356,7 @@
       margin-top: 1rem;
     }
 
-    /* 🪙 8각 이미지 기반 코인 스타일 */
+    /* 8각 이미지 기반 코인 스타일 */
     .coin {
       position: relative;
       width: 64px;
@@ -381,21 +381,18 @@
       filter: brightness(0.9);
     }
     
-    /* 4. 기본 앞면 */
     .coin.heads {
       background-image: url('coin-heads.png');
       transform: scale(1.05);
       color: transparent;
     }
     
-    /* 3. 기본 뒷면 */
     .coin.tails {
       background-image: url('coin-tails.png');
       transform: scale(1);
       color: transparent;
     }
 
-    /* 1. 합 승리 시 빛나는 황금 코인 */
     .coin.win-glow {
       background-image: url('coin-win.png') !important;
       filter: drop-shadow(0 0 12px rgba(251, 197, 49, 0.8));
@@ -403,7 +400,6 @@
       color: transparent;
     }
 
-    /* 5. 앞면 깨진 코인 */
     .coin.broken-heads {
       background-image: url('coin-broken-heads.png') !important;
       opacity: 0.6;
@@ -412,7 +408,6 @@
       color: transparent;
     }
 
-    /* 2. 뒷면 깨진 코인 */
     .coin.broken-tails {
       background-image: url('coin-broken-tails.png') !important;
       opacity: 0.6;
@@ -679,7 +674,6 @@
     let pRemCoins = 0;
     let eRemCoins = 0;
     
-    // 코인별 개별 상태 기록 (heads, tails, broken-heads, broken-tails)
     let pCoinStates = [];
     let eCoinStates = [];
 
@@ -977,13 +971,13 @@
     function triggerSparks() {
       const layer = document.getElementById('spark-layer');
       layer.innerHTML = '';
-      const sparkCount = 30;
+      const sparkCount = 35;
 
       for (let i = 0; i < sparkCount; i++) {
         const spark = document.createElement('div');
         spark.className = 'spark';
         const angle = Math.random() * Math.PI * 2;
-        const distance = 80 + Math.random() * 150;
+        const distance = 80 + Math.random() * 160;
         const dx = `${Math.cos(angle) * distance}px`;
         const dy = `${Math.sin(angle) * distance}px`;
 
@@ -1068,9 +1062,11 @@
       const eSkillName = getSkillName(false, eUsedType);
 
       document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
-      document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">코인을 던지는 중...</span>`;
+      document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">⚔️ ${currentClashRound}합 진행 중...</span>`;
 
-      // 아직 안 깨진 코인들만 새로 굴림
+      // 💥 합이 부딪힐 때마다 불꽃 튀는 효과 발생!
+      triggerSparks();
+
       let playerRolls = [];
       let playerHeads = 0;
       let activePIndices = [];
@@ -1102,7 +1098,6 @@
       const playerFinalPower = pBase + (playerHeads * pCP);
       const enemyFinalPower = eBase + (enemyHeads * eCP);
 
-      // DOM 스테이지 세팅
       let pHTML = '';
       for (let i = 0; i < pTotalMax; i++) {
         if (pCoinStates[i] === 'broken-heads') {
@@ -1136,9 +1131,10 @@
       document.getElementById('e-coins-stage').innerHTML = eHTML;
 
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
-      const stepDelay = 300;
+      
+      // ⚡ 합 수가 늘어나고 코인이 적어질수록 판정 속도가 점점 빨라짐 (가속 공식)
+      const dynamicSpeed = Math.max(120, 320 - (currentClashRound * 30) - ((pTotalMax - activePIndices.length) * 15));
 
-      // 순차적 코인 결과 공개
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
           if (i < activePIndices.length) {
@@ -1161,10 +1157,10 @@
               eElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
             }
           }
-        }, (i + 1) * stepDelay);
+        }, (i + 1) * dynamicSpeed);
       }
 
-      const totalAnimTime = (maxStep + 1) * stepDelay;
+      const totalAnimTime = (maxStep + 1) * dynamicSpeed + 150;
 
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
@@ -1179,22 +1175,23 @@
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
             <div style="font-size: 0.9rem; color: #fbc531;">위력이 같아 코인이 파괴되지 않고 다시 맞붙습니다!</div>
           `;
-          setTimeout(() => { runClashRound(); }, 1000);
+          setTimeout(() => { runClashRound(); }, 800);
 
         } else if (playerFinalPower > enemyFinalPower) {
-          // 아군 승리 -> 승리한 코인들은 1번 이미지(황금 빛남)로 연출
+          // 아군 승리: 이미 깨진 코인은 제외하고 살아있는 코인들만 빛남 연출 적용
           activePIndices.forEach(idx => {
             const elem = document.getElementById(`p-coin-${idx}`);
-            if (elem) elem.classList.add('win-glow');
+            if (elem && !pCoinStates[idx].startsWith('broken')) {
+              elem.classList.add('win-glow');
+            }
           });
 
-          // 적군 패배 -> 가장 오른쪽 남아있는 코인 1개 파괴
+          // 적군 패배: 남아있는 코인 중 가장 오른쪽 코인 파괴
           const breakCoinIdx = activeEIndices[activeEIndices.length - 1];
           const breakTarget = document.getElementById(`e-coin-${breakCoinIdx}`);
           
           triggerShatterEffect(breakTarget);
           
-          // 기존 상태가 앞면이었으면 5번, 뒷면이었으면 2번 이미지 적용
           const isHeadsTarget = eCoinStates[breakCoinIdx] === 'heads';
           eCoinStates[breakCoinIdx] = isHeadsTarget ? 'broken-heads' : 'broken-tails';
 
@@ -1211,20 +1208,22 @@
               <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
             `;
             currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 1200);
+            setTimeout(() => { runClashRound(); }, 900);
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">🎉 최종 승리! (PLAYER WIN)</div>`;
             finishMatch();
           }
 
         } else {
-          // 적군 승리 -> 승리 코인 빛남 연출
+          // 적군 승리: 살아있는 아군 코인만 빛남 연출
           activeEIndices.forEach(idx => {
             const elem = document.getElementById(`e-coin-${idx}`);
-            if (elem) elem.classList.add('win-glow');
+            if (elem && !eCoinStates[idx].startsWith('broken')) {
+              elem.classList.add('win-glow');
+            }
           });
 
-          // 아군 패배 -> 아군 오른쪽 코인 1개 파괴
+          // 아군 패배: 아군 오른쪽 코인 파괴
           const breakCoinIdx = activePIndices[activePIndices.length - 1];
           const breakTarget = document.getElementById(`p-coin-${breakCoinIdx}`);
           
@@ -1246,7 +1245,7 @@
               <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
             `;
             currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 1200);
+            setTimeout(() => { runClashRound(); }, 900);
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">☠️ 최종 패배... (ENEMY WIN)</div>`;
             finishMatch();
