@@ -971,13 +971,13 @@
     function triggerSparks() {
       const layer = document.getElementById('spark-layer');
       layer.innerHTML = '';
-      const sparkCount = 35;
+      const sparkCount = 45;
 
       for (let i = 0; i < sparkCount; i++) {
         const spark = document.createElement('div');
         spark.className = 'spark';
         const angle = Math.random() * Math.PI * 2;
-        const distance = 80 + Math.random() * 160;
+        const distance = 90 + Math.random() * 180;
         const dx = `${Math.cos(angle) * distance}px`;
         const dy = `${Math.sin(angle) * distance}px`;
 
@@ -988,7 +988,7 @@
         layer.appendChild(spark);
       }
 
-      setTimeout(() => { layer.innerHTML = ''; }, 700);
+      setTimeout(() => { layer.innerHTML = ''; }, 750);
     }
 
     function triggerShatterEffect(targetElem) {
@@ -1062,10 +1062,7 @@
       const eSkillName = getSkillName(false, eUsedType);
 
       document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
-      document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">⚔️ ${currentClashRound}합 진행 중...</span>`;
-
-      // 💥 합이 부딪힐 때마다 불꽃 튀는 효과 발생!
-      triggerSparks();
+      document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">⚔️ ${currentClashRound}합 판정 중...</span>`;
 
       let playerRolls = [];
       let playerHeads = 0;
@@ -1132,8 +1129,9 @@
 
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
       
-      // ⚡ 합 수가 늘어나고 코인이 적어질수록 판정 속도가 점점 빨라짐 (가속 공식)
-      const dynamicSpeed = Math.max(120, 320 - (currentClashRound * 30) - ((pTotalMax - activePIndices.length) * 15));
+      // ⏱️ 코인 개수가 몇 개이든 상관없이 전체 회전 시간이 항상 일정한 시간(약 600ms) 내에 끝나도록 고정 속도 적용
+      const fixedTotalTime = 550;
+      const stepDelay = Math.max(40, fixedTotalTime / Math.max(1, maxStep));
 
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
@@ -1157,10 +1155,10 @@
               eElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
             }
           }
-        }, (i + 1) * dynamicSpeed);
+        }, (i + 1) * stepDelay);
       }
 
-      const totalAnimTime = (maxStep + 1) * dynamicSpeed + 150;
+      const totalAnimTime = fixedTotalTime + 200;
 
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
@@ -1169,16 +1167,17 @@
         document.getElementById('p-power-score').innerText = `위력: ${playerFinalPower}`;
         document.getElementById('e-power-score').innerText = `위력: ${enemyFinalPower}`;
 
+        // 💥 합 판정이 모두 끝난 직후에 불꽃 효과가 터지도록 연출!
+        triggerSparks();
+
         if (playerFinalPower === enemyFinalPower) {
-          triggerSparks();
           document.getElementById('clash-status-text').innerHTML = `
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
             <div style="font-size: 0.9rem; color: #fbc531;">위력이 같아 코인이 파괴되지 않고 다시 맞붙습니다!</div>
           `;
-          setTimeout(() => { runClashRound(); }, 800);
+          setTimeout(() => { runClashRound(); }, 900);
 
         } else if (playerFinalPower > enemyFinalPower) {
-          // 아군 승리: 이미 깨진 코인은 제외하고 살아있는 코인들만 빛남 연출 적용
           activePIndices.forEach(idx => {
             const elem = document.getElementById(`p-coin-${idx}`);
             if (elem && !pCoinStates[idx].startsWith('broken')) {
@@ -1186,7 +1185,6 @@
             }
           });
 
-          // 적군 패배: 남아있는 코인 중 가장 오른쪽 코인 파괴
           const breakCoinIdx = activeEIndices[activeEIndices.length - 1];
           const breakTarget = document.getElementById(`e-coin-${breakCoinIdx}`);
           
@@ -1208,14 +1206,13 @@
               <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
             `;
             currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 900);
+            setTimeout(() => { runClashRound(); }, 1000);
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">🎉 최종 승리! (PLAYER WIN)</div>`;
             finishMatch();
           }
 
         } else {
-          // 적군 승리: 살아있는 아군 코인만 빛남 연출
           activeEIndices.forEach(idx => {
             const elem = document.getElementById(`e-coin-${idx}`);
             if (elem && !eCoinStates[idx].startsWith('broken')) {
@@ -1223,7 +1220,6 @@
             }
           });
 
-          // 아군 패배: 아군 오른쪽 코인 파괴
           const breakCoinIdx = activePIndices[activePIndices.length - 1];
           const breakTarget = document.getElementById(`p-coin-${breakCoinIdx}`);
           
@@ -1245,7 +1241,7 @@
               <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
             `;
             currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 900);
+            setTimeout(() => { runClashRound(); }, 1000);
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">☠️ 최종 패배... (ENEMY WIN)</div>`;
             finishMatch();
