@@ -1129,13 +1129,15 @@
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
       
       /* 
-        ⚡ [가속 로직 상향]
-        1합 초기 기준 420ms에서 합이 진행될 때마다 110ms씩 크게 감소합니다.
-        최대 2배속(최소 210ms)에 도달하면 더 이상 빨라지지 않고 속도가 유지됩니다.
+        ⚡ [가속 곡선 설계: 최대 5배속 (10합 도달)]
+        - 기본 소요시간: 500ms (1합)
+        - 10합에서 5배속인 100ms에 도달하도록 설정 (10합 이후 100ms 고정)
       */
-      const initialDuration = 420;
-      const minDuration = 210; // 2배 속도 캡(Cap)
-      const fixedTotalDuration = Math.max(minDuration, initialDuration - ((currentClashRound - 1) * 110));
+      const initialDuration = 500;
+      const minDuration = 100; // 5배속 제한 (500ms / 5 = 100ms)
+      const speedStep = (initialDuration - minDuration) / 9; // 10합(9단계)만에 5배속 도달
+      
+      const fixedTotalDuration = Math.max(minDuration, initialDuration - ((currentClashRound - 1) * speedStep));
 
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
@@ -1162,7 +1164,7 @@
         }, fixedTotalDuration);
       }
 
-      const totalAnimTime = fixedTotalDuration + 140;
+      const totalAnimTime = fixedTotalDuration + Math.max(60, fixedTotalDuration * 0.3);
 
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
@@ -1173,14 +1175,15 @@
 
         triggerSparks();
 
-        // 🤝 무승부(비김) 발생 시에도 n합 카운터 +1 합산
+        // 🤝 무승부(비김) 발생 시에도 n합 카운터 즉시 합산 처리!
         if (playerFinalPower === enemyFinalPower) {
+          currentClashRound++;
+          document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
           document.getElementById('clash-status-text').innerHTML = `
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
-            <div style="font-size: 0.9rem; color: #fbc531;">위력이 동일합니다! (${currentClashRound + 1}합 진행)</div>
+            <div style="font-size: 0.9rem; color: #fbc531;">위력이 동일합니다! (${currentClashRound}합 재시도)</div>
           `;
-          currentClashRound++;
-          setTimeout(() => { runClashRound(); }, 750);
+          setTimeout(() => { runClashRound(); }, Math.max(300, fixedTotalDuration + 200));
 
         } else if (playerFinalPower > enemyFinalPower) {
           activePIndices.forEach(idx => {
@@ -1206,12 +1209,12 @@
           eRemCoins--;
 
           if (eRemCoins > 0) {
+            currentClashRound++;
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner player">💥 아군 합 승리!</div>
-              <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
+              <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 1개가 파괴되었습니다! (${currentClashRound}합 진행)</div>
             `;
-            currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 850);
+            setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">🎉 최종 승리! (PLAYER WIN)</div>`;
             finishMatch();
@@ -1220,7 +1223,7 @@
         } else {
           activeEIndices.forEach(idx => {
             const elem = document.getElementById(`e-coin-${idx}`);
-            if (elem && !eCoinStates[idx].startsWith('broken')) {
+            if (elem && !pCoinStates[idx].startsWith('broken')) {
               elem.classList.add('win-glow');
             }
           });
@@ -1241,12 +1244,12 @@
           pRemCoins--;
 
           if (pRemCoins > 0) {
+            currentClashRound++;
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner enemy">💥 적군 합 승리!</div>
-              <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
+              <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 1개가 파괴되었습니다! (${currentClashRound}합 진행)</div>
             `;
-            currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 850);
+            setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">☠️ 최종 패배... (ENEMY WIN)</div>`;
             finishMatch();
