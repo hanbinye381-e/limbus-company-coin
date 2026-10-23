@@ -1131,11 +1131,11 @@
       /* 
         ⚡ [가속 곡선 설계: 최대 5배속 (10합 도달)]
         - 기본 소요시간: 500ms (1합)
-        - 10합에서 5배속인 100ms에 도달하도록 설정 (10합 이후 100ms 고정)
+        - 10합에서 5배속인 100ms에 도달 (10합 이후 100ms 고정)
       */
       const initialDuration = 500;
-      const minDuration = 100; // 5배속 제한 (500ms / 5 = 100ms)
-      const speedStep = (initialDuration - minDuration) / 9; // 10합(9단계)만에 5배속 도달
+      const minDuration = 100;
+      const speedStep = (initialDuration - minDuration) / 9;
       
       const fixedTotalDuration = Math.max(minDuration, initialDuration - ((currentClashRound - 1) * speedStep));
 
@@ -1175,13 +1175,13 @@
 
         triggerSparks();
 
-        // 🤝 무승부(비김) 발생 시에도 n합 카운터 즉시 합산 처리!
+        // 🤝 [핵심 개편] 무승부 혹은 판정 승리 후 코인이 남아있어 재판정할 때 모두 n합 숫자가 1씩 증가
         if (playerFinalPower === enemyFinalPower) {
           currentClashRound++;
           document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
           document.getElementById('clash-status-text').innerHTML = `
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
-            <div style="font-size: 0.9rem; color: #fbc531;">위력이 동일합니다! (${currentClashRound}합 재시도)</div>
+            <div style="font-size: 0.9rem; color: #fbc531;">위력이 동일합니다! (${currentClashRound}합 진행)</div>
           `;
           setTimeout(() => { runClashRound(); }, Math.max(300, fixedTotalDuration + 200));
 
@@ -1209,10 +1209,11 @@
           eRemCoins--;
 
           if (eRemCoins > 0) {
-            currentClashRound++;
+            currentClashRound++; // 아군 승리 후 적 코인이 남아 다음 판정으로 넘어갈 때 n합 +1 증가
+            document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner player">💥 아군 합 승리!</div>
-              <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 1개가 파괴되었습니다! (${currentClashRound}합 진행)</div>
+              <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 파괴! (${currentClashRound}합 진행)</div>
             `;
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
@@ -1244,10 +1245,11 @@
           pRemCoins--;
 
           if (pRemCoins > 0) {
-            currentClashRound++;
+            currentClashRound++; // 적군 승리 후 아군 코인이 남아 다음 판정으로 넘어갈 때 n합 +1 증가
+            document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner enemy">💥 적군 합 승리!</div>
-              <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 1개가 파괴되었습니다! (${currentClashRound}합 진행)</div>
+              <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 파괴! (${currentClashRound}합 진행)</div>
             `;
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
