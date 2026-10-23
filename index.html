@@ -1128,9 +1128,13 @@
 
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
       
-      // ⏱️ 합 수가 거듭될수록 전체 판정 시간(회전 및 결과 공개 속도)이 점차 빨라짐
-      const baseOverallTime = Math.max(220, 600 - (currentClashRound * 75));
-      const stepDelay = Math.max(30, baseOverallTime / Math.max(1, maxStep));
+      /* 
+        🪙 [핵심 수정] 
+        코인 개수가 1개이든 9개이든 상관없이, 전체 판정 시간(총 소요 시간)이 
+        합 수가 늘어날수록 점점 빨라지되(가속) 항상 고정된 짧은 호흡(최대 ~350ms) 내에 
+        모든 코인의 결과가 거의 동시에 촤르륵 펼쳐지도록 고정했습니다!
+      */
+      const fixedTotalDuration = Math.max(120, 350 - (currentClashRound * 35));
 
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
@@ -1154,10 +1158,10 @@
               eElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
             }
           }
-        }, (i + 1) * stepDelay);
+        }, fixedTotalDuration);
       }
 
-      const totalAnimTime = baseOverallTime + 180;
+      const totalAnimTime = fixedTotalDuration + 150;
 
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
@@ -1166,7 +1170,7 @@
         document.getElementById('p-power-score').innerText = `위력: ${playerFinalPower}`;
         document.getElementById('e-power-score').innerText = `위력: ${enemyFinalPower}`;
 
-        // 💥 판정이 끝난 직후 결과 발표 순간에만 불꽃 효과 발동!
+        // 합 판정 종료 시점에만 불꽃 이펙트 폭발
         triggerSparks();
 
         if (playerFinalPower === enemyFinalPower) {
@@ -1174,7 +1178,7 @@
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
             <div style="font-size: 0.9rem; color: #fbc531;">위력이 같아 코인이 파괴되지 않고 다시 맞붙습니다!</div>
           `;
-          setTimeout(() => { runClashRound(); }, 850);
+          setTimeout(() => { runClashRound(); }, 750);
 
         } else if (playerFinalPower > enemyFinalPower) {
           activePIndices.forEach(idx => {
@@ -1205,7 +1209,7 @@
               <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
             `;
             currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 950);
+            setTimeout(() => { runClashRound(); }, 850);
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">🎉 최종 승리! (PLAYER WIN)</div>`;
             finishMatch();
@@ -1240,7 +1244,7 @@
               <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 1개가 파괴되었습니다! (${currentClashRound + 1}합 진행)</div>
             `;
             currentClashRound++;
-            setTimeout(() => { runClashRound(); }, 950);
+            setTimeout(() => { runClashRound(); }, 850);
           } else {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">☠️ 최종 패배... (ENEMY WIN)</div>`;
             finishMatch();
