@@ -4,60 +4,72 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TRPG 중앙 코인 대결 시뮬레이터</title>
-  <!-- 구글 폰트 불러오기: Oswald (Limbus) & Cinzel Decorative / Cinzel (Ruina) -->
+  <!-- Google Fonts: Oswald (Limbus), Cinzel (Ruina), Noto Sans KR -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Cinzel:wght@600;800&family=Oswald:wght@600;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Oswald:wght@600;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
   
   <style>
-    /* 림버스 컴퍼니 테마 */
+    /* 🔴 림버스 컴퍼니 테마: 단테 시계 태엽 & 버스 모니터 패널 */
     :root[data-theme="limbus"] {
       --font-title: 'Oswald', 'Noto Sans KR', sans-serif;
       --font-body: 'Noto Sans KR', sans-serif;
-      --bg-color: #070709;
-      --card-bg: #111116;
-      --sub-card-bg: #0a0a0d;
-      --border-style: 2px solid #3a1518;
-      --card-radius: 2px;
       
-      --primary-color: #ff2a2a;
-      --primary-hover: #d62828;
-      --accent-color: #f1b31c;
-      --text-color: #e0e0e0;
+      --bg-color: #050507;
+      --card-bg: linear-gradient(180deg, #181412 0%, #0d0b0a 100%);
+      --sub-card-bg: #090807;
       
-      --title-color: #f1b31c;
-      --title-shadow: 0 0 10px rgba(241, 179, 28, 0.4), 0 0 20px rgba(255, 42, 42, 0.3);
-      --btn-bg: linear-gradient(180deg, #b81d1d 0%, #680d0d 100%);
-      --btn-border: 1px solid #ff4a4a;
+      --border-style: 2px solid #8e2a18;
+      --card-box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 0 12px rgba(142, 42, 24, 0.4);
+      --card-radius: 0px;
+
+      --primary-color: #ff3322;
+      --primary-hover: #d62211;
+      --accent-color: #e6a100;
+      --text-color: #dcd8d0;
       
-      --spark-color-1: #f1b31c;
-      --spark-color-2: #ff2a2a;
-      --glow-filter: drop-shadow(0 0 12px rgba(241, 179, 28, 0.9));
+      --title-color: #f0a800;
+      --title-shadow: 0 0 8px rgba(240, 168, 0, 0.6), 2px 2px 0px #500000;
+      
+      --btn-bg: linear-gradient(180deg, #991c0e 0%, #520902 100%);
+      --btn-border: 2px solid #e6a100;
+      
+      --spark-color-1: #e6a100;
+      --spark-color-2: #ff3322;
+      --glow-filter: drop-shadow(0 0 12px rgba(230, 161, 0, 0.9));
+      
+      --badge-clip: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
     }
 
-    /* 라이브러리 오브 루이나 테마 */
+    /* 🔵 라이브러리 오브 루이나 테마: 도서관 황금 아르누보 & 세룰리안 네온 */
     :root[data-theme="ruina"] {
-      --font-title: 'Cinzel Decorative', 'Cinzel', serif;
+      --font-title: 'Cinzel', 'Noto Sans KR', serif;
       --font-body: 'Cinzel', 'Noto Sans KR', serif;
-      --bg-color: #04070d;
-      --card-bg: #09101d;
-      --sub-card-bg: #050a14;
-      --border-style: 2px double #cba153;
-      --card-radius: 0px;
       
+      --bg-color: #03060a;
+      --card-bg: linear-gradient(180deg, #0a1322 0%, #040810 100%);
+      --sub-card-bg: #020509;
+      
+      --border-style: 2px double #c59f52;
+      --card-box-shadow: inset 0 0 20px rgba(0,0,0,0.95), 0 0 15px rgba(197, 159, 82, 0.3);
+      --card-radius: 0px;
+
       --primary-color: #38ef7d;
       --primary-hover: #11998e;
-      --accent-color: #4deeea;
-      --text-color: #eaeef6;
+      --accent-color: #38e8e5;
+      --text-color: #eaeff5;
       
-      --title-color: #4deeea;
-      --title-shadow: 0 0 12px rgba(77, 238, 234, 0.6), 0 0 24px rgba(203, 161, 83, 0.4);
-      --btn-bg: linear-gradient(180deg, #0f2b48 0%, #061526 100%);
-      --btn-border: 1px solid #cba153;
+      --title-color: #38e8e5;
+      --title-shadow: 0 0 10px rgba(56, 232, 229, 0.7), 0 0 20px rgba(197, 159, 82, 0.5);
       
-      --spark-color-1: #4deeea;
-      --spark-color-2: #cba153;
-      --glow-filter: drop-shadow(0 0 14px rgba(77, 238, 234, 0.9));
+      --btn-bg: linear-gradient(180deg, #0e2b47 0%, #051322 100%);
+      --btn-border: 2px double #c59f52;
+      
+      --spark-color-1: #38e8e5;
+      --spark-color-2: #c59f52;
+      --glow-filter: drop-shadow(0 0 14px rgba(56, 232, 229, 0.9));
+      
+      --badge-clip: none;
     }
 
     * { box-sizing: border-box; }
@@ -91,10 +103,10 @@
 
     h1 {
       font-family: var(--font-title);
-      font-size: 1.9rem;
+      font-size: 2.1rem;
       margin: 0;
       color: var(--title-color);
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-transform: uppercase;
       text-shadow: var(--title-shadow);
       transition: all 0.3s;
@@ -106,8 +118,8 @@
       gap: 10px;
       background: var(--card-bg);
       padding: 0.4rem 0.9rem;
-      border-radius: var(--card-radius);
       border: var(--border-style);
+      box-shadow: var(--card-box-shadow);
     }
     .theme-select-box label {
       margin: 0;
@@ -141,29 +153,28 @@
     .side-box {
       background: var(--card-bg);
       padding: 1.4rem;
-      border-radius: var(--card-radius);
       border: var(--border-style);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      box-shadow: var(--card-box-shadow);
       transition: all 0.3s;
+      position: relative;
     }
 
     .side-title {
       font-family: var(--font-title);
-      font-size: 1.3rem;
+      font-size: 1.4rem;
       font-weight: bold;
       margin-bottom: 1rem;
       text-align: center;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
       text-transform: uppercase;
     }
-    .player .side-title { color: #38ef7d; }
-    .enemy .side-title { color: #ff2a2a; }
+    .player .side-title { color: #38ef7d; text-shadow: 0 0 8px rgba(56, 239, 125, 0.4); }
+    .enemy .side-title { color: #ff3322; text-shadow: 0 0 8px rgba(255, 51, 34, 0.4); }
 
     .slot-container {
       width: 100%;
       background: var(--sub-card-bg);
       border: var(--border-style);
-      border-radius: var(--card-radius);
       padding: 0.8rem;
       margin-bottom: 0.9rem;
       text-align: center;
@@ -178,8 +189,9 @@
     .slots-wrapper {
       display: flex;
       justify-content: center;
-      gap: 8px;
-      min-height: 40px;
+      gap: 10px;
+      min-height: 44px;
+      align-items: center;
     }
     .next-box {
       margin-top: 0.6rem;
@@ -196,45 +208,49 @@
     .matchup-indicator {
       margin-top: 0.7rem;
       padding: 0.45rem;
-      border-radius: var(--card-radius);
       font-size: 0.8rem;
       font-weight: bold;
       text-align: center;
       background: var(--card-bg);
       border: var(--border-style);
+      letter-spacing: 1px;
     }
-    .matchup-indicator.very-advantage { color: #38ef7d; border-color: #38ef7d; background: rgba(56, 239, 125, 0.05); }
-    .matchup-indicator.advantage { color: #70a1ff; border-color: #1e90ff; background: rgba(112, 161, 255, 0.05); }
-    .matchup-indicator.balanced { color: var(--accent-color); border-color: var(--accent-color); background: rgba(241, 179, 28, 0.05); }
-    .matchup-indicator.disadvantage { color: #ff6b81; border-color: #ff2a2a; background: rgba(255, 42, 42, 0.05); }
-    .matchup-indicator.very-disadvantage { color: #ff2a2a; background: rgba(255, 42, 42, 0.1); border-color: #ff2a2a; }
+    .matchup-indicator.very-advantage { color: #38ef7d; border-color: #38ef7d; background: rgba(56, 239, 125, 0.08); }
+    .matchup-indicator.advantage { color: #70a1ff; border-color: #1e90ff; background: rgba(112, 161, 255, 0.08); }
+    .matchup-indicator.balanced { color: var(--accent-color); border-color: var(--accent-color); background: rgba(230, 161, 0, 0.08); }
+    .matchup-indicator.disadvantage { color: #ff6b81; border-color: #ff3322; background: rgba(255, 51, 34, 0.08); }
+    .matchup-indicator.very-disadvantage { color: #ff3322; background: rgba(255, 51, 34, 0.15); border-color: #ff3322; }
 
+    /* 림버스 인게임 팔각형 스킬 배지 스타일 구현 */
     .skill-badge {
-      padding: 0.45rem 0.8rem;
-      border-radius: var(--card-radius);
+      padding: 0.5rem 0.9rem;
       font-weight: bold;
       font-size: 0.8rem;
       background: #141418;
       color: #fff;
-      border: 1px solid #333340;
+      border: 1px solid #444452;
       cursor: pointer;
       transition: all 0.2s;
       user-select: none;
+      clip-path: var(--badge-clip);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
     }
-    .skill-badge:hover { transform: translateY(-2px); border-color: #777; }
-    .skill-badge.s1 { background: #0d1829; color: #70a1ff; border-color: #1f3b6e; }
-    .skill-badge.s2 { background: #121330; color: #9aa8df; border-color: #2e3875; }
-    .skill-badge.s3 { background: #2e0a11; color: #ff94a0; border-color: #6e1f2d; }
+    .skill-badge:hover { transform: translateY(-2px); border-color: #888; }
+    .skill-badge.s1 { background: #0c182b; color: #70a1ff; border-color: #1f3b6e; }
+    .skill-badge.s2 { background: #121333; color: #9aa8df; border-color: #2e3875; }
+    .skill-badge.s3 { background: #300a12; color: #ff94a0; border-color: #6e1f2d; }
     
     .skill-badge.selected {
       border-color: var(--accent-color) !important;
-      box-shadow: 0 0 10px var(--accent-color);
-      transform: scale(1.04);
+      box-shadow: 0 0 12px var(--accent-color);
+      transform: scale(1.06);
     }
     .skill-badge.next-badge {
       cursor: default;
       font-size: 0.7rem;
-      padding: 0.2rem 0.5rem;
+      padding: 0.25rem 0.6rem;
       opacity: 0.9;
     }
 
@@ -243,7 +259,6 @@
       background: var(--sub-card-bg);
       border: var(--border-style);
       padding: 0.8rem;
-      border-radius: var(--card-radius);
       margin-bottom: 0.9rem;
     }
     .skill-config-title {
@@ -263,7 +278,6 @@
       background: var(--card-bg);
       border: var(--border-style);
       padding: 0.5rem 0.3rem;
-      border-radius: var(--card-radius);
       text-align: center;
     }
     .config-card label {
@@ -301,7 +315,6 @@
       background: #181820;
       color: #ccc;
       border: 1px solid #333344;
-      border-radius: var(--card-radius);
       cursor: pointer;
       transition: all 0.2s;
       font-family: var(--font-body);
@@ -317,8 +330,7 @@
     }
     .coin-preview-item {
       font-size: 0.65rem;
-      padding: 0.3rem;
-      border-radius: var(--card-radius);
+      padding: 0.39rem;
       background: var(--card-bg);
       color: var(--accent-color);
       text-align: center;
@@ -342,7 +354,6 @@
       background: var(--sub-card-bg);
       border: var(--border-style);
       color: #fff;
-      border-radius: var(--card-radius);
       font-size: 0.85rem;
       font-family: var(--font-body);
       transition: border-color 0.2s;
@@ -357,7 +368,6 @@
       background: var(--sub-card-bg);
       border: var(--border-style);
       padding: 0.5rem;
-      border-radius: var(--card-radius);
       font-size: 0.8rem;
       margin-top: 0.4rem;
       text-align: center;
@@ -369,8 +379,7 @@
       background: var(--card-bg);
       border: var(--border-style);
       padding: 1.8rem;
-      border-radius: var(--card-radius);
-      box-shadow: 0 8px 24px rgba(0,0,0,0.8);
+      box-shadow: var(--card-box-shadow);
       text-align: center;
       min-height: 520px;
       display: flex;
@@ -383,25 +392,24 @@
     button.clash-btn {
       width: 100%;
       padding: 1.1rem;
-      font-size: 1.25rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: #fff;
       font-family: var(--font-title);
-      letter-spacing: 2px;
+      letter-spacing: 3px;
       text-transform: uppercase;
       background: var(--btn-bg);
       border: var(--btn-border);
-      border-radius: var(--card-radius);
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.6);
     }
     button.clash-btn:hover { filter: brightness(1.25); transform: translateY(-1px); }
     button.clash-btn:disabled { background: #1c1c24 !important; color: #555; cursor: not-allowed; box-shadow: none; transform: none; border-color: #333; }
 
     .clash-count-badge {
       font-family: var(--font-title);
-      font-size: 1.2rem;
+      font-size: 1.3rem;
       font-weight: bold;
       color: var(--accent-color);
       margin-bottom: 0.4rem;
@@ -411,14 +419,14 @@
 
     .result-banner {
       font-family: var(--font-title);
-      font-size: 1.6rem;
+      font-size: 1.7rem;
       font-weight: bold;
       margin-bottom: 0.5rem;
-      letter-spacing: 1px;
+      letter-spacing: 2px;
       text-transform: uppercase;
     }
     .result-banner.player { color: #38ef7d; text-shadow: 0 0 10px rgba(56, 239, 125, 0.4); }
-    .result-banner.enemy { color: #ff2a2a; text-shadow: 0 0 10px rgba(255, 42, 42, 0.4); }
+    .result-banner.enemy { color: #ff3322; text-shadow: 0 0 10px rgba(255, 51, 34, 0.4); }
     .result-banner.clash { color: var(--accent-color); text-shadow: 0 0 12px var(--accent-color); animation: clashPulse 0.3s infinite alternate; }
 
     @keyframes clashPulse {
@@ -439,7 +447,6 @@
       background: var(--sub-card-bg);
       border: var(--border-style);
       padding: 1.2rem;
-      border-radius: var(--card-radius);
       min-height: 240px;
     }
 
@@ -535,9 +542,8 @@
       font-size: 0.65rem;
       color: #aaa;
       font-weight: normal;
-      background: rgba(0,0,0,0.8);
+      background: rgba(0,0,0,0.85);
       padding: 1px 4px;
-      border-radius: 2px;
       font-family: var(--font-body);
     }
 
@@ -1098,8 +1104,8 @@
       const sparkCount = 45;
 
       const currentTheme = document.documentElement.getAttribute('data-theme');
-      const c1 = currentTheme === 'ruina' ? '#4deeea' : '#f1b31c';
-      const c2 = currentTheme === 'ruina' ? '#cba153' : '#ff2a2a';
+      const c1 = currentTheme === 'ruina' ? '#38e8e5' : '#e6a100';
+      const c2 = currentTheme === 'ruina' ? '#c59f52' : '#ff3322';
 
       for (let i = 0; i < sparkCount; i++) {
         const spark = document.createElement('div');
