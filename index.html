@@ -1,14 +1,45 @@
 <!DOCTYPE html>
-<html lang="ko">
+<html lang="ko" data-theme="limbus">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TRPG 중앙 코인 대결 시뮬레이터</title>
   <style>
+    /* 🎨 테마별 CSS 변수 정의 */
+    :root[data-theme="limbus"] {
+      --bg-color: #0d0d0f;
+      --card-bg: #16161a;
+      --sub-card-bg: #111115;
+      --border-color: #2a2a35;
+      --primary-color: #ff4757;
+      --primary-hover: #ff6b81;
+      --accent-color: #fbc531;
+      --title-shadow: rgba(255, 71, 87, 0.3);
+      --btn-grad-start: #ff4757;
+      --btn-grad-end: #ff3838;
+      --spark-color-1: #fbc531;
+      --spark-color-2: #ff4757;
+    }
+
+    :root[data-theme="ruina"] {
+      --bg-color: #0b0e14;
+      --card-bg: #121824;
+      --sub-card-bg: #0d121c;
+      --border-color: #1e293b;
+      --primary-color: #00a8ff;
+      --primary-hover: #4cd137;
+      --accent-color: #e1b12c;
+      --title-shadow: rgba(0, 168, 255, 0.4);
+      --btn-grad-start: #00a8ff;
+      --btn-grad-end: #1e3799;
+      --spark-color-1: #00a8ff;
+      --spark-color-2: #e1b12c;
+    }
+
     * { box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #0d0d0f;
+      background-color: var(--bg-color);
       color: #e2e2e6;
       display: flex;
       justify-content: center;
@@ -17,20 +48,50 @@
       margin: 0;
       padding: 1.5rem 2rem;
       overflow-x: hidden;
+      transition: background-color 0.3s, color 0.3s;
     }
     
     .main-wrapper {
       width: 100%;
       max-width: 1800px;
     }
+
+    .header-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
     h1 {
       font-size: 1.7rem;
-      margin-bottom: 1.5rem;
-      color: #ff4757;
-      text-align: center;
+      margin: 0;
+      color: var(--primary-color);
       letter-spacing: 1.5px;
       text-transform: uppercase;
-      text-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
+      text-shadow: 0 2px 8px var(--title-shadow);
+      transition: color 0.3s;
+    }
+
+    .theme-select-box {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--card-bg);
+      padding: 0.4rem 0.8rem;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+    .theme-select-box label {
+      margin: 0;
+      font-size: 0.8rem;
+      color: #aaa;
+    }
+    .theme-select-box select {
+      padding: 0.3rem 0.5rem;
+      font-size: 0.8rem;
+      width: auto;
     }
 
     .battle-layout {
@@ -47,15 +108,16 @@
     }
 
     .side-box {
-      background: #16161a;
+      background: var(--card-bg);
       padding: 1.4rem;
       border-radius: 12px;
-      border: 1px solid #2a2a35;
+      border: 1px solid var(--border-color);
       border-top: 4px solid #555;
       box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+      transition: background-color 0.3s, border-color 0.3s;
     }
     .side-box.player { border-top-color: #2ed573; }
-    .side-box.enemy { border-top-color: #ff4757; }
+    .side-box.enemy { border-top-color: var(--primary-color); }
 
     .side-title {
       font-size: 1.2rem;
@@ -65,12 +127,12 @@
       letter-spacing: 0.5px;
     }
     .player .side-title { color: #2ed573; }
-    .enemy .side-title { color: #ff4757; }
+    .enemy .side-title { color: var(--primary-color); }
 
     .slot-container {
       width: 100%;
-      background: #111115;
-      border: 1px solid #282832;
+      background: var(--sub-card-bg);
+      border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 0.8rem;
       margin-bottom: 0.9rem;
@@ -92,9 +154,9 @@
     .next-box {
       margin-top: 0.6rem;
       padding-top: 0.5rem;
-      border-top: 1px dashed #2a2a35;
+      border-top: 1px dashed var(--border-color);
       font-size: 0.75rem;
-      color: #fbc531;
+      color: var(--accent-color);
       display: flex;
       justify-content: center;
       align-items: center;
@@ -108,14 +170,14 @@
       font-size: 0.78rem;
       font-weight: bold;
       text-align: center;
-      background: #16161a;
-      border: 1px solid #333340;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
     }
     .matchup-indicator.very-advantage { color: #2ed573; border-color: #2ed573; background: rgba(46, 213, 115, 0.05); }
     .matchup-indicator.advantage { color: #70a1ff; border-color: #1e90ff; background: rgba(112, 161, 255, 0.05); }
-    .matchup-indicator.balanced { color: #fbc531; border-color: #fbc531; background: rgba(251, 197, 49, 0.05); }
-    .matchup-indicator.disadvantage { color: #ff6b81; border-color: #ff4757; background: rgba(255, 107, 129, 0.05); }
-    .matchup-indicator.very-disadvantage { color: #ff4757; background: rgba(255, 71, 87, 0.1); border-color: #ff4757; }
+    .matchup-indicator.balanced { color: var(--accent-color); border-color: var(--accent-color); background: rgba(251, 197, 49, 0.05); }
+    .matchup-indicator.disadvantage { color: #ff6b81; border-color: var(--primary-color); background: rgba(255, 107, 129, 0.05); }
+    .matchup-indicator.very-disadvantage { color: var(--primary-color); background: rgba(255, 71, 87, 0.1); border-color: var(--primary-color); }
 
     .skill-badge {
       padding: 0.45rem 0.8rem;
@@ -135,7 +197,7 @@
     .skill-badge.s3 { background: #3c141d; color: #ff8795; border-color: #752233; }
     
     .skill-badge.selected {
-      border-color: #fbc531 !important;
+      border-color: var(--accent-color) !important;
       box-shadow: 0 0 10px rgba(251, 197, 49, 0.4);
       transform: scale(1.04);
     }
@@ -148,8 +210,8 @@
 
     .skill-config-box {
       width: 100%;
-      background: #111115;
-      border: 1px solid #282832;
+      background: var(--sub-card-bg);
+      border: 1px solid var(--border-color);
       padding: 0.8rem;
       border-radius: 8px;
       margin-bottom: 0.9rem;
@@ -169,7 +231,7 @@
     }
     .config-card {
       background: #1a1a20;
-      border: 1px solid #282832;
+      border: 1px solid var(--border-color);
       padding: 0.5rem 0.3rem;
       border-radius: 6px;
       text-align: center;
@@ -192,7 +254,7 @@
     .preset-manager {
       margin-top: 0.6rem;
       padding-top: 0.6rem;
-      border-top: 1px dashed #2a2a35;
+      border-top: 1px dashed var(--border-color);
       display: flex;
       flex-direction: column;
       gap: 6px;
@@ -225,10 +287,10 @@
       font-size: 0.65rem;
       padding: 0.3rem;
       border-radius: 4px;
-      background: #16161a;
-      color: #fbc531;
+      background: var(--card-bg);
+      color: var(--accent-color);
       text-align: center;
-      border: 1px solid #282832;
+      border: 1px solid var(--border-color);
       line-height: 1.3;
     }
 
@@ -245,22 +307,22 @@
     input[type="number"], input[type="text"], select {
       width: 100%;
       padding: 0.5rem 0.6rem;
-      background: #111115;
-      border: 1px solid #2a2a35;
+      background: var(--sub-card-bg);
+      border: 1px solid var(--border-color);
       color: #fff;
       border-radius: 6px;
       font-size: 0.85rem;
       transition: border-color 0.2s;
     }
     input[type="number"]:focus, input[type="text"]:focus, select:focus {
-      border-color: #ff4757;
+      border-color: var(--primary-color);
       outline: none;
     }
     
     .info-badge {
       width: 100%;
-      background: #111115;
-      border: 1px solid #282832;
+      background: var(--sub-card-bg);
+      border: 1px solid var(--border-color);
       padding: 0.5rem;
       border-radius: 6px;
       font-size: 0.8rem;
@@ -271,8 +333,8 @@
 
     .center-stage {
       position: relative;
-      background: #16161a;
-      border: 1px solid #2a2a35;
+      background: var(--card-bg);
+      border: 1px solid var(--border-color);
       padding: 1.8rem;
       border-radius: 12px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.6);
@@ -282,6 +344,7 @@
       flex-direction: column;
       justify-content: space-between;
       overflow: hidden;
+      transition: background-color 0.3s, border-color 0.3s;
     }
 
     button.clash-btn {
@@ -290,20 +353,20 @@
       font-size: 1.2rem;
       font-weight: bold;
       color: #fff;
-      background: linear-gradient(135deg, #ff4757, #ff3838);
+      background: linear-gradient(135deg, var(--btn-grad-start), var(--btn-grad-end));
       border: none;
       border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s;
-      box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    button.clash-btn:hover { background: linear-gradient(135deg, #ff6b81, #ff4757); transform: translateY(-1px); }
+    button.clash-btn:hover { filter: brightness(1.15); transform: translateY(-1px); }
     button.clash-btn:disabled { background: #2a2a35 !important; color: #666; cursor: not-allowed; box-shadow: none; transform: none; }
 
     .clash-count-badge {
       font-size: 1.1rem;
       font-weight: bold;
-      color: #fbc531;
+      color: var(--accent-color);
       margin-bottom: 0.4rem;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -316,8 +379,8 @@
       letter-spacing: 0.5px;
     }
     .result-banner.player { color: #2ed573; text-shadow: 0 0 10px rgba(46, 213, 115, 0.3); }
-    .result-banner.enemy { color: #ff4757; text-shadow: 0 0 10px rgba(255, 71, 87, 0.3); }
-    .result-banner.clash { color: #fbc531; text-shadow: 0 0 12px rgba(251, 197, 49, 0.5); animation: clashPulse 0.3s infinite alternate; }
+    .result-banner.enemy { color: var(--primary-color); text-shadow: 0 0 10px var(--title-shadow); }
+    .result-banner.clash { color: var(--accent-color); text-shadow: 0 0 12px rgba(251, 197, 49, 0.5); animation: clashPulse 0.3s infinite alternate; }
 
     @keyframes clashPulse {
       0% { transform: scale(1); }
@@ -334,8 +397,8 @@
     }
 
     .side-result-box {
-      background: #111115;
-      border: 1px solid #282832;
+      background: var(--sub-card-bg);
+      border: 1px solid var(--border-color);
       padding: 1.2rem;
       border-radius: 10px;
       min-height: 240px;
@@ -344,7 +407,7 @@
     .power-score-badge {
       font-size: 1.3rem;
       font-weight: bold;
-      color: #fbc531;
+      color: var(--accent-color);
       margin-top: 4px;
     }
 
@@ -392,10 +455,9 @@
       color: transparent;
     }
 
-    /* 👑 오직 최종 승리 시에만 활성화되는 황금빛 강조 효과 */
     .coin.win-glow {
       background-image: url('coin-win.png') !important;
-      filter: drop-shadow(0 0 12px rgba(251, 197, 49, 0.8));
+      filter: drop-shadow(0 0 12px var(--accent-color));
       transform: scale(1.12);
       color: transparent;
     }
@@ -453,7 +515,7 @@
       height: 6px;
       border-radius: 50%;
       background: #fff;
-      box-shadow: 0 0 10px #fbc531, 0 0 20px #ff4757;
+      box-shadow: 0 0 10px var(--spark-color-1), 0 0 20px var(--spark-color-2);
       animation: sparkFly 0.6s ease-out forwards;
     }
     @keyframes sparkFly {
@@ -465,8 +527,8 @@
       position: absolute;
       width: 8px;
       height: 8px;
-      background: #fbc531;
-      box-shadow: 0 0 8px #ff4757;
+      background: var(--accent-color);
+      box-shadow: 0 0 8px var(--primary-color);
       animation: shatterFly 0.5s ease-out forwards;
       pointer-events: none;
     }
@@ -479,7 +541,17 @@
 <body>
 
   <div class="main-wrapper">
-    <h1>⚔️ TRPG 코인 순차 판정 시뮬레이터</h1>
+    <div class="header-bar">
+      <h1>⚔️ TRPG 코인 순차 판정 시뮬레이터</h1>
+
+      <div class="theme-select-box">
+        <label for="theme-select">🎨 테마:</label>
+        <select id="theme-select" onchange="changeTheme(this.value)">
+          <option value="limbus">🔴 림버스 컴퍼니 (Limbus)</option>
+          <option value="ruina">🔵 라이브러리 오브 루이나 (Ruina)</option>
+        </select>
+      </div>
+    </div>
 
     <div class="battle-layout">
       <!-- 1. 아군 설정창 -->
@@ -501,7 +573,7 @@
           <div class="config-grid">
             <div class="config-card">
               <label>1스킬 이름</label>
-              <input type="text" id="p-s1-name" value="1ส킬" onchange="renderSlots()">
+              <input type="text" id="p-s1-name" value="1스킬" onchange="renderSlots()">
               <label>기본 위력</label>
               <input type="number" id="p-s1-base" value="3" onchange="validateInputs(); renderSlots();">
               <label>코인 위력</label>
@@ -676,6 +748,17 @@
     
     let pCoinStates = [];
     let eCoinStates = [];
+
+    function changeTheme(themeName) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem('trpg_sim_theme', themeName);
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem('trpg_sim_theme') || 'limbus';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      document.getElementById('theme-select').value = savedTheme;
+    }
 
     function calculateHeadsChance(sanity) {
       let s = Number(sanity) || 0;
@@ -973,6 +1056,10 @@
       layer.innerHTML = '';
       const sparkCount = 45;
 
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const c1 = currentTheme === 'ruina' ? '#00a8ff' : '#fbc531';
+      const c2 = currentTheme === 'ruina' ? '#e1b12c' : '#ff4757';
+
       for (let i = 0; i < sparkCount; i++) {
         const spark = document.createElement('div');
         spark.className = 'spark';
@@ -983,7 +1070,7 @@
 
         spark.style.setProperty('--dx', dx);
         spark.style.setProperty('--dy', dy);
-        spark.style.background = Math.random() > 0.5 ? '#fbc531' : '#ff4757';
+        spark.style.background = Math.random() > 0.5 ? c1 : c2;
 
         layer.appendChild(spark);
       }
@@ -1062,9 +1149,9 @@
       const eSkillName = getSkillName(false, eUsedType);
 
       document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
-      document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">⚔️ ${currentClashRound}합 판정 중...</span>`;
+      document.getElementById('clash-status-text').innerHTML = `<span style="color: var(--accent-color); font-weight: bold;">⚔️ ${currentClashRound}합 판정 중...</span>`;
 
-      // 🧹 라운드 시작 시 모든 win-glow 이펙트를 무조건 제거하여 오동작 원천 차단
+      // 🧹 라운드 시작 시 모든 win-glow 이펙트를 무조건 제거
       document.querySelectorAll('.coin').forEach(c => c.classList.remove('win-glow'));
 
       let playerRolls = [];
@@ -1166,7 +1253,6 @@
 
       const totalAnimTime = fixedTotalDuration + Math.max(50, fixedTotalDuration * 0.2);
 
-      // 💥 판정이 완전히 끝난 직후 승패 판정
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
         document.getElementById('e-result-count-text').innerText = `앞면 ${enemyHeads} / ${eRemCoins}`;
@@ -1179,7 +1265,7 @@
         if (playerFinalPower === enemyFinalPower) {
           document.getElementById('clash-status-text').innerHTML = `
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
-            <div style="font-size: 0.9rem; color: #fbc531;">위력이 동일합니다! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
+            <div style="font-size: 0.9rem; color: var(--accent-color);">위력이 동일합니다! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
           `;
           currentClashRound++; 
           setTimeout(() => { runClashRound(); }, Math.max(300, fixedTotalDuration + 200));
@@ -1200,17 +1286,14 @@
 
           eRemCoins--;
 
-          // 🛑 [핵심 수정] 이번 타격으로 적의 코인이 완전히 다 깨졌는지(eRemCoins === 0) 여부를 명확히 분기
           if (eRemCoins > 0) {
-            // 아직 적 코인이 남아있으므로 중간 합 승리 -> 절대 빛남(win-glow) 없음!
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner player">💥 아군 합 승리!</div>
-              <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
+              <div style="font-size: 0.9rem; color: var(--primary-color);">적의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
             `;
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
-            // 🎉 적 코인이 모두 박살 나서 '완전 최종 승리'가 확정된 순간에만 살아있는 아군 코인들에 win-glow 적용!
             activePIndices.forEach(idx => {
               const elem = document.getElementById(`p-coin-${idx}`);
               if (elem && !pCoinStates[idx].startsWith('broken')) {
@@ -1237,17 +1320,14 @@
 
           pRemCoins--;
 
-          // 🛑 [핵심 수정] 이번 타격으로 아군의 코인이 완전히 다 깨졌는지(pRemCoins === 0) 여부를 명확히 분기
           if (pRemCoins > 0) {
-            // 아직 아군 코인이 남아있으므로 중간 합 패배 -> 절대 빛남(win-glow) 없음!
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner enemy">💥 적군 합 승리!</div>
-              <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
+              <div style="font-size: 0.9rem; color: var(--primary-color);">아군의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
             `;
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
-            // ☠️ 아군 코인이 모두 박살 나서 '완전 최종 패배'가 확정된 순간에만 살아있는 적군 코인들에 win-glow 적용!
             activeEIndices.forEach(idx => {
               const elem = document.getElementById(`e-coin-${idx}`);
               if (elem && !eCoinStates[idx].startsWith('broken')) {
@@ -1273,6 +1353,7 @@
       document.getElementById('clash-btn').disabled = false;
     }
 
+    initTheme();
     playerNext = drawNextSkill(true);
     enemyNext = drawNextSkill(false);
     updatePresetDropdowns();
