@@ -392,7 +392,7 @@
       color: transparent;
     }
 
-    /* 최종 승리 시에만 강조될 황금 빛남 효과 */
+    /* 👑 오직 최종 승리 시에만 활성화되는 황금빛 강조 효과 */
     .coin.win-glow {
       background-image: url('coin-win.png') !important;
       filter: drop-shadow(0 0 12px rgba(251, 197, 49, 0.8));
@@ -501,7 +501,7 @@
           <div class="config-grid">
             <div class="config-card">
               <label>1스킬 이름</label>
-              <input type="text" id="p-s1-name" value="1스킬" onchange="renderSlots()">
+              <input type="text" id="p-s1-name" value="1ส킬" onchange="renderSlots()">
               <label>기본 위력</label>
               <input type="number" id="p-s1-base" value="3" onchange="validateInputs(); renderSlots();">
               <label>코인 위력</label>
@@ -1064,7 +1064,7 @@
       document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
       document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">⚔️ ${currentClashRound}합 판정 중...</span>`;
 
-      // 🧹 모든 win-glow 이펙트 완벽히 제거
+      // 🧹 라운드 시작 시 모든 win-glow 이펙트를 무조건 제거하여 오동작 원천 차단
       document.querySelectorAll('.coin').forEach(c => c.classList.remove('win-glow'));
 
       let playerRolls = [];
@@ -1166,7 +1166,7 @@
 
       const totalAnimTime = fixedTotalDuration + Math.max(50, fixedTotalDuration * 0.2);
 
-      // 💥 판정 완전히 끝난 후 결과 처리
+      // 💥 판정이 완전히 끝난 직후 승패 판정
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
         document.getElementById('e-result-count-text').innerText = `앞면 ${enemyHeads} / ${eRemCoins}`;
@@ -1200,8 +1200,9 @@
 
           eRemCoins--;
 
+          // 🛑 [핵심 수정] 이번 타격으로 적의 코인이 완전히 다 깨졌는지(eRemCoins === 0) 여부를 명확히 분기
           if (eRemCoins > 0) {
-            // 🛑 중간 합 승리 시에는 빛남(win-glow)을 넣지 않고 다음 합으로 진행!
+            // 아직 적 코인이 남아있으므로 중간 합 승리 -> 절대 빛남(win-glow) 없음!
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner player">💥 아군 합 승리!</div>
               <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
@@ -1209,7 +1210,7 @@
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
-            // 👑 [수정] 상대방 코인이 '모두 깨진 최종 승리 순간'에만 살아있는 아군 코인들에 win-glow 적용!
+            // 🎉 적 코인이 모두 박살 나서 '완전 최종 승리'가 확정된 순간에만 살아있는 아군 코인들에 win-glow 적용!
             activePIndices.forEach(idx => {
               const elem = document.getElementById(`p-coin-${idx}`);
               if (elem && !pCoinStates[idx].startsWith('broken')) {
@@ -1236,8 +1237,9 @@
 
           pRemCoins--;
 
+          // 🛑 [핵심 수정] 이번 타격으로 아군의 코인이 완전히 다 깨졌는지(pRemCoins === 0) 여부를 명확히 분기
           if (pRemCoins > 0) {
-            // 🛑 중간 합 패배 시에는 빛남(win-glow)을 넣지 않고 다음 합으로 진행!
+            // 아직 아군 코인이 남아있으므로 중간 합 패배 -> 절대 빛남(win-glow) 없음!
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner enemy">💥 적군 합 승리!</div>
               <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
@@ -1245,7 +1247,7 @@
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
-            // 👑 [수정] 내 코인이 '모두 깨진 최종 패배(적 승리) 순간'에만 살아있는 적군 코인들에 win-glow 적용!
+            // ☠️ 아군 코인이 모두 박살 나서 '완전 최종 패배'가 확정된 순간에만 살아있는 적군 코인들에 win-glow 적용!
             activeEIndices.forEach(idx => {
               const elem = document.getElementById(`e-coin-${idx}`);
               if (elem && !eCoinStates[idx].startsWith('broken')) {
