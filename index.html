@@ -392,7 +392,7 @@
       color: transparent;
     }
 
-    /* 승리 시에만 후가공으로 적용될 글로우 효과 */
+    /* 최종 승리 시에만 강조될 황금 빛남 효과 */
     .coin.win-glow {
       background-image: url('coin-win.png') !important;
       filter: drop-shadow(0 0 12px rgba(251, 197, 49, 0.8));
@@ -1064,7 +1064,7 @@
       document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
       document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">⚔️ ${currentClashRound}합 판정 중...</span>`;
 
-      // 🧹 [버그 수정] 새 라운드 시작 시 이전 승리 글로우(win-glow) 완전 제거
+      // 🧹 모든 win-glow 이펙트 완벽히 제거
       document.querySelectorAll('.coin').forEach(c => c.classList.remove('win-glow'));
 
       let playerRolls = [];
@@ -1147,7 +1147,6 @@
             if (pElem) {
               const res = playerRolls[i];
               pCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
-              // 순수 앞/뒷면 클래스만 지정 (글로우 포함 불가)
               pElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
               pElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
             }
@@ -1158,7 +1157,6 @@
             if (eElem) {
               const res = enemyRolls[i];
               eCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
-              // 순수 앞/뒷면 클래스만 지정 (글로우 포함 불가)
               eElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
               eElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
             }
@@ -1168,7 +1166,7 @@
 
       const totalAnimTime = fixedTotalDuration + Math.max(50, fixedTotalDuration * 0.2);
 
-      // 💥 판정이 완벽히 다 끝난 후 승패 결정 시점에만 이펙트 적용
+      // 💥 판정 완전히 끝난 후 결과 처리
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
         document.getElementById('e-result-count-text').innerText = `앞면 ${enemyHeads} / ${eRemCoins}`;
@@ -1187,14 +1185,6 @@
           setTimeout(() => { runClashRound(); }, Math.max(300, fixedTotalDuration + 200));
 
         } else if (playerFinalPower > enemyFinalPower) {
-          // ✨ [버그 수정] 승패가 갈린 '이 순간'에만 아군 코인에 승리 글로우(win-glow) 추가
-          activePIndices.forEach(idx => {
-            const elem = document.getElementById(`p-coin-${idx}`);
-            if (elem && !pCoinStates[idx].startsWith('broken')) {
-              elem.classList.add('win-glow');
-            }
-          });
-
           const breakCoinIdx = activeEIndices[activeEIndices.length - 1];
           const breakTarget = document.getElementById(`e-coin-${breakCoinIdx}`);
           
@@ -1211,6 +1201,7 @@
           eRemCoins--;
 
           if (eRemCoins > 0) {
+            // 🛑 중간 합 승리 시에는 빛남(win-glow)을 넣지 않고 다음 합으로 진행!
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner player">💥 아군 합 승리!</div>
               <div style="font-size: 0.9rem; color: #ff4757;">적의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
@@ -1218,19 +1209,18 @@
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
+            // 👑 [수정] 상대방 코인이 '모두 깨진 최종 승리 순간'에만 살아있는 아군 코인들에 win-glow 적용!
+            activePIndices.forEach(idx => {
+              const elem = document.getElementById(`p-coin-${idx}`);
+              if (elem && !pCoinStates[idx].startsWith('broken')) {
+                elem.classList.add('win-glow');
+              }
+            });
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">🎉 최종 승리! (PLAYER WIN)</div>`;
             finishMatch();
           }
 
         } else {
-          // ✨ [버그 수정] 승패가 갈린 '이 순간'에만 적군 코인에 승리 글로우(win-glow) 추가
-          activeEIndices.forEach(idx => {
-            const elem = document.getElementById(`e-coin-${idx}`);
-            if (elem && !eCoinStates[idx].startsWith('broken')) {
-              elem.classList.add('win-glow');
-            }
-          });
-
           const breakCoinIdx = activePIndices[activePIndices.length - 1];
           const breakTarget = document.getElementById(`p-coin-${breakCoinIdx}`);
           
@@ -1247,6 +1237,7 @@
           pRemCoins--;
 
           if (pRemCoins > 0) {
+            // 🛑 중간 합 패배 시에는 빛남(win-glow)을 넣지 않고 다음 합으로 진행!
             document.getElementById('clash-status-text').innerHTML = `
               <div class="result-banner enemy">💥 적군 합 승리!</div>
               <div style="font-size: 0.9rem; color: #ff4757;">아군의 코인 파괴! (${currentClashRound}합 판정 종료 ➡️ ${currentClashRound + 1}합 준비)</div>
@@ -1254,6 +1245,13 @@
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, Math.max(350, fixedTotalDuration + 250));
           } else {
+            // 👑 [수정] 내 코인이 '모두 깨진 최종 패배(적 승리) 순간'에만 살아있는 적군 코인들에 win-glow 적용!
+            activeEIndices.forEach(idx => {
+              const elem = document.getElementById(`e-coin-${idx}`);
+              if (elem && !eCoinStates[idx].startsWith('broken')) {
+                elem.classList.add('win-glow');
+              }
+            });
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">☠️ 최종 패배... (ENEMY WIN)</div>`;
             finishMatch();
           }
