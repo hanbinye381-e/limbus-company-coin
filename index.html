@@ -372,7 +372,7 @@
       border: none !important;
       background-color: transparent !important;
       box-shadow: none !important;
-      transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     }
     .coin.flipping {
       animation: coinFlip 0.3s infinite linear;
@@ -392,6 +392,7 @@
       color: transparent;
     }
 
+    /* 승리 시에만 후가공으로 적용될 글로우 효과 */
     .coin.win-glow {
       background-image: url('coin-win.png') !important;
       filter: drop-shadow(0 0 12px rgba(251, 197, 49, 0.8));
@@ -1063,6 +1064,9 @@
       document.getElementById('clash-round-badge').innerText = `${currentClashRound}합`;
       document.getElementById('clash-status-text').innerHTML = `<span style="color: #fbc531; font-weight: bold;">⚔️ ${currentClashRound}합 판정 중...</span>`;
 
+      // 🧹 [버그 수정] 새 라운드 시작 시 이전 승리 글로우(win-glow) 완전 제거
+      document.querySelectorAll('.coin').forEach(c => c.classList.remove('win-glow'));
+
       let playerRolls = [];
       let playerHeads = 0;
       let activePIndices = [];
@@ -1128,11 +1132,7 @@
 
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
       
-      /* 
-        ⚡ [10배속 가속 곡선 설계]
-        - 1합: 500ms
-        - 10합: 50ms (10배속, 10합 이후 50ms 고정)
-      */
+      /* ⚡ [10배속 가속 곡선] */
       const initialDuration = 500;
       const minDuration = 50; 
       const speedStep = (initialDuration - minDuration) / 9;
@@ -1147,7 +1147,7 @@
             if (pElem) {
               const res = playerRolls[i];
               pCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
-              // 🐛 [버그 수정] 판정이 완전히 끝나기 전에는 win-glow를 넣지 않음
+              // 순수 앞/뒷면 클래스만 지정 (글로우 포함 불가)
               pElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
               pElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
             }
@@ -1158,7 +1158,7 @@
             if (eElem) {
               const res = enemyRolls[i];
               eCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
-              // 🐛 [버그 수정] 판정이 완전히 끝나기 전에는 win-glow를 넣지 않음
+              // 순수 앞/뒷면 클래스만 지정 (글로우 포함 불가)
               eElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
               eElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
             }
@@ -1168,7 +1168,7 @@
 
       const totalAnimTime = fixedTotalDuration + Math.max(50, fixedTotalDuration * 0.2);
 
-      // 💥 코인이 모두 다 굴러가고 판정이 '완전히 끝난' 직후 결과 발표 및 이펙트 처리
+      // 💥 판정이 완벽히 다 끝난 후 승패 결정 시점에만 이펙트 적용
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `앞면 ${playerHeads} / ${pRemCoins}`;
         document.getElementById('e-result-count-text').innerText = `앞면 ${enemyHeads} / ${eRemCoins}`;
@@ -1178,7 +1178,6 @@
 
         triggerSparks();
 
-        // 🤝 무승부 발생 시: 현 합 판정이 다 끝난 시점에 n합 카운터 +1 올림
         if (playerFinalPower === enemyFinalPower) {
           document.getElementById('clash-status-text').innerHTML = `
             <div class="result-banner clash">⚔️ 비김! (RE-TRY)</div>
@@ -1188,7 +1187,7 @@
           setTimeout(() => { runClashRound(); }, Math.max(300, fixedTotalDuration + 200));
 
         } else if (playerFinalPower > enemyFinalPower) {
-          // ✨ [버그 수정] 판정이 끝난 시점에만 살아있는 아군 코인들에 win-glow 부여
+          // ✨ [버그 수정] 승패가 갈린 '이 순간'에만 아군 코인에 승리 글로우(win-glow) 추가
           activePIndices.forEach(idx => {
             const elem = document.getElementById(`p-coin-${idx}`);
             if (elem && !pCoinStates[idx].startsWith('broken')) {
@@ -1224,7 +1223,7 @@
           }
 
         } else {
-          // ✨ [버그 수정] 판정이 끝난 시점에만 살아있는 적군 코인들에 win-glow 부여
+          // ✨ [버그 수정] 승패가 갈린 '이 순간'에만 적군 코인에 승리 글로우(win-glow) 추가
           activeEIndices.forEach(idx => {
             const elem = document.getElementById(`e-coin-${idx}`);
             if (elem && !eCoinStates[idx].startsWith('broken')) {
