@@ -414,7 +414,6 @@
       min-height: 240px;
     }
 
-    /* 체력바 UI 스타일 */
     .hp-container {
       margin-bottom: 0.8rem;
       background: #111;
@@ -650,7 +649,6 @@
           <div class="coin-preview-box" id="p-coin-preview"></div>
         </div>
 
-        <!-- 체력 및 정신력 설정 -->
         <div class="control-row">
           <div class="control-group" style="margin-bottom:0;">
             <label for="p-max-hp">최대 체력</label>
@@ -1218,7 +1216,7 @@
         const defType = document.getElementById('p-s4-type').value;
         if (defType === 'evade') {
           if (pPower >= ePower) {
-            statusMsg = `<div class="result-banner player">EVADE SUCCESS!</div><div style="color:#38ef7d;">아군 회피 성공! (위력: ${pPower} vs ${ePower}) - 공격 무효화</div>`;
+            statusMsg = `<div class="result-banner player">EVADE SUCCESS!</div><div style="color:#38ef7d;">아군 회피 성공! (위력: ${pPower} vs ${ePower}) - 공격 회피 완료</div>`;
           } else {
             statusMsg = `<div class="result-banner enemy">EVADE FAILED!</div><div style="color:#ff3322;">아군 회피 실패! - 아군 체력 ${ePower} 피해!</div>`;
             applyDamage(true, ePower);
@@ -1234,7 +1232,7 @@
         const defType = document.getElementById('e-s4-type').value;
         if (defType === 'evade') {
           if (ePower >= pPower) {
-            statusMsg = `<div class="result-banner enemy">ENEMY EVADE SUCCESS!</div><div style="color:#ff3322;">적군 회피 성공! (위력: ${ePower} vs ${pPower}) - 아군 공격 무효화</div>`;
+            statusMsg = `<div class="result-banner enemy">ENEMY EVADE SUCCESS!</div><div style="color:#ff3322;">적군 회피 성공! (위력: ${ePower} vs ${pPower}) - 아군 공격 회피 완료</div>`;
           } else {
             statusMsg = `<div class="result-banner player">ENEMY EVADE FAILED!</div><div style="color:#38ef7d;">적군 회피 실패! - 적 체력 ${pPower} 피해!</div>`;
             applyDamage(false, pPower);
@@ -1379,18 +1377,29 @@
           if (breakTarget) { breakTarget.className = `coin ${eCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
 
           eRemCoins--;
-          applyDamage(false, Math.round(enemyFinalPower / 2)); // 데미지 반영
 
-          if (eRemCoins > 0 && parseInt(document.getElementById('e-hp').value) > 0) {
+          if (eRemCoins > 0) {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">CLASH WIN</div>`;
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, 400);
           } else {
+            // 합 완전 승리 -> 남아있는 아군 코인을 다시 굴려 적에게 일방 공격 데미지 입힘
+            let totalAttackDamage = pBase;
             activePIndices.forEach(idx => {
               const elem = document.getElementById(`p-coin-${idx}`);
-              if (elem && !pCoinStates[idx].startsWith('broken')) elem.classList.add('win-glow');
+              if (elem && !pCoinStates[idx].startsWith('broken')) {
+                elem.classList.add('win-glow');
+              }
+              if (pCoinStates[idx] === 'heads') {
+                totalAttackDamage += pCP;
+              }
             });
-            document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">PLAYER WIN</div>`;
+
+            applyDamage(false, totalAttackDamage);
+            document.getElementById('clash-status-text').innerHTML = `
+              <div class="result-banner player">PLAYER WIN</div>
+              <div style="font-size:0.9rem; color:#38ef7d;">일방 공격 성공! 적에게 총 ${totalAttackDamage} 데미지!</div>
+            `;
             finishMatch();
           }
 
@@ -1404,18 +1413,29 @@
           if (breakTarget) { breakTarget.className = `coin ${pCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
 
           pRemCoins--;
-          applyDamage(true, Math.round(playerFinalPower / 2)); // 데미지 반영
 
-          if (pRemCoins > 0 && parseInt(document.getElementById('p-hp').value) > 0) {
+          if (pRemCoins > 0) {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">CLASH LOSE</div>`;
             currentClashRound++; 
             setTimeout(() => { runClashRound(); }, 400);
           } else {
+            // 합 완전 패배 -> 남아있는 적군 코인에 따른 일방 공격 데미지 계산 및 아군 체력 차감
+            let totalAttackDamage = eBase;
             activeEIndices.forEach(idx => {
               const elem = document.getElementById(`e-coin-${idx}`);
-              if (elem && !eCoinStates[idx].startsWith('broken')) elem.classList.add('win-glow');
+              if (elem && !eCoinStates[idx].startsWith('broken')) {
+                elem.classList.add('win-glow');
+              }
+              if (eCoinStates[idx] === 'heads') {
+                totalAttackDamage += eCP;
+              }
             });
-            document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">ENEMY WIN</div>`;
+
+            applyDamage(true, totalAttackDamage);
+            document.getElementById('clash-status-text').innerHTML = `
+              <div class="result-banner enemy">ENEMY WIN</div>
+              <div style="font-size:0.9rem; color:#ff3322;">적의 일방 공격! 아군에게 총 ${totalAttackDamage} 데미지!</div>
+            `;
             finishMatch();
           }
         }
