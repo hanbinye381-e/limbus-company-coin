@@ -4,71 +4,56 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TRPG 중앙 코인 대결 시뮬레이터</title>
-  <!-- Google Fonts: Oswald (Limbus), Cinzel (Ruina), Noto Sans KR -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Oswald:wght@600;700&family=Noto+Sans+KR:wght@500;700;900&display=swap" rel="stylesheet">
   
   <style>
-    /* 🔴 림버스 컴퍼니 테마: 단테 시계 태엽 & 버스 모니터 패널 */
+    /* 🔴 림버스 컴퍼니 테마 */
     :root[data-theme="limbus"] {
       --font-title: 'Oswald', 'Noto Sans KR', sans-serif;
       --font-body: 'Noto Sans KR', sans-serif;
-      
       --bg-color: #050507;
       --card-bg: linear-gradient(180deg, #181412 0%, #0d0b0a 100%);
       --sub-card-bg: #090807;
-      
       --border-style: 2px solid #8e2a18;
       --card-box-shadow: inset 0 0 15px rgba(0,0,0,0.9), 0 0 12px rgba(142, 42, 24, 0.4);
       --card-radius: 0px;
-
       --primary-color: #ff3322;
       --primary-hover: #d62211;
       --accent-color: #e6a100;
       --text-color: #dcd8d0;
-      
       --title-color: #f0a800;
       --title-shadow: 0 0 8px rgba(240, 168, 0, 0.6), 2px 2px 0px #500000;
-      
       --btn-bg: linear-gradient(180deg, #991c0e 0%, #520902 100%);
       --btn-border: 2px solid #e6a100;
-      
       --spark-color-1: #e6a100;
       --spark-color-2: #ff3322;
       --glow-filter: drop-shadow(0 0 12px rgba(230, 161, 0, 0.9));
-      
       --badge-clip: polygon(15% 0%, 85% 0%, 100% 50%, 85% 100%, 15% 100%, 0% 50%);
     }
 
-    /* 🔵 라이브러리 오브 루이나 테마: 도서관 황금 아르누보 & 세룰리안 네온 */
+    /* 🔵 라이브러리 오브 루이나 테마 */
     :root[data-theme="ruina"] {
       --font-title: 'Cinzel', 'Noto Sans KR', serif;
       --font-body: 'Cinzel', 'Noto Sans KR', serif;
-      
       --bg-color: #03060a;
       --card-bg: linear-gradient(180deg, #0a1322 0%, #040810 100%);
       --sub-card-bg: #020509;
-      
       --border-style: 2px double #c59f52;
       --card-box-shadow: inset 0 0 20px rgba(0,0,0,0.95), 0 0 15px rgba(197, 159, 82, 0.3);
       --card-radius: 0px;
-
       --primary-color: #38ef7d;
       --primary-hover: #11998e;
       --accent-color: #38e8e5;
       --text-color: #eaeff5;
-      
       --title-color: #38e8e5;
       --title-shadow: 0 0 10px rgba(56, 232, 229, 0.7), 0 0 20px rgba(197, 159, 82, 0.5);
-      
       --btn-bg: linear-gradient(180deg, #0e2b47 0%, #051322 100%);
       --btn-border: 2px double #c59f52;
-      
       --spark-color-1: #38e8e5;
       --spark-color-2: #c59f52;
       --glow-filter: drop-shadow(0 0 14px rgba(56, 232, 229, 0.9));
-      
       --badge-clip: none;
     }
 
@@ -145,9 +130,7 @@
     }
 
     @media (max-width: 1200px) {
-      .battle-layout {
-        grid-template-columns: 1fr;
-      }
+      .battle-layout { grid-template-columns: 1fr; }
     }
 
     .side-box {
@@ -189,10 +172,24 @@
     .slots-wrapper {
       display: flex;
       justify-content: center;
-      gap: 10px;
+      gap: 8px;
       min-height: 44px;
       align-items: center;
     }
+
+    .def-toggle-btn {
+      padding: 0.4rem 0.6rem;
+      font-size: 0.75rem;
+      font-weight: bold;
+      background: #332211;
+      color: #ffaa00;
+      border: 1px solid #aa6600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .def-toggle-btn:hover { background: #553311; }
+    .def-toggle-btn.active { background: #aa6600; color: #fff; }
+
     .next-box {
       margin-top: 0.6rem;
       padding-top: 0.5rem;
@@ -221,7 +218,6 @@
     .matchup-indicator.disadvantage { color: #ff6b81; border-color: #ff3322; background: rgba(255, 51, 34, 0.08); }
     .matchup-indicator.very-disadvantage { color: #ff3322; background: rgba(255, 51, 34, 0.15); border-color: #ff3322; }
 
-    /* 림버스 인게임 팔각형 스킬 배지 스타일 구현 */
     .skill-badge {
       padding: 0.5rem 0.9rem;
       font-weight: bold;
@@ -241,6 +237,7 @@
     .skill-badge.s1 { background: #0c182b; color: #70a1ff; border-color: #1f3b6e; }
     .skill-badge.s2 { background: #121333; color: #9aa8df; border-color: #2e3875; }
     .skill-badge.s3 { background: #300a12; color: #ff94a0; border-color: #6e1f2d; }
+    .skill-badge.s4 { background: #2b200a; color: #ffd166; border-color: #75551f; } /* 수비 슬롯 */
     
     .skill-badge.selected {
       border-color: var(--accent-color) !important;
@@ -288,7 +285,7 @@
       margin-top: 4px;
     }
     .config-card label:first-child { margin-top: 0; }
-    .config-card input[type="text"], .config-card input[type="number"] {
+    .config-card input[type="text"], .config-card input[type="number"], .config-card select {
       font-size: 0.75rem !important;
       padding: 0.25rem !important;
       text-align: center;
@@ -323,19 +320,19 @@
 
     .coin-preview-box {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr;
-      gap: 6px;
+      grid-template-columns: 1fr 1fr 1fr 1fr;
+      gap: 4px;
       width: 100%;
       margin-top: 0.6rem;
     }
     .coin-preview-item {
-      font-size: 0.65rem;
-      padding: 0.39rem;
+      font-size: 0.6rem;
+      padding: 0.3rem;
       background: var(--card-bg);
       color: var(--accent-color);
       text-align: center;
       border: var(--border-style);
-      line-height: 1.3;
+      line-height: 1.2;
     }
 
     .control-group {
@@ -606,8 +603,11 @@
         <div class="side-title">PLAYER</div>
         
         <div class="slot-container">
-          <div class="slot-header">현재 보유 스킬 슬롯 (클릭 선택)</div>
-          <div class="slots-wrapper" id="p-slots-display"></div>
+          <div class="slot-header">보유 스킬 슬롯</div>
+          <div class="slots-wrapper">
+            <div id="p-slots-display" style="display:flex; gap:6px;"></div>
+            <button class="def-toggle-btn" id="p-def-btn" onclick="toggleDefenseSlot(true)">수비</button>
+          </div>
           <div class="next-box" id="p-next-display">
             <span>[NEXT]:</span>
             <span class="skill-badge next-badge s1">1스킬</span>
@@ -616,7 +616,7 @@
         </div>
 
         <div class="skill-config-box">
-          <div class="skill-config-title">스킬 이름 / 위력 / 코인 수 설정</div>
+          <div class="skill-config-title">스킬 / 수비 옵션 설정</div>
           <div class="config-grid">
             <div class="config-card">
               <label>1스킬 이름</label>
@@ -647,6 +647,33 @@
               <input type="number" id="p-s3-coinpower" value="5" onchange="validateInputs(); renderSlots();">
               <label>코인 수</label>
               <input type="number" id="p-s3-coins" value="3" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+          </div>
+
+          <!-- 수비(4스킬) 전용 설정 -->
+          <div class="config-card" style="margin-top: 6px; width: 100%;">
+            <label style="color: #ffd166; font-weight: bold;">수비 스킬 설정 (4번 슬롯)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; margin-top: 4px;">
+              <div>
+                <label>유형</label>
+                <select id="p-s4-type" onchange="renderSlots()">
+                  <option value="guard">방어</option>
+                  <option value="evade">회피</option>
+                  <option value="counter">반격</option>
+                </select>
+              </div>
+              <div>
+                <label>기본 위력</label>
+                <input type="number" id="p-s4-base" value="10" onchange="validateInputs(); renderSlots();">
+              </div>
+              <div>
+                <label>코인 위력</label>
+                <input type="number" id="p-s4-coinpower" value="4" onchange="validateInputs(); renderSlots();">
+              </div>
+              <div>
+                <label>코인 수</label>
+                <input type="number" id="p-s4-coins" value="1" min="1" max="5" onchange="validateInputs(); renderSlots();">
+              </div>
             </div>
           </div>
           
@@ -708,8 +735,11 @@
         <div class="side-title">ENEMY</div>
         
         <div class="slot-container">
-          <div class="slot-header">현재 보유 스킬 슬롯 (클릭 선택)</div>
-          <div class="slots-wrapper" id="e-slots-display"></div>
+          <div class="slot-header">보유 스킬 슬롯</div>
+          <div class="slots-wrapper">
+            <div id="e-slots-display" style="display:flex; gap:6px;"></div>
+            <button class="def-toggle-btn" id="e-def-btn" onclick="toggleDefenseSlot(false)">수비</button>
+          </div>
           <div class="next-box" id="e-next-display">
             <span>[NEXT]:</span>
             <span class="skill-badge next-badge s1">1스킬</span>
@@ -718,7 +748,7 @@
         </div>
 
         <div class="skill-config-box">
-          <div class="skill-config-title">스킬 이름 / 위력 / 코인 수 설정</div>
+          <div class="skill-config-title">스킬 / 수비 옵션 설정</div>
           <div class="config-grid">
             <div class="config-card">
               <label>1스킬 이름</label>
@@ -749,6 +779,33 @@
               <input type="number" id="e-s3-coinpower" value="5" onchange="validateInputs(); renderSlots();">
               <label>코인 수</label>
               <input type="number" id="e-s3-coins" value="3" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+          </div>
+
+          <!-- 수비(4스킬) 전용 설정 -->
+          <div class="config-card" style="margin-top: 6px; width: 100%;">
+            <label style="color: #ffd166; font-weight: bold;">수비 스킬 설정 (4번 슬롯)</label>
+            <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 4px; margin-top: 4px;">
+              <div>
+                <label>유형</label>
+                <select id="e-s4-type" onchange="renderSlots()">
+                  <option value="guard">방어</option>
+                  <option value="evade">회피</option>
+                  <option value="counter">반격</option>
+                </select>
+              </div>
+              <div>
+                <label>기본 위력</label>
+                <input type="number" id="e-s4-base" value="10" onchange="validateInputs(); renderSlots();">
+              </div>
+              <div>
+                <label>코인 위력</label>
+                <input type="number" id="e-s4-coinpower" value="4" onchange="validateInputs(); renderSlots();">
+              </div>
+              <div>
+                <label>코인 수</label>
+                <input type="number" id="e-s4-coins" value="1" min="1" max="5" onchange="validateInputs(); renderSlots();">
+              </div>
             </div>
           </div>
 
@@ -807,6 +864,21 @@
       document.getElementById('theme-select').value = savedTheme;
     }
 
+    function toggleDefenseSlot(isPlayer) {
+      const slots = isPlayer ? playerSlots : enemySlots;
+      const btn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
+      
+      // 슬롯 2를 수비 슬롯(4번)으로 토글
+      if (slots[1] === 4) {
+        slots[1] = 2; // 원래 2스킬로 복구
+        btn.classList.remove('active');
+      } else {
+        slots[1] = 4; // 4번 수비 슬롯으로 전환
+        btn.classList.add('active');
+      }
+      renderSlots();
+    }
+
     function calculateHeadsChance(sanity) {
       let s = Number(sanity) || 0;
       let chance = 50 + s;
@@ -828,7 +900,7 @@
       if (es.value < -45) es.value = -45;
 
       ['p', 'e'].forEach(prefix => {
-        [1, 2, 3].forEach(num => {
+        [1, 2, 3, 4].forEach(num => {
           let coinsElem = document.getElementById(`${prefix}-s${num}-coins`);
           if (coinsElem) {
             if (coinsElem.value > 9) coinsElem.value = 9;
@@ -844,6 +916,11 @@
 
     function getSkillName(isPlayer, skillType) {
       const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) {
+        const subType = document.getElementById(`${prefix}-s4-type`)?.value || 'guard';
+        const typeMap = { guard: '방어', evade: '회피', counter: '반격' };
+        return `[수비] ${typeMap[subType]}`;
+      }
       const inputVal = document.getElementById(`${prefix}-s${skillType}-name`)?.value;
       return inputVal && inputVal.trim() !== '' ? inputVal : `${skillType}스킬`;
     }
@@ -921,6 +998,12 @@
           base: document.getElementById(`${prefix}-s3-base`).value,
           cp: document.getElementById(`${prefix}-s3-coinpower`).value,
           coins: document.getElementById(`${prefix}-s3-coins`).value,
+        },
+        s4: {
+          type: document.getElementById(`${prefix}-s4-type`).value,
+          base: document.getElementById(`${prefix}-s4-base`).value,
+          cp: document.getElementById(`${prefix}-s4-coinpower`).value,
+          coins: document.getElementById(`${prefix}-s4-coins`).value,
         }
       };
 
@@ -969,6 +1052,13 @@
       document.getElementById(`${prefix}-s3-coinpower`).value = p.s3.cp;
       document.getElementById(`${prefix}-s3-coins`).value = p.s3.coins;
 
+      if (p.s4) {
+        document.getElementById(`${prefix}-s4-type`).value = p.s4.type;
+        document.getElementById(`${prefix}-s4-base`).value = p.s4.base;
+        document.getElementById(`${prefix}-s4-coinpower`).value = p.s4.cp;
+        document.getElementById(`${prefix}-s4-coins`).value = p.s4.coins;
+      }
+
       validateInputs();
       renderSlots();
     }
@@ -992,14 +1082,22 @@
     }
 
     function updateMatchupAnalysis() {
+      const pType = playerSlots[pSelectedIndex];
+      const eType = enemySlots[eSelectedIndex];
+
+      if (pType === 4 || eType === 4) {
+        document.getElementById('p-matchup').className = 'matchup-indicator balanced';
+        document.getElementById('p-matchup').innerText = pType === 4 ? "수비 스킬 준비 중" : "공격 판정 중";
+        document.getElementById('e-matchup').className = 'matchup-indicator balanced';
+        document.getElementById('e-matchup').innerText = eType === 4 ? "수비 스킬 준비 중" : "공격 판정 중";
+        return;
+      }
+
       const pSanity = parseInt(document.getElementById('p-sanity').value) || 0;
       const eSanity = parseInt(document.getElementById('e-sanity').value) || 0;
       
       const pChance = calculateHeadsChance(pSanity) / 100;
       const eChance = calculateHeadsChance(eSanity) / 100;
-
-      const pType = playerSlots[pSelectedIndex];
-      const eType = enemySlots[eSelectedIndex];
 
       const pCoins = getSkillCoins(true, pType);
       const pBase = getSkillBasePower(true, pType);
@@ -1013,46 +1111,29 @@
       const eExpectedPower = eBase + (eCoins * eChance * eCP);
       const diff = pExpectedPower - eExpectedPower;
 
-      let pStatus = "";
-      let eStatus = "";
-      let pClass = "";
-      let eClass = "";
+      let pStatus = "", eStatus = "", pClass = "", eClass = "";
 
       if (diff >= 4.0) {
-        pStatus = "VERY ADVANTAGE";
-        eStatus = "VERY DISADVANTAGE";
-        pClass = "very-advantage";
-        eClass = "very-disadvantage";
+        pStatus = "VERY ADVANTAGE"; eStatus = "VERY DISADVANTAGE";
+        pClass = "very-advantage"; eClass = "very-disadvantage";
       } else if (diff >= 1.5) {
-        pStatus = "ADVANTAGE";
-        eStatus = "DISADVANTAGE";
-        pClass = "advantage";
-        eClass = "disadvantage";
+        pStatus = "ADVANTAGE"; eStatus = "DISADVANTAGE";
+        pClass = "advantage"; eClass = "disadvantage";
       } else if (diff <= -4.0) {
-        pStatus = "VERY DISADVANTAGE";
-        eStatus = "VERY ADVANTAGE";
-        pClass = "very-disadvantage";
-        eClass = "very-advantage";
+        pStatus = "VERY DISADVANTAGE"; eStatus = "VERY ADVANTAGE";
+        pClass = "very-disadvantage"; eClass = "very-advantage";
       } else if (diff <= -1.5) {
-        pStatus = "DISADVANTAGE";
-        eStatus = "ADVANTAGE";
-        pClass = "disadvantage";
-        eClass = "advantage";
+        pStatus = "DISADVANTAGE"; eStatus = "ADVANTAGE";
+        pClass = "disadvantage"; eClass = "advantage";
       } else {
-        pStatus = "BALANCED";
-        eStatus = "BALANCED";
-        pClass = "balanced";
-        eClass = "balanced";
+        pStatus = "BALANCED"; eStatus = "BALANCED";
+        pClass = "balanced"; eClass = "balanced";
       }
 
       const pIndicator = document.getElementById('p-matchup');
       const eIndicator = document.getElementById('e-matchup');
-
-      pIndicator.className = `matchup-indicator ${pClass}`;
-      pIndicator.innerText = pStatus;
-
-      eIndicator.className = `matchup-indicator ${eClass}`;
-      eIndicator.innerText = eStatus;
+      pIndicator.className = `matchup-indicator ${pClass}`; pIndicator.innerText = pStatus;
+      eIndicator.className = `matchup-indicator ${eClass}`; eIndicator.innerText = eStatus;
     }
 
     function renderSlots() {
@@ -1087,12 +1168,12 @@
         <span class="skill-badge next-badge s${enemyNext}">${eNextName} (${eNextCoins}C)</span>
       `;
 
-      document.getElementById('p-coin-preview').innerHTML = [1, 2, 3].map(s => 
-        `<div class="coin-preview-item">${getSkillName(true, s)}<br>위력 ${getSkillBasePower(true, s)}+${getSkillCoinPower(true, s)}<br><strong>${getSkillCoins(true, s)} COINS</strong></div>`
+      document.getElementById('p-coin-preview').innerHTML = [1, 2, 3, 4].map(s => 
+        `<div class="coin-preview-item">${getSkillName(true, s)}<br>위력 ${getSkillBasePower(true, s)}+${getSkillCoinPower(true, s)}<br><strong>${getSkillCoins(true, s)}C</strong></div>`
       ).join('');
 
-      document.getElementById('e-coin-preview').innerHTML = [1, 2, 3].map(s => 
-        `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}+${getSkillCoinPower(false, s)}<br><strong>${getSkillCoins(false, s)} COINS</strong></div>`
+      document.getElementById('e-coin-preview').innerHTML = [1, 2, 3, 4].map(s => 
+        `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}+${getSkillCoinPower(false, s)}<br><strong>${getSkillCoins(false, s)}C</strong></div>`
       ).join('');
 
       updateMatchupAnalysis();
@@ -1156,6 +1237,16 @@
       const pUsedType = playerSlots[pSelectedIndex];
       const eUsedType = enemySlots[eSelectedIndex];
 
+      // 수비 스킬이 포함되었는지 체크
+      const isPDef = (pUsedType === 4);
+      const isEDef = (eUsedType === 4);
+
+      if (isPDef || isEDef) {
+        runDefenseLogic(isPDef, isEDef);
+        return;
+      }
+
+      // 일반 합(Clash) 진행
       const pTotal = getSkillCoins(true, pUsedType);
       const eTotal = getSkillCoins(false, eUsedType);
 
@@ -1171,6 +1262,82 @@
       document.getElementById('clash-round-badge').style.display = 'block';
 
       runClashRound();
+    }
+
+    // 🛡️ 수비 스킬 전용 판정 실행
+    function runDefenseLogic(isPDef, isEDef) {
+      document.getElementById('clash-btn').disabled = true;
+      document.getElementById('clash-round-badge').style.display = 'block';
+      document.getElementById('clash-round-badge').innerText = 'DEFENSE PHASE';
+
+      const pSanity = parseInt(document.getElementById('p-sanity').value) || 0;
+      const eSanity = parseInt(document.getElementById('e-sanity').value) || 0;
+      const pChance = calculateHeadsChance(pSanity);
+      const eChance = calculateHeadsChance(eSanity);
+
+      const pUsedType = playerSlots[pSelectedIndex];
+      const eUsedType = enemySlots[eSelectedIndex];
+
+      // 아군/적군 코인 결과 산출
+      let pHeads = 0;
+      let pCoinsCount = getSkillCoins(true, pUsedType);
+      for (let i = 0; i < pCoinsCount; i++) {
+        if (Math.random() * 100 < pChance) pHeads++;
+      }
+      const pPower = getSkillBasePower(true, pUsedType) + (pHeads * getSkillCoinPower(true, pUsedType));
+
+      let eHeads = 0;
+      let eCoinsCount = getSkillCoins(false, eUsedType);
+      for (let i = 0; i < eCoinsCount; i++) {
+        if (Math.random() * 100 < eChance) eHeads++;
+      }
+      const ePower = getSkillBasePower(false, eUsedType) + (eHeads * getSkillCoinPower(false, eUsedType));
+
+      let statusMsg = "";
+
+      if (isPDef && !isEDef) {
+        const defType = document.getElementById('p-s4-type').value;
+        if (defType === 'evade') {
+          if (pPower >= ePower) {
+            statusMsg = `<div class="result-banner player">EVADE SUCCESS!</div><div style="color:#38ef7d;">아군 회피 성공! (회피 위력: ${pPower} vs 공격 위력: ${ePower}) - 공격 무효화 및 다음 공격 회피 준비</div>`;
+          } else {
+            statusMsg = `<div class="result-banner enemy">EVADE FAILED!</div><div style="color:#ff3322;">아군 회피 실패! (회피 위력: ${pPower} vs 공격 위력: ${ePower}) - 적 피격</div>`;
+          }
+        } else if (defType === 'guard') {
+          statusMsg = `<div class="result-banner player">GUARD ACTIVE!</div><div style="color:#ffd166;">아군 방어막 ${pPower} 생성 완료 (적 공격 위력: ${ePower} 피해 감쇄)</div>`;
+        } else { // counter
+          statusMsg = `<div class="result-banner clash">COUNTER ATTACK!</div><div style="color:#38e8e5;">적 공격 맞은 후 아군 반격 실행 (반격 위력: ${pPower})</div>`;
+        }
+      } else if (!isPDef && isEDef) {
+        const defType = document.getElementById('e-s4-type').value;
+        if (defType === 'evade') {
+          if (ePower >= pPower) {
+            statusMsg = `<div class="result-banner enemy">ENEMY EVADE SUCCESS!</div><div style="color:#ff3322;">적군 회피 성공! (회피 위력: ${ePower} vs 아군 위력: ${pPower}) - 아군 공격 무효화</div>`;
+          } else {
+            statusMsg = `<div class="result-banner player">ENEMY EVADE FAILED!</div><div style="color:#38ef7d;">적군 회피 실패! (회피 위력: ${ePower} vs 아군 위력: ${pPower}) - 적 피격</div>`;
+          }
+        } else if (defType === 'guard') {
+          statusMsg = `<div class="result-banner enemy">ENEMY GUARD ACTIVE!</div><div style="color:#ffd166;">적군 방어막 ${ePower} 생성 완료 (아군 공격 위력: ${pPower} 피해 감쇄)</div>`;
+        } else {
+          statusMsg = `<div class="result-banner clash">ENEMY COUNTER!</div><div style="color:#38e8e5;">아군 공격 후 적군 반격 가함 (적 반격 위력: ${ePower})</div>`;
+        }
+      } else {
+        statusMsg = `<div class="result-banner clash">BOTH DEFENDING</div><div style="color:#aaa;">양측 모두 수비 스킬을 사용했습니다.</div>`;
+      }
+
+      document.getElementById('p-result-skill-tag').innerHTML = `<span class="skill-badge s${pUsedType}">${getSkillName(true, pUsedType)}</span>`;
+      document.getElementById('p-result-count-text').innerText = `HEADS ${pHeads} / ${pCoinsCount}`;
+      document.getElementById('p-power-score').innerText = `POWER: ${pPower}`;
+
+      document.getElementById('e-result-skill-tag').innerHTML = `<span class="skill-badge s${eUsedType}">${getSkillName(false, eUsedType)}</span>`;
+      document.getElementById('e-result-count-text').innerText = `HEADS ${eHeads} / ${eCoinsCount}`;
+      document.getElementById('e-power-score').innerText = `POWER: ${ePower}`;
+
+      document.getElementById('clash-status-text').innerHTML = statusMsg;
+
+      setTimeout(() => {
+        finishMatch();
+      }, 1200);
     }
 
     function runClashRound() {
