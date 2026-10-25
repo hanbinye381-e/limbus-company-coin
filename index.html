@@ -881,6 +881,7 @@
     }
 
     function applyDamage(isPlayer, amount) {
+      if (amount <= 0) return;
       const prefix = isPlayer ? 'p' : 'e';
       let hpElem = document.getElementById(`${prefix}-hp`);
       let hp = parseInt(hpElem.value) || 0;
@@ -1170,8 +1171,11 @@
       const isPDef = (pUsedType === 4);
       const isEDef = (eUsedType === 4);
 
+      document.getElementById('clash-btn').disabled = true;
+      document.getElementById('clash-round-badge').style.display = 'block';
+
       if (isPDef || isEDef) {
-        runDefenseLogic(isPDef, isEDef);
+        runSequentialDefense(isPDef, isEDef);
         return;
       }
 
@@ -1183,14 +1187,11 @@
       eCoinStates = new Array(eTotal).fill('none');
       currentClashRound = 1;
 
-      document.getElementById('clash-btn').disabled = true;
-      document.getElementById('clash-round-badge').style.display = 'block';
       runClashRound();
     }
 
-    function runDefenseLogic(isPDef, isEDef) {
-      document.getElementById('clash-btn').disabled = true;
-      document.getElementById('clash-round-badge').style.display = 'block';
+    // 🛡️ 수비 시 코인별 순차 판정 로직 (회피/방어/반격)
+    function runSequentialDefense(isPDef, isEDef) {
       document.getElementById('clash-round-badge').innerText = 'DEFENSE PHASE';
 
       const pSanity = parseInt(document.getElementById('p-sanity').value) || 0;
@@ -1201,63 +1202,129 @@
       const pUsedType = playerSlots[pSelectedIndex];
       const eUsedType = enemySlots[eSelectedIndex];
 
-      let pHeads = 0;
-      let pCoinsCount = getSkillCoins(true, pUsedType);
-      for (let i = 0; i < pCoinsCount; i++) { if (Math.random() * 100 < pChance) pHeads++; }
-      const pPower = getSkillBasePower(true, pUsedType) + (pHeads * getSkillCoinPower(true, pUsedType));
+      const pBase = getSkillBasePower(true, pUsedType);
+      const pCP = getSkillCoinPower(true, pUsedType);
+      const pCoinsCount = getSkillCoins(true, pUsedType);
 
-      let eHeads = 0;
-      let eCoinsCount = getSkillCoins(false, eUsedType);
-      for (let i = 0; i < eCoinsCount; i++) { if (Math.random() * 100 < eChance) eHeads++; }
-      const ePower = getSkillBasePower(false, eUsedType) + (eHeads * getSkillCoinPower(false, eUsedType));
+      const eBase = getSkillBasePower(false, eUsedType);
+      const eCP = getSkillCoinPower(false, eUsedType);
+      const eCoinsCount = getSkillCoins(false, eUsedType);
 
-      let statusMsg = "";
-      if (isPDef && !isEDef) {
-        const defType = document.getElementById('p-s4-type').value;
-        if (defType === 'evade') {
-          if (pPower >= ePower) {
-            statusMsg = `<div class="result-banner player">EVADE SUCCESS!</div><div style="color:#38ef7d;">아군 회피 성공! (위력: ${pPower} vs ${ePower}) - 공격 회피 완료</div>`;
-          } else {
-            statusMsg = `<div class="result-banner enemy">EVADE FAILED!</div><div style="color:#ff3322;">아군 회피 실패! - 아군 체력 ${ePower} 피해!</div>`;
-            applyDamage(true, ePower);
-          }
-        } else if (defType === 'guard') {
-          statusMsg = `<div class="result-banner player">GUARD ACTIVE!</div><div style="color:#ffd166;">방어막 ${pPower} 형성 (적 공격 위력 ${ePower} 피해 감쇄)</div>`;
-          applyDamage(true, Math.max(0, ePower - pPower));
-        } else {
-          statusMsg = `<div class="result-banner clash">COUNTER ATTACK!</div><div style="color:#38e8e5;">적 피격 후 반격 실행! 적에게 ${pPower} 피해!</div>`;
-          applyDamage(false, pPower);
-        }
-      } else if (!isPDef && isEDef) {
-        const defType = document.getElementById('e-s4-type').value;
-        if (defType === 'evade') {
-          if (ePower >= pPower) {
-            statusMsg = `<div class="result-banner enemy">ENEMY EVADE SUCCESS!</div><div style="color:#ff3322;">적군 회피 성공! (위력: ${ePower} vs ${pPower}) - 아군 공격 회피 완료</div>`;
-          } else {
-            statusMsg = `<div class="result-banner player">ENEMY EVADE FAILED!</div><div style="color:#38ef7d;">적군 회피 실패! - 적 체력 ${pPower} 피해!</div>`;
-            applyDamage(false, pPower);
-          }
-        } else if (defType === 'guard') {
-          statusMsg = `<div class="result-banner enemy">ENEMY GUARD ACTIVE!</div><div style="color:#ffd166;">적 방어막 ${ePower} 형성 (아군 공격 위력 ${pPower} 피해 감쇄)</div>`;
-          applyDamage(false, Math.max(0, pPower - ePower));
-        } else {
-          statusMsg = `<div class="result-banner clash">ENEMY COUNTER!</div><div style="color:#38e8e5;">아군 공격 후 적 반격! 아군에게 ${ePower} 피해!</div>`;
-          applyDamage(true, ePower);
-        }
-      } else {
-        statusMsg = `<div class="result-banner clash">BOTH DEFENDING</div><div style="color:#aaa;">양측 모두 수비 스킬을 사용했습니다.</div>`;
-      }
+      // DOM 렌더링 준비
+      let pHTML = '';
+      for (let i = 0; i < pCoinsCount; i++) pHTML += `<div class="coin flipping" id="p-coin-${i}"></div>`;
+      let eHTML = '';
+      for (let i = 0; i < eCoinsCount; i++) eHTML += `<div class="coin flipping" id="e-coin-${i}"></div>`;
 
       document.getElementById('p-result-skill-tag').innerHTML = `<span class="skill-badge s${pUsedType}">${getSkillName(true, pUsedType)}</span>`;
-      document.getElementById('p-result-count-text').innerText = `HEADS ${pHeads} / ${pCoinsCount}`;
-      document.getElementById('p-power-score').innerText = `POWER: ${pPower}`;
+      document.getElementById('p-result-count-text').innerText = '수비 진행 중...';
+      document.getElementById('p-power-score').innerText = 'POWER: -';
+      document.getElementById('p-coins-stage').innerHTML = pHTML;
 
       document.getElementById('e-result-skill-tag').innerHTML = `<span class="skill-badge s${eUsedType}">${getSkillName(false, eUsedType)}</span>`;
-      document.getElementById('e-result-count-text').innerText = `HEADS ${eHeads} / ${eCoinsCount}`;
-      document.getElementById('e-power-score').innerText = `POWER: ${ePower}`;
-      document.getElementById('clash-status-text').innerHTML = statusMsg;
+      document.getElementById('e-result-count-text').innerText = '공격 진행 중...';
+      document.getElementById('e-power-score').innerText = 'POWER: -';
+      document.getElementById('e-coins-stage').innerHTML = eHTML;
 
-      setTimeout(() => { finishMatch(); }, 1400);
+      let step = 0;
+      let maxSteps = Math.max(pCoinsCount, eCoinsCount);
+      let pGuardShield = 0;
+      let eGuardShield = 0;
+      let pCounterDmg = 0;
+      let eCounterDmg = 0;
+
+      let interval = setInterval(() => {
+        if (step < pCoinsCount) {
+          const res = Math.random() * 100 < pChance;
+          const val = pBase + (res ? pCP : 0);
+          const elem = document.getElementById(`p-coin-${step}`);
+          if (elem) {
+            elem.className = `coin ${res ? 'heads' : 'tails'}`;
+            elem.innerHTML = `<span class="coin-sub">${val}</span>`;
+          }
+          if (isPDef) {
+            const defType = document.getElementById('p-s4-type').value;
+            if (defType === 'guard') pGuardShield += val;
+            if (defType === 'counter') pCounterDmg += val;
+          }
+        }
+
+        if (step < eCoinsCount) {
+          const res = Math.random() * 100 < eChance;
+          const val = eBase + (res ? eCP : 0);
+          const elem = document.getElementById(`e-coin-${step}`);
+          if (elem) {
+            elem.className = `coin ${res ? 'heads' : 'tails'}`;
+            elem.innerHTML = `<span class="coin-sub">${val}</span>`;
+          }
+          if (isEDef) {
+            const defType = document.getElementById('e-s4-type').value;
+            if (defType === 'guard') eGuardShield += val;
+            if (defType === 'counter') eCounterDmg += val;
+          }
+        }
+
+        // 수비 vs 공격 1대1 매칭 판정 (순차적)
+        if (isPDef && !isEDef && step < eCoinsCount) {
+          const defType = document.getElementById('p-s4-type').value;
+          const eVal = eBase + (Math.random() * 100 < eChance ? eCP : 0);
+          const pVal = pBase + (Math.random() * 100 < pChance ? pCP : 0);
+
+          if (defType === 'evade') {
+            if (pVal >= eVal) {
+              document.getElementById('clash-status-text').innerHTML = `<span style="color:#38ef7d;">회피 성공! (회피 ${pVal} vs 공격 ${eVal})</span>`;
+            } else {
+              let dmg = Math.max(1, eVal - pGuardShield);
+              pGuardShield = Math.max(0, pGuardShield - eVal);
+              applyDamage(true, dmg);
+              document.getElementById('clash-status-text').innerHTML = `<span style="color:#ff3322;">회피 실패! 아군 ${dmg} 데미지!</span>`;
+            }
+          } else if (defType === 'guard') {
+            let dmg = Math.max(0, eVal - pGuardShield);
+            pGuardShield = Math.max(0, pGuardShield - eVal);
+            applyDamage(true, dmg);
+            document.getElementById('clash-status-text').innerHTML = `<span style="color:#ffd166;">방어막으로 경감! 아군 ${dmg} 데미지!</span>`;
+          }
+        } else if (!isPDef && isEDef && step < pCoinsCount) {
+          const defType = document.getElementById('e-s4-type').value;
+          const pVal = pBase + (Math.random() * 100 < pChance ? pCP : 0);
+          const eVal = eBase + (Math.random() * 100 < eChance ? eCP : 0);
+
+          if (defType === 'evade') {
+            if (eVal >= pVal) {
+              document.getElementById('clash-status-text').innerHTML = `<span style="color:#ff3322;">적 회피 성공! (적 회피 ${eVal} vs 아군 ${pVal})</span>`;
+            } else {
+              applyDamage(false, pVal);
+              document.getElementById('clash-status-text').innerHTML = `<span style="color:#38ef7d;">적 회피 실패! 적에게 ${pVal} 데미지!</span>`;
+            }
+          } else if (defType === 'guard') {
+            let dmg = Math.max(0, pVal - eGuardShield);
+            eGuardShield = Math.max(0, eGuardShield - pVal);
+            applyDamage(false, dmg);
+            document.getElementById('clash-status-text').innerHTML = `<span style="color:#ffd166;">적 방어! 적에게 ${dmg} 데미지!</span>`;
+          }
+        }
+
+        step++;
+        if (step >= maxSteps) {
+          clearInterval(interval);
+          // 반격(Counter) 후속 처리: 공격 판정이 모두 끝난 뒤 적/아군을 타격
+          if (isPDef && !isEDef) {
+            const defType = document.getElementById('p-s4-type').value;
+            if (defType === 'counter' && pCounterDmg > 0) {
+              applyDamage(false, pCounterDmg);
+              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[반격 성공] 적에게 총 ${pCounterDmg} 반격 데미지!</span>`;
+            }
+          } else if (!isPDef && isEDef) {
+            const defType = document.getElementById('e-s4-type').value;
+            if (defType === 'counter' && eCounterDmg > 0) {
+              applyDamage(true, eCounterDmg);
+              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[적 반격 성공] 아군에게 총 ${eCounterDmg} 반격 데미지!</span>`;
+            }
+          }
+          setTimeout(() => { finishMatch(); }, 1600);
+        }
+      }, 500);
     }
 
     function runClashRound() {
@@ -1325,7 +1392,7 @@
       document.getElementById('e-coins-stage').innerHTML = eHTML;
 
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
-      const fixedTotalDuration = Math.max(50, 500 - ((currentClashRound - 1) * 45));
+      const fixedTotalDuration = 500;
 
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
@@ -1352,8 +1419,6 @@
         }, fixedTotalDuration);
       }
 
-      const totalAnimTime = fixedTotalDuration + 100;
-
       setTimeout(() => {
         document.getElementById('p-result-count-text').innerText = `HEADS ${playerHeads} / ${pRemCoins}`;
         document.getElementById('e-result-count-text').innerText = `HEADS ${enemyHeads} / ${eRemCoins}`;
@@ -1365,7 +1430,7 @@
         if (playerFinalPower === enemyFinalPower) {
           document.getElementById('clash-status-text').innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
           currentClashRound++; 
-          setTimeout(() => { runClashRound(); }, 300);
+          setTimeout(() => { runClashRound(); }, 400);
 
         } else if (playerFinalPower > enemyFinalPower) {
           const breakCoinIdx = activeEIndices[activeEIndices.length - 1];
@@ -1381,26 +1446,33 @@
           if (eRemCoins > 0) {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">CLASH WIN</div>`;
             currentClashRound++; 
-            setTimeout(() => { runClashRound(); }, 400);
+            setTimeout(() => { runClashRound(); }, 500);
           } else {
-            // 합 완전 승리 -> 남아있는 아군 코인을 다시 굴려 적에게 일방 공격 데미지 입힘
-            let totalAttackDamage = pBase;
-            activePIndices.forEach(idx => {
-              const elem = document.getElementById(`p-coin-${idx}`);
-              if (elem && !pCoinStates[idx].startsWith('broken')) {
-                elem.classList.add('win-glow');
-              }
-              if (pCoinStates[idx] === 'heads') {
-                totalAttackDamage += pCP;
-              }
-            });
+            // ⚔️ 합 승리 후 남은 코인들로 적을 '하나씩 순차 타격'
+            document.getElementById('clash-status-text').innerHTML = `<div class="result-banner player">PLAYER WIN (ONE-SIDED ATTACK)</div>`;
+            
+            let activeWins = activePIndices.filter(idx => !pCoinStates[idx].startsWith('broken'));
+            let hitIndex = 0;
 
-            applyDamage(false, totalAttackDamage);
-            document.getElementById('clash-status-text').innerHTML = `
-              <div class="result-banner player">PLAYER WIN</div>
-              <div style="font-size:0.9rem; color:#38ef7d;">일방 공격 성공! 적에게 총 ${totalAttackDamage} 데미지!</div>
-            `;
-            finishMatch();
+            let hitInterval = setInterval(() => {
+              if (hitIndex < activeWins.length) {
+                let idx = activeWins[hitIndex];
+                let elem = document.getElementById(`p-coin-${idx}`);
+                if (elem) elem.classList.add('win-glow');
+
+                let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
+                applyDamage(false, coinDmg);
+
+                document.getElementById('clash-status-text').innerHTML = `
+                  <div class="result-banner player">SEQUENTIAL STRIKE (${hitIndex + 1}/${activeWins.length})</div>
+                  <div style="font-size:0.9rem; color:#38ef7d;">적에게 ${coinDmg} 데미지 타격!</div>
+                `;
+                hitIndex++;
+              } else {
+                clearInterval(hitInterval);
+                setTimeout(() => { finishMatch(); }, 1000);
+              }
+            }, 400);
           }
 
         } else {
@@ -1417,29 +1489,36 @@
           if (pRemCoins > 0) {
             document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">CLASH LOSE</div>`;
             currentClashRound++; 
-            setTimeout(() => { runClashRound(); }, 400);
+            setTimeout(() => { runClashRound(); }, 500);
           } else {
-            // 합 완전 패배 -> 남아있는 적군 코인에 따른 일방 공격 데미지 계산 및 아군 체력 차감
-            let totalAttackDamage = eBase;
-            activeEIndices.forEach(idx => {
-              const elem = document.getElementById(`e-coin-${idx}`);
-              if (elem && !eCoinStates[idx].startsWith('broken')) {
-                elem.classList.add('win-glow');
-              }
-              if (eCoinStates[idx] === 'heads') {
-                totalAttackDamage += eCP;
-              }
-            });
+            // ⚔️ 합 패배 후 적이 남은 코인들로 아군을 '하나씩 순차 타격'
+            document.getElementById('clash-status-text').innerHTML = `<div class="result-banner enemy">ENEMY WIN (ONE-SIDED ATTACK)</div>`;
+            
+            let activeWins = activeEIndices.filter(idx => !eCoinStates[idx].startsWith('broken'));
+            let hitIndex = 0;
 
-            applyDamage(true, totalAttackDamage);
-            document.getElementById('clash-status-text').innerHTML = `
-              <div class="result-banner enemy">ENEMY WIN</div>
-              <div style="font-size:0.9rem; color:#ff3322;">적의 일방 공격! 아군에게 총 ${totalAttackDamage} 데미지!</div>
-            `;
-            finishMatch();
+            let hitInterval = setInterval(() => {
+              if (hitIndex < activeWins.length) {
+                let idx = activeWins[hitIndex];
+                let elem = document.getElementById(`e-coin-${idx}`);
+                if (elem) elem.classList.add('win-glow');
+
+                let coinDmg = eBase + (eCoinStates[idx] === 'heads' ? eCP : 0);
+                applyDamage(true, coinDmg);
+
+                document.getElementById('clash-status-text').innerHTML = `
+                  <div class="result-banner enemy">ENEMY STRIKE (${hitIndex + 1}/${activeWins.length})</div>
+                  <div style="font-size:0.9rem; color:#ff3322;">아군에게 ${coinDmg} 피격!</div>
+                `;
+                hitIndex++;
+              } else {
+                clearInterval(hitInterval);
+                setTimeout(() => { finishMatch(); }, 1000);
+              }
+            }, 400);
           }
         }
-      }, totalAnimTime);
+      }, fixedTotalDuration + 100);
     }
 
     function finishMatch() {
