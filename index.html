@@ -903,6 +903,7 @@
       });
     }
 
+    // 데미지 차감 및 방어막 적용 정밀화
     function applyDamage(isPlayer, amount, isGuardReduced = false) {
       if (amount <= 0) return;
       if (isGuardReduced) {
@@ -910,14 +911,14 @@
       }
 
       const prefix = isPlayer ? 'p' : 'e';
-      let shield = isPlayer ? pShield : eShield;
+      let currentShield = isPlayer ? pShield : eShield;
 
-      if (shield > 0) {
-        if (shield >= amount) {
+      if (currentShield > 0) {
+        if (currentShield >= amount) {
           if (isPlayer) pShield -= amount; else eShield -= amount;
           amount = 0;
         } else {
-          amount -= shield;
+          amount -= currentShield;
           if (isPlayer) pShield = 0; else eShield = 0;
         }
       }
@@ -1232,7 +1233,7 @@
       runClashRound();
     }
 
-    // 수비 / 반격 / 회피 정밀 판정 로직
+    // 일방공격 피격 데미지 연산 버그 정밀 수정
     function runSequentialDefense(isPDef, isEDef) {
       document.getElementById('clash-round-badge').innerText = 'DEFENSE PHASE';
 
@@ -1314,34 +1315,37 @@
           }
         }
 
-        // 1. 아군 수비 vs 적 공격
+        // 1. 아군 수비 vs 적 일방 공격
         if (isPDef && !isEDef && step < eCoinsCount) {
           const defType = document.getElementById('p-s4-type').value;
-          const eVal = eRolls[step].val;
+          const eVal = eRolls[step].val; // 적 공격 위력
 
           if (defType === 'guard') {
             applyDamage(true, eVal, true);
-            document.getElementById('clash-status-text').innerHTML = `<span style="color:#ffd166;">[방어] 적 공격(${eVal}) 방어막 적용 및 데미지 10% 경감</span>`;
+            document.getElementById('clash-status-text').innerHTML = `<span style="color:#ffd166;">[방어] 적 공격(${eVal}) 실드 방어 및 데미지 10% 경감</span>`;
           } else if (defType === 'evade') {
             const pVal = step < pCoinsCount ? pRolls[step].val : 0;
             if (!pEvadeBroken && pVal >= eVal) {
               document.getElementById('clash-status-text').innerHTML = `<span style="color:#38ef7d;">[회피 성공] (회피 ${pVal} vs 공격 ${eVal})</span>`;
             } else {
               pEvadeBroken = true;
-              applyDamage(true, eVal, false);
-              document.getElementById('clash-status-text').innerHTML = `<span style="color:#ff3322;">[회피 실패 및 관통] 아군 ${eVal} 피격!</span>`;
+              applyDamage(true, eVal, false); // 회피 뚫림: 데미지 직접 적용
+              document.getElementById('clash-status-text').innerHTML = `<span style="color:#ff3322;">[회피 실패 및 피격] 아군 ${eVal} 데미지 받음!</span>`;
             }
+          } else if (defType === 'counter') {
+            applyDamage(true, eVal, false); // 반격: 적 일방공격 피격 데미지 실시간 차감
+            document.getElementById('clash-status-text').innerHTML = `<span style="color:#ff3322;">[적 일방 공격 진행] 아군 ${eVal} 데미지 받음!</span>`;
           }
         }
 
-        // 2. 아군 공격 vs 적 수비
+        // 2. 아군 일방 공격 vs 적 수비
         if (!isPDef && isEDef && step < pCoinsCount) {
           const defType = document.getElementById('e-s4-type').value;
-          const pVal = pRolls[step].val;
+          const pVal = pRolls[step].val; // 아군 공격 위력
 
           if (defType === 'guard') {
             applyDamage(false, pVal, true);
-            document.getElementById('clash-status-text').innerHTML = `<span style="color:#ffd166;">[적 방어] 아군 공격(${pVal}) 방어막 적용 및 데미지 10% 경감</span>`;
+            document.getElementById('clash-status-text').innerHTML = `<span style="color:#ffd166;">[적 방어] 아군 공격(${pVal}) 실드 방어 및 데미지 10% 경감</span>`;
           } else if (defType === 'evade') {
             const eVal = step < eCoinsCount ? eRolls[step].val : 0;
             if (!eEvadeBroken && eVal >= pVal) {
@@ -1349,8 +1353,11 @@
             } else {
               eEvadeBroken = true;
               applyDamage(false, pVal, false);
-              document.getElementById('clash-status-text').innerHTML = `<span style="color:#38ef7d;">[적 회피 실패 및 관통] 적에게 ${pVal} 데미지!</span>`;
+              document.getElementById('clash-status-text').innerHTML = `<span style="color:#38ef7d;">[적 회피 실패 및 피격] 적에게 ${pVal} 데미지!</span>`;
             }
+          } else if (defType === 'counter') {
+            applyDamage(false, pVal, false);
+            document.getElementById('clash-status-text').innerHTML = `<span style="color:#38ef7d;">[아군 일방 공격 진행] 적에게 ${pVal} 데미지!</span>`;
           }
         }
 
@@ -1358,11 +1365,11 @@
         if (step >= maxSteps) {
           clearInterval(interval);
 
-          // 3. 반격 처리: 적의 공격 코인들이 전부 끝난 뒤 순차 발동
+          // 3. 반격(Counter) 후속 공격: 피격 종료 후 순차 반격 타격
           if (isPDef && !isEDef) {
             const defType = document.getElementById('p-s4-type').value;
             if (defType === 'counter') {
-              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[반격 개시] 적의 공격 종료, 반격 타격 시작!</span>`;
+              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[반격 개시] 적 공격 종료, 아군 순차 반격 시작!</span>`;
               let counterIdx = 0;
               let counterInterval = setInterval(() => {
                 if (counterIdx < pCoinsCount) {
@@ -1385,7 +1392,7 @@
           } else if (!isPDef && isEDef) {
             const defType = document.getElementById('e-s4-type').value;
             if (defType === 'counter') {
-              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[적 반격 개시] 아군 공격 종료, 적 반격 시작!</span>`;
+              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[적 반격 개시] 아군 공격 종료, 적 순차 반격 시작!</span>`;
               let counterIdx = 0;
               let counterInterval = setInterval(() => {
                 if (counterIdx < eCoinsCount) {
