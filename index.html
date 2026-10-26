@@ -414,7 +414,6 @@
       min-height: 240px;
     }
 
-    /* 체력바 및 방어막 바 스타일 */
     .hp-container {
       margin-bottom: 0.8rem;
       background: #111;
@@ -437,7 +436,6 @@
     }
     .hp-bar-fill.enemy-hp { background: #ff3322; }
     
-    /* 푸른색 방어막 오버레이 바 */
     .shield-bar-fill {
       position: absolute;
       top: 0; left: 0; height: 100%;
@@ -852,7 +850,6 @@
     let pCoinStates = [];
     let eCoinStates = [];
 
-    // 방어막(실드) 관리 변수
     let pShield = 0;
     let eShield = 0;
 
@@ -900,24 +897,21 @@
         document.getElementById(`${prefix}-hp-bar`).style.width = `${pct}%`;
         document.getElementById(`${prefix}-hp-text`).innerText = `HP: ${hp} / ${maxHp}`;
 
-        // 푸른색 방어막 바 업데이트 (최대 체력 기준 비율)
         let shield = prefix === 'p' ? pShield : eShield;
         let shieldPct = Math.max(0, Math.min(100, (shield / maxHp) * 100));
         document.getElementById(`${prefix}-shield-bar`).style.width = `${shieldPct}%`;
       });
     }
 
-    // 방어막 우선 차감 및 방어 시 데미지 10% 감소 적용
     function applyDamage(isPlayer, amount, isGuardReduced = false) {
       if (amount <= 0) return;
       if (isGuardReduced) {
-        amount = Math.round(amount * 0.9); // 방어 시 10% 감소
+        amount = Math.round(amount * 0.9);
       }
 
       const prefix = isPlayer ? 'p' : 'e';
       let shield = isPlayer ? pShield : eShield;
 
-      // 방어막이 있으면 먼저 차감
       if (shield > 0) {
         if (shield >= amount) {
           if (isPlayer) pShield -= amount; else eShield -= amount;
@@ -1211,7 +1205,7 @@
 
     function startMatch() {
       validateInputs();
-      pShield = 0; eShield = 0; // 전투 시작 시 방어막 초기화
+      pShield = 0; eShield = 0;
       updateHpDisplay();
 
       const pUsedType = playerSlots[pSelectedIndex];
@@ -1238,7 +1232,7 @@
       runClashRound();
     }
 
-    // 🛡️ 수비 스킬 순차 판정 시스템 (정확한 회피 뚫림 및 반격 적용)
+    // 수비 / 반격 / 회피 정밀 판정 로직
     function runSequentialDefense(isPDef, isEDef) {
       document.getElementById('clash-round-badge').innerText = 'DEFENSE PHASE';
 
@@ -1275,27 +1269,24 @@
 
       let step = 0;
       let maxSteps = Math.max(pCoinsCount, eCoinsCount);
-      let pEvadeBroken = false; // 아군 회피가 뚫렸는지 여부
-      let eEvadeBroken = false; // 적군 회피가 뚫렸는지 여부
+      let pEvadeBroken = false;
+      let eEvadeBroken = false;
 
       let pRolls = [];
       let eRolls = [];
 
-      // 아군 수비 코인 미리 롤링
       for (let i = 0; i < pCoinsCount; i++) {
         let isHeads = Math.random() * 100 < pChance;
         let val = pBase + (isHeads ? pCP : 0);
         pRolls.push({ isHeads, val });
       }
 
-      // 적군 수비 코인 미리 롤링
       for (let i = 0; i < eCoinsCount; i++) {
         let isHeads = Math.random() * 100 < eChance;
         let val = eBase + (isHeads ? eCP : 0);
         eRolls.push({ isHeads, val });
       }
 
-      // 방어 스킬 사용 시 방어막 수치 즉시 부여
       if (isPDef && document.getElementById('p-s4-type').value === 'guard') {
         pShield = pRolls.reduce((acc, cur) => acc + cur.val, 0);
       }
@@ -1305,7 +1296,6 @@
       updateHpDisplay();
 
       let interval = setInterval(() => {
-        // 아군 코인 UI 표시
         if (step < pCoinsCount) {
           let r = pRolls[step];
           let elem = document.getElementById(`p-coin-${step}`);
@@ -1315,7 +1305,6 @@
           }
         }
 
-        // 적군 코인 UI 표시
         if (step < eCoinsCount) {
           let r = eRolls[step];
           let elem = document.getElementById(`e-coin-${step}`);
@@ -1325,27 +1314,27 @@
           }
         }
 
-        // 1. 아군이 수비, 적이 공격일 때
+        // 1. 아군 수비 vs 적 공격
         if (isPDef && !isEDef && step < eCoinsCount) {
           const defType = document.getElementById('p-s4-type').value;
           const eVal = eRolls[step].val;
 
           if (defType === 'guard') {
-            applyDamage(true, eVal, true); // 방어 시 10% 감소 및 방어막 차감
+            applyDamage(true, eVal, true);
             document.getElementById('clash-status-text').innerHTML = `<span style="color:#ffd166;">[방어] 적 공격(${eVal}) 방어막 적용 및 데미지 10% 경감</span>`;
           } else if (defType === 'evade') {
             const pVal = step < pCoinsCount ? pRolls[step].val : 0;
             if (!pEvadeBroken && pVal >= eVal) {
               document.getElementById('clash-status-text').innerHTML = `<span style="color:#38ef7d;">[회피 성공] (회피 ${pVal} vs 공격 ${eVal})</span>`;
             } else {
-              pEvadeBroken = true; // 회피 실패 시 이후 공격은 전부 적중
+              pEvadeBroken = true;
               applyDamage(true, eVal, false);
               document.getElementById('clash-status-text').innerHTML = `<span style="color:#ff3322;">[회피 실패 및 관통] 아군 ${eVal} 피격!</span>`;
             }
           }
         }
 
-        // 2. 아군이 공격, 적이 수비일 때
+        // 2. 아군 공격 vs 적 수비
         if (!isPDef && isEDef && step < pCoinsCount) {
           const defType = document.getElementById('e-s4-type').value;
           const pVal = pRolls[step].val;
@@ -1369,20 +1358,52 @@
         if (step >= maxSteps) {
           clearInterval(interval);
 
-          // 3. 반격(Counter) 처리: 적의 모든 일방 공격이 '끝난 후' 발동
+          // 3. 반격 처리: 적의 공격 코인들이 전부 끝난 뒤 순차 발동
           if (isPDef && !isEDef) {
             const defType = document.getElementById('p-s4-type').value;
             if (defType === 'counter') {
-              let totalCounterDmg = pRolls.reduce((acc, cur) => acc + cur.val, 0);
-              applyDamage(false, totalCounterDmg, false);
-              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[반격 작렬] 공격 종료 후 적에게 총 ${totalCounterDmg} 반격 데미지!</span>`;
+              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[반격 개시] 적의 공격 종료, 반격 타격 시작!</span>`;
+              let counterIdx = 0;
+              let counterInterval = setInterval(() => {
+                if (counterIdx < pCoinsCount) {
+                  let r = pRolls[counterIdx];
+                  let elem = document.getElementById(`p-coin-${counterIdx}`);
+                  if (elem) elem.classList.add('win-glow');
+                  applyDamage(false, r.val, false);
+                  document.getElementById('clash-status-text').innerHTML = `
+                    <div class="result-banner player">COUNTER STRIKE (${counterIdx + 1}/${pCoinsCount})</div>
+                    <div style="font-size:0.9rem; color:#38e8e5;">반격으로 적에게 ${r.val} 데미지 타격!</div>
+                  `;
+                  counterIdx++;
+                } else {
+                  clearInterval(counterInterval);
+                  setTimeout(() => { finishMatch(); }, 1200);
+                }
+              }, 400);
+              return;
             }
           } else if (!isPDef && isEDef) {
             const defType = document.getElementById('e-s4-type').value;
             if (defType === 'counter') {
-              let totalCounterDmg = eRolls.reduce((acc, cur) => acc + cur.val, 0);
-              applyDamage(true, totalCounterDmg, false);
-              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[적 반격 작렬] 공격 종료 후 아군에게 총 ${totalCounterDmg} 반격 데미지!</span>`;
+              document.getElementById('clash-status-text').innerHTML += `<br><span style="color:#38e8e5;">[적 반격 개시] 아군 공격 종료, 적 반격 시작!</span>`;
+              let counterIdx = 0;
+              let counterInterval = setInterval(() => {
+                if (counterIdx < eCoinsCount) {
+                  let r = eRolls[counterIdx];
+                  let elem = document.getElementById(`e-coin-${counterIdx}`);
+                  if (elem) elem.classList.add('win-glow');
+                  applyDamage(true, r.val, false);
+                  document.getElementById('clash-status-text').innerHTML = `
+                    <div class="result-banner enemy">ENEMY COUNTER (${counterIdx + 1}/${eCoinsCount})</div>
+                    <div style="font-size:0.9rem; color:#ff3322;">적 반격으로 아군에게 ${r.val} 피격!</div>
+                  `;
+                  counterIdx++;
+                } else {
+                  clearInterval(counterInterval);
+                  setTimeout(() => { finishMatch(); }, 1200);
+                }
+              }, 400);
+              return;
             }
           }
 
