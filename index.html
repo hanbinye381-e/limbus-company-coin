@@ -434,7 +434,7 @@
       min-height: 240px;
     }
 
-    /* 🎯 체력바 및 금빛 흐트러짐 선 스타일 */
+    /* 체력바 및 금빛 흐트러짐 선 스타일 */
     .hp-container {
       margin-bottom: 0.8rem;
       background: #111;
@@ -508,7 +508,7 @@
       align-items: center;
     }
 
-    /* 🌀 흐트러짐 이미지 스타일 */
+    /* 흐트러짐 이미지 스타일 */
     .stagger-img {
       max-width: 180px;
       max-height: 80px;
@@ -699,7 +699,7 @@
               </div>
             </div>
             <div class="config-card" style="border-color: #aa1133;">
-              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬 (일반 스킬화)</label>
+              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬</label>
               <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
                 <div><label>이름</label><input type="text" id="p-ego-name" value="홍염살" onchange="renderSlots()"></div>
                 <div><label>기본</label><input type="number" id="p-ego-base" value="15" onchange="validateInputs(); renderSlots();"></div>
@@ -722,7 +722,7 @@
           <div class="coin-preview-box" id="p-coin-preview"></div>
         </div>
 
-        <!-- 🎯 금빛 흐트러짐 선 편집 옵션 -->
+        <!-- 금빛 흐트러짐 선 편집 옵션 -->
         <div class="skill-config-box" style="margin-bottom: 0.9rem; border-color: #e6a100;">
           <div class="skill-config-title" style="color: #e6a100;">금빛 흐트러짐 선 설정 (체력 %)</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
@@ -872,7 +872,7 @@
               </div>
             </div>
             <div class="config-card" style="border-color: #aa1133;">
-              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬 (일반 스킬화)</label>
+              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬</label>
               <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
                 <div><label>이름</label><input type="text" id="e-ego-name" value="여우비" onchange="renderSlots()"></div>
                 <div><label>기본</label><input type="number" id="e-ego-base" value="15" onchange="validateInputs(); renderSlots();"></div>
@@ -895,7 +895,7 @@
           <div class="coin-preview-box" id="e-coin-preview"></div>
         </div>
 
-        <!-- 🎯 금빛 흐트러짐 선 편집 옵션 -->
+        <!-- 금빛 흐트러짐 선 편집 옵션 -->
         <div class="skill-config-box" style="margin-bottom: 0.9rem; border-color: #e6a100;">
           <div class="skill-config-title" style="color: #e6a100;">금빛 흐트러짐 선 설정 (체력 %)</div>
           <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
@@ -1080,7 +1080,7 @@
         const shieldBar = document.getElementById(`${prefix}-shield-bar`);
         if(shieldBar) shieldBar.style.width = `${shieldPct}%`;
 
-        // 흐트러짐 선 레이어 렌더링 및 체력에 따른 동적 숨김/활성화
+        // 흐트러짐 선 렌더링 및 체력 구간에 따른 숨김 처리
         const linesLayer = document.getElementById(`${prefix}-stagger-lines-layer`);
         if(linesLayer) {
           linesLayer.innerHTML = '';
@@ -1096,7 +1096,6 @@
               line.className = 'stagger-line';
               line.style.left = `${th.val}%`;
               
-              // 현재 체력이 이 흐트러짐 선 아래로 내려갔다면 선을 숨김
               if (pct <= th.val) {
                 line.classList.add('hidden');
               }
@@ -1106,16 +1105,17 @@
           });
         }
 
-        // 흐트러짐 단계에 따른 이미지 또는 코인 스테이지 표시
+        // 흐트러짐 이미지 갱신
         const currentStaggerLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
         const stageElem = document.getElementById(`${prefix}-coins-stage`);
-        if (currentStaggerLvl > 0 && stageElem && !stageElem.querySelector('.stagger-img')) {
+        if (currentStaggerLvl > 0 && stageElem) {
           const imgName = currentStaggerLvl === 1 ? 'stagger.png' : (currentStaggerLvl === 2 ? 'stagger1.png' : 'stagger2.png');
           stageElem.innerHTML = `<img src="images/${imgName}" class="stagger-img" alt="STAGGER">`;
         }
       });
     }
 
+    // 데미지 차감 및 단계별 누적 흐트러짐 판정
     function applyDamage(isPlayer, amount, isGuardReduced = false) {
       if (amount <= 0) return;
       if (isGuardReduced) {
@@ -1526,6 +1526,7 @@
       if(clashBtn) clashBtn.disabled = true;
       if(roundBadge) roundBadge.style.display = 'block';
 
+      // 전투 시작 시 이미 흐트러짐 상태라면 즉시 일방 공격 수행
       if (pStaggerLevel > 0 || eStaggerLevel > 0) {
         runStaggerOneSidedAttack();
         return;
@@ -1831,6 +1832,15 @@
 
         triggerSparks();
 
+        // 데미지 판정 직후 흐트러짐이 발생했는지 검사하는 헬퍼 함수
+        const checkImmediateStaggerDuringHit = () => {
+          if (pStaggerLevel > 0 || eStaggerLevel > 0) {
+            setTimeout(() => { finishMatch(); }, 800);
+            return true;
+          }
+          return false;
+        };
+
         if (playerFinalPower === enemyFinalPower) {
           if(statusText) statusText.innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
           currentClashRound++; 
@@ -1865,6 +1875,11 @@
 
                 let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
                 applyDamage(false, coinDmg, false);
+
+                if (checkImmediateStaggerDuringHit()) {
+                  clearInterval(hitInterval);
+                  return;
+                }
 
                 if(statusText) {
                   statusText.innerHTML = `
@@ -1910,6 +1925,11 @@
                 let coinDmg = eBase + (eCoinStates[idx] === 'heads' ? eCP : 0);
                 applyDamage(true, coinDmg, false);
 
+                if (checkImmediateStaggerDuringHit()) {
+                  clearInterval(hitInterval);
+                  return;
+                }
+
                 if(statusText) {
                   statusText.innerHTML = `
                     <div class="result-banner enemy">ENEMY STRIKE (${hitIndex + 1}/${activeWins.length})</div>
@@ -1928,11 +1948,10 @@
     }
 
     function finishMatch() {
-      // 턴 종료 후 흐트러짐 상태 해제 (1턴 행동불능 적용 완료 후 복귀)
+      // 턴 종료 시 흐트러짐 상태 해제 (다음 턴 정상화)
       if (pStaggerLevel > 0) pStaggerLevel = 0;
       if (eStaggerLevel > 0) eStaggerLevel = 0;
 
-      // E.G.O 사용 후 일반 스킬로 복귀
       if (playerSlots[pSelectedIndex] === 5) playerSlots[pSelectedIndex] = 2;
       if (enemySlots[eSelectedIndex] === 5) enemySlots[eSelectedIndex] = 2;
       
