@@ -969,6 +969,10 @@
 
     let pStaggerLevel = 0;
     let eStaggerLevel = 0;
+    
+    // 다음 턴에 적용될 흐트러짐 상태 플래그
+    let pIsStaggeredNextTurn = false;
+    let eIsStaggeredNextTurn = false;
 
     let pEgoHoldTimer = null;
     let eEgoHoldTimer = null;
@@ -1105,7 +1109,7 @@
           });
         }
 
-        // 흐트러짐 이미지 갱신
+        // 흐트러짐 이미지 갱신 (현재 턴에 적용 중이거나 다음 턴에 걸릴 때 표시)
         const currentStaggerLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
         const stageElem = document.getElementById(`${prefix}-coins-stage`);
         if (currentStaggerLvl > 0 && stageElem) {
@@ -1115,7 +1119,7 @@
       });
     }
 
-    // 데미지 차감 및 단계별 누적 흐트러짐 판정
+    // 데미지 차감 및 흐트러짐 선 도달 체크 (다음 턴 흐트러짐 예약)
     function applyDamage(isPlayer, amount, isGuardReduced = false) {
       if (amount <= 0) return;
       if (isGuardReduced) {
@@ -1156,9 +1160,9 @@
         thresholds.forEach((th) => {
           if (th > 0 && oldPct > th && newPct <= th) {
             if (isPlayer) {
-              pStaggerLevel = Math.min(3, pStaggerLevel + 1);
+              pIsStaggeredNextTurn = true;
             } else {
-              eStaggerLevel = Math.min(3, eStaggerLevel + 1);
+              eIsStaggeredNextTurn = true;
             }
           }
         });
@@ -1526,7 +1530,7 @@
       if(clashBtn) clashBtn.disabled = true;
       if(roundBadge) roundBadge.style.display = 'block';
 
-      // 전투 시작 시 이미 흐트러짐 상태라면 즉시 일방 공격 수행
+      // 턴 시작 시 이번 턴에 흐트러짐 상태가 적용되어 있다면 즉시 일방 공격 수행
       if (pStaggerLevel > 0 || eStaggerLevel > 0) {
         runStaggerOneSidedAttack();
         return;
@@ -1555,7 +1559,7 @@
 
     function runStaggerOneSidedAttack() {
       const roundBadge = document.getElementById('clash-round-badge');
-      if(roundBadge) roundBadge.innerText = 'STAGGER ATTACK';
+      if(roundBadge) roundBadge.innerText = 'STAGGER ATTACK (행동 불능)';
 
       const isPlayerStaggered = pStaggerLevel > 0;
       const attackerIsPlayer = !isPlayerStaggered;
@@ -1602,8 +1606,8 @@
           const statusText = document.getElementById('clash-status-text');
           if(statusText) {
             statusText.innerHTML = `
-              <div class="result-banner ${attackerIsPlayer ? 'player' : 'enemy'}">STAGGER ONE-SIDED STRIKE (${step + 1}/${coinsCount})</div>
-              <div style="font-size:0.9rem; color:#ff3322;">흐트러진 대상에게 ${coinDmg} 일방 타격!</div>
+              <div class="result-banner ${attackerIsPlayer ? 'player' : 'enemy'}">STAGGERED ONE-SIDED STRIKE (${step + 1}/${coinsCount})</div>
+              <div style="font-size:0.9rem; color:#ff3322;">흐트러져서 행동 불가! 상대의 일방 공격 ${coinDmg} 피격!</div>
             `;
           }
 
@@ -1832,15 +1836,6 @@
 
         triggerSparks();
 
-        // 데미지 판정 직후 흐트러짐이 발생했는지 검사하는 헬퍼 함수
-        const checkImmediateStaggerDuringHit = () => {
-          if (pStaggerLevel > 0 || eStaggerLevel > 0) {
-            setTimeout(() => { finishMatch(); }, 800);
-            return true;
-          }
-          return false;
-        };
-
         if (playerFinalPower === enemyFinalPower) {
           if(statusText) statusText.innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
           currentClashRound++; 
@@ -1875,11 +1870,6 @@
 
                 let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
                 applyDamage(false, coinDmg, false);
-
-                if (checkImmediateStaggerDuringHit()) {
-                  clearInterval(hitInterval);
-                  return;
-                }
 
                 if(statusText) {
                   statusText.innerHTML = `
@@ -1925,11 +1915,6 @@
                 let coinDmg = eBase + (eCoinStates[idx] === 'heads' ? eCP : 0);
                 applyDamage(true, coinDmg, false);
 
-                if (checkImmediateStaggerDuringHit()) {
-                  clearInterval(hitInterval);
-                  return;
-                }
-
                 if(statusText) {
                   statusText.innerHTML = `
                     <div class="result-banner enemy">ENEMY STRIKE (${hitIndex + 1}/${activeWins.length})</div>
@@ -1948,9 +1933,21 @@
     }
 
     function finishMatch() {
-      // 턴 종료 시 흐트러짐 상태 해제 (다음 턴 정상화)
-      if (pStaggerLevel > 0) pStaggerLevel = 0;
-      if (eStaggerLevel > 0) eStaggerLevel = 0;
+      // 턴이 끝났으므로 예약되었던 다음 턴 흐트러짐 상태를 실제로 발동 시킴
+      if (pIsStaggeredNextTurn) {
+        pStaggerLevel = Math.min(3, pStaggerLevel + 1);
+        pIsStaggeredNextTurn = false;
+      } else {
+        // 흐트러짐 상태에서 무사히 턴을 넘겼다면 흐트러짐 해제
+        pStaggerLevel = 0;
+      }
+
+      if (eIsStaggeredNextTurn) {
+        eStaggerLevel = Math.min(3, eStaggerLevel + 1);
+        eIsStaggeredNextTurn = false;
+      } else {
+        eStaggerLevel = 0;
+      }
 
       if (playerSlots[pSelectedIndex] === 5) playerSlots[pSelectedIndex] = 2;
       if (enemySlots[eSelectedIndex] === 5) enemySlots[eSelectedIndex] = 2;
@@ -1977,4 +1974,4 @@
     updateInfo();
   </script>
 </body>
-</html>
+</html
