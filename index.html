@@ -467,15 +467,20 @@
       transition: width 0.3s ease;
     }
 
-    /* 금빛 흐트러짐 구분선 스타일 요청 반영 */
+    /* 금빛 흐트러짐 구분선 스타일 (HP바 내부에 완벽히 맞춤) */
     .stagger-line {
       position: absolute;
-      top: 0;
-      bottom: 0;
+      top: 4px;
+      bottom: 4px;
       width: 2px;
       background-color: #ffd700;
       box-shadow: 0 0 8px #ffaa00;
       z-index: 5;
+      transition: opacity 0.2s;
+    }
+    .stagger-line.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
 
     .hp-text {
@@ -635,12 +640,7 @@
           <div class="slots-wrapper">
             <div id="p-slots-display" style="display:flex; gap:6px;"></div>
             <button class="def-toggle-btn" id="p-def-btn" onclick="toggleDefenseSlot(true)">수비</button>
-            <button class="ego-toggle-btn" id="p-ego-btn" 
-              onmousedown="startEgoHold(true)" onmouseup="cancelEgoHold(true)" onmouseleave="cancelEgoHold(true)"
-              ontouchstart="startEgoHold(true)" ontouchend="cancelEgoHold(true)">
-              E.G.O (1초 꾹)
-              <div class="ego-progress" id="p-ego-progress"></div>
-            </button>
+            <button class="ego-toggle-btn" id="p-ego-btn" onclick="toggleEgoSlot(true)">E.G.O</button>
           </div>
           <div class="next-box" id="p-next-display">
             <span>[NEXT]:</span>
@@ -650,7 +650,7 @@
         </div>
 
         <div class="skill-config-box">
-          <div class="skill-config-title">스킬 / 수비 옵션 설정</div>
+          <div class="skill-config-title">스킬 / 수비 / E.G.O 옵션 설정</div>
           <div class="config-grid">
             <div class="config-card">
               <label>1스킬 이름</label>
@@ -695,7 +695,7 @@
               </div>
             </div>
             <div class="config-card" style="border-color: #aa1133;">
-              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬 설정</label>
+              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬 (5번 슬롯)</label>
               <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
                 <div><label>이름</label><input type="text" id="p-ego-name" value="홍염살" onchange="renderSlots()"></div>
                 <div><label>기본</label><input type="number" id="p-ego-base" value="12" onchange="validateInputs(); renderSlots();"></div>
@@ -767,9 +767,9 @@
                   <div class="hp-bar-bg">
                     <div class="hp-bar-fill" id="p-hp-bar" style="width: 100%;"></div>
                     <div class="shield-bar-fill" id="p-shield-bar" style="width: 0%;"></div>
+                    <!-- 금빛 흐트러짐 선 레이어 (HP 바 내부 일치) -->
+                    <div id="p-stagger-lines-layer"></div>
                   </div>
-                  <!-- 금빛 흐트러짐 선 레이어 -->
-                  <div id="p-stagger-lines-layer"></div>
                   <div class="hp-text" id="p-hp-text">HP: 100 / 100</div>
                 </div>
                 <div id="p-result-skill-tag" style="margin-bottom: 0.4rem;"><span class="skill-badge s1">아군 스킬</span></div>
@@ -784,9 +784,9 @@
                   <div class="hp-bar-bg">
                     <div class="hp-bar-fill enemy-hp" id="e-hp-bar" style="width: 100%;"></div>
                     <div class="shield-bar-fill" id="e-shield-bar" style="width: 0%;"></div>
+                    <!-- 금빛 흐트러짐 선 레이어 (HP 바 내부 일치) -->
+                    <div id="e-stagger-lines-layer"></div>
                   </div>
-                  <!-- 금빛 흐트러짐 선 레이어 -->
-                  <div id="e-stagger-lines-layer"></div>
                   <div class="hp-text" id="e-hp-text">HP: 100 / 100</div>
                 </div>
                 <div id="e-result-skill-tag" style="margin-bottom: 0.4rem;"><span class="skill-badge s1">적군 스킬</span></div>
@@ -808,12 +808,7 @@
           <div class="slots-wrapper">
             <div id="e-slots-display" style="display:flex; gap:6px;"></div>
             <button class="def-toggle-btn" id="e-def-btn" onclick="toggleDefenseSlot(false)">수비</button>
-            <button class="ego-toggle-btn" id="e-ego-btn" 
-              onmousedown="startEgoHold(false)" onmouseup="cancelEgoHold(false)" onmouseleave="cancelEgoHold(false)"
-              ontouchstart="startEgoHold(false)" ontouchend="cancelEgoHold(false)">
-              E.G.O (1초 꾹)
-              <div class="ego-progress" id="e-ego-progress"></div>
-            </button>
+            <button class="ego-toggle-btn" id="e-ego-btn" onclick="toggleEgoSlot(false)">E.G.O</button>
           </div>
           <div class="next-box" id="e-next-display">
             <span>[NEXT]:</span>
@@ -823,7 +818,7 @@
         </div>
 
         <div class="skill-config-box">
-          <div class="skill-config-title">스킬 / 수비 옵션 설정</div>
+          <div class="skill-config-title">스킬 / 수비 / E.G.O 옵션 설정</div>
           <div class="config-grid">
             <div class="config-card">
               <label>1스킬 이름</label>
@@ -868,7 +863,7 @@
               </div>
             </div>
             <div class="config-card" style="border-color: #aa1133;">
-              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬 설정</label>
+              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬 (5번 슬롯)</label>
               <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
                 <div><label>이름</label><input type="text" id="e-ego-name" value="여우비" onchange="renderSlots()"></div>
                 <div><label>기본</label><input type="number" id="e-ego-base" value="12" onchange="validateInputs(); renderSlots();"></div>
@@ -965,11 +960,6 @@
 
     let pStaggerLevel = 0;
     let eStaggerLevel = 0;
-    let pPassedStaggerThresholds = [false, false, false];
-    let ePassedStaggerThresholds = [false, false, false];
-
-    let pEgoHoldTimer = null;
-    let eEgoHoldTimer = null;
 
     function changeTheme(themeName) {
       document.documentElement.setAttribute('data-theme', themeName);
@@ -987,68 +977,37 @@
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return;
 
       const slots = isPlayer ? playerSlots : enemySlots;
-      const btn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
+      const defBtn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
+      const egoBtn = document.getElementById(isPlayer ? 'p-ego-btn' : 'e-ego-btn');
       
-      if (slots[1] === 5) return;
-
       if (slots[1] === 4) {
         slots[1] = 2;
-        if(btn) btn.classList.remove('active');
+        if(defBtn) defBtn.classList.remove('active');
       } else {
         slots[1] = 4;
-        if(btn) btn.classList.add('active');
-        const egoBtn = document.getElementById(isPlayer ? 'p-ego-btn' : 'e-ego-btn');
+        if(defBtn) defBtn.classList.add('active');
         if(egoBtn) egoBtn.classList.remove('active');
       }
       renderSlots();
     }
 
-    function startEgoHold(isPlayer) {
+    function toggleEgoSlot(isPlayer) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return;
 
-      const progressElem = document.getElementById(isPlayer ? 'p-ego-progress' : 'e-ego-progress');
-      const btnElem = document.getElementById(isPlayer ? 'p-ego-btn' : 'e-ego-btn');
       const slots = isPlayer ? playerSlots : enemySlots;
+      const egoBtn = document.getElementById(isPlayer ? 'p-ego-btn' : 'e-ego-btn');
+      const defBtn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
 
-      let startTime = Date.now();
-      const duration = 1000;
-
-      if(progressElem) progressElem.style.width = '0%';
-      
-      const timer = setInterval(() => {
-        let elapsed = Date.now() - startTime;
-        let pct = Math.min(100, (elapsed / duration) * 100);
-        if(progressElem) progressElem.style.width = `${pct}%`;
-
-        if (elapsed >= duration) {
-          clearInterval(timer);
-          if(progressElem) progressElem.style.width = '0%';
-          
-          if (slots[1] === 5) {
-            slots[1] = 2;
-            if(btnElem) btnElem.classList.remove('active');
-          } else {
-            slots[1] = 5;
-            if(btnElem) btnElem.classList.add('active');
-            const defBtn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
-            if(defBtn) defBtn.classList.remove('active');
-            playSFX('spin');
-          }
-          renderSlots();
-        }
-      }, 30);
-
-      if (isPlayer) pEgoHoldTimer = timer; else eEgoHoldTimer = timer;
-    }
-
-    function cancelEgoHold(isPlayer) {
-      const timer = isPlayer ? pEgoHoldTimer : eEgoHoldTimer;
-      if (timer) {
-        clearInterval(timer);
-        if (isPlayer) pEgoHoldTimer = null; else eEgoHoldTimer = null;
+      if (slots[1] === 5) {
+        slots[1] = 2;
+        if(egoBtn) egoBtn.classList.remove('active');
+      } else {
+        slots[1] = 5;
+        if(egoBtn) egoBtn.classList.add('active');
+        if(defBtn) defBtn.classList.remove('active');
+        playSFX('spin');
       }
-      const progressElem = document.getElementById(isPlayer ? 'p-ego-progress' : 'e-ego-progress');
-      if (progressElem) progressElem.style.width = '0%';
+      renderSlots();
     }
 
     function calculateHeadsChance(sanity) {
@@ -1078,6 +1037,7 @@
         const shieldBar = document.getElementById(`${prefix}-shield-bar`);
         if(shieldBar) shieldBar.style.width = `${shieldPct}%`;
 
+        // 흐트러짐 선 렌더링 및 체력 구간에 따른 동적 숨김/활성화
         const linesLayer = document.getElementById(`${prefix}-stagger-lines-layer`);
         if(linesLayer) {
           linesLayer.innerHTML = '';
@@ -1087,16 +1047,23 @@
             parseFloat(document.getElementById(`${prefix}-stagger-3`)?.value) || 0
           ];
 
-          thresholds.forEach(val => {
-            if (val > 0 && val < 100) {
+          thresholds.forEach((thVal) => {
+            if (thVal > 0 && thVal < 100) {
               let line = document.createElement('div');
               line.className = 'stagger-line';
-              line.style.left = `${val}%`;
+              line.style.left = `${thVal}%`;
+              
+              // 현재 HP 퍼센트가 이 흐트러짐 선보다 아래(왼쪽)에 있으면 선을 숨김, 높으면 표시
+              if (pct < thVal) {
+                line.classList.add('hidden');
+              }
+              
               linesLayer.appendChild(line);
             }
           });
         }
 
+        // 흐트러짐 단계별 이미지 출력
         const currentStaggerLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
         const stageElem = document.getElementById(`${prefix}-coins-stage`);
         if (currentStaggerLvl > 0 && stageElem) {
@@ -1136,24 +1103,28 @@
         if(hpElem) hpElem.value = hp;
 
         let currentPct = (hp / maxHp) * 100;
-        let passedArr = isPlayer ? pPassedStaggerThresholds : ePassedStaggerThresholds;
-        
         let thresholds = [
           parseFloat(document.getElementById(`${prefix}-stagger-1`)?.value) || 0,
           parseFloat(document.getElementById(`${prefix}-stagger-2`)?.value) || 0,
           parseFloat(document.getElementById(`${prefix}-stagger-3`)?.value) || 0
         ].sort((a, b) => b - a);
 
-        thresholds.forEach((th, idx) => {
-          if (th > 0 && currentPct <= th && !passedArr[idx]) {
-            passedArr[idx] = true;
-            if (isPlayer) {
-              pStaggerLevel = Math.min(3, pStaggerLevel + 1);
-            } else {
-              eStaggerLevel = Math.min(3, eStaggerLevel + 1);
-            }
+        let currentLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
+        let triggeredCount = 0;
+
+        thresholds.forEach((th) => {
+          if (th > 0 && currentPct <= th) {
+            triggeredCount++;
           }
         });
+
+        if (triggeredCount > currentLvl) {
+          if (isPlayer) {
+            pStaggerLevel = Math.min(3, triggeredCount);
+          } else {
+            eStaggerLevel = Math.min(3, triggeredCount);
+          }
+        }
       }
       updateHpDisplay();
     }
@@ -1172,20 +1143,13 @@
         if (maxHpElem && (maxHpElem.value === '' || maxHpElem.value < 1)) maxHpElem.value = 100;
         if (hpElem && hpElem.value === '') hpElem.value = maxHpElem.value;
 
-        [1, 2, 3, 4].forEach(num => {
-          let coinsElem = document.getElementById(`${prefix}-s${num}-coins`);
+        [1, 2, 3, 4, 5].forEach(num => {
+          let coinsElem = document.getElementById(`${prefix}-s${num === 5 ? 'ego' : num}-coins`);
           if (coinsElem) {
             if (coinsElem.value > 9) coinsElem.value = 9;
             if (coinsElem.value < 1 || coinsElem.value === '') coinsElem.value = 1;
           }
-          let baseElem = document.getElementById(`${prefix}-s${num}-base`);
-          if (baseElem && baseElem.value === '') baseElem.value = 0;
-          let cpElem = document.getElementById(`${prefix}-s${num}-coinpower`);
-          if (cpElem && cpElem.value === '') cpElem.value = 0;
         });
-
-        let egoCoins = document.getElementById(`${prefix}-ego-coins`);
-        if (egoCoins && (egoCoins.value < 1 || egoCoins.value > 5)) egoCoins.value = 1;
       });
     }
 
@@ -1409,549 +1373,4 @@
       if (diff >= 4.0) { pStatus = "VERY ADVANTAGE"; eStatus = "VERY DISADVANTAGE"; pClass = "very-advantage"; eClass = "very-disadvantage"; }
       else if (diff >= 1.5) { pStatus = "ADVANTAGE"; eStatus = "DISADVANTAGE"; pClass = "advantage"; eClass = "disadvantage"; }
       else if (diff <= -4.0) { pStatus = "VERY DISADVANTAGE"; eStatus = "VERY ADVANTAGE"; pClass = "very-disadvantage"; eClass = "very-advantage"; }
-      else if (diff <= -1.5) { pStatus = "DISADVANTAGE"; eStatus = "ADVANTAGE"; pClass = "disadvantage"; eClass = "advantage"; }
-      else { pStatus = "BALANCED"; eStatus = "BALANCED"; pClass = "balanced"; eClass = "balanced"; }
-
-      pInd.className = `matchup-indicator ${pClass}`; pInd.innerText = pStatus;
-      eInd.className = `matchup-indicator ${eClass}`; eInd.innerText = eStatus;
-    }
-
-    function renderSlots() {
-      const pWrapper = document.getElementById('p-slots-display');
-      const eWrapper = document.getElementById('e-slots-display');
-
-      if(pWrapper) {
-        pWrapper.innerHTML = playerSlots.map((s, idx) => {
-          const isSelected = idx === pSelectedIndex ? 'selected' : '';
-          const badgeClass = s === 5 ? 'ego' : `s${s}`;
-          return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(true, ${idx})">${getSkillName(true, s)}</span>`;
-        }).join('');
-      }
-
-      if(eWrapper) {
-        eWrapper.innerHTML = enemySlots.map((s, idx) => {
-          const isSelected = idx === eSelectedIndex ? 'selected' : '';
-          const badgeClass = s === 5 ? 'ego' : `s${s}`;
-          return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(false, ${idx})">${getSkillName(false, s)}</span>`;
-        }).join('');
-      }
-
-      const pNextDisp = document.getElementById('p-next-display');
-      const eNextDisp = document.getElementById('e-next-display');
-      if(pNextDisp) pNextDisp.innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${playerNext === 5 ? 1 : playerNext}">${getSkillName(true, playerNext)}</span>`;
-      if(eNextDisp) eNextDisp.innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${enemyNext === 5 ? 1 : enemyNext}">${getSkillName(false, enemyNext)}</span>`;
-
-      const pCoinPrev = document.getElementById('p-coin-preview');
-      const eCoinPrev = document.getElementById('e-coin-preview');
-      if(pCoinPrev) {
-        pCoinPrev.innerHTML = [1, 2, 3, 4].map(s => 
-          `<div class="coin-preview-item">${getSkillName(true, s)}<br>위력 ${getSkillBasePower(true, s)}+${getSkillCoinPower(true, s)}<br><strong>${getSkillCoins(true, s)}C</strong></div>`
-        ).join('');
-      }
-      if(eCoinPrev) {
-        eCoinPrev.innerHTML = [1, 2, 3, 4].map(s => 
-          `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}+${getSkillCoinPower(false, s)}<br><strong>${getSkillCoins(false, s)}C</strong></div>`
-        ).join('');
-      }
-
-      updateHpDisplay();
-      updateMatchupAnalysis();
-    }
-
-    function triggerSparks() {
-      const layer = document.getElementById('spark-layer');
-      if(!layer) return;
-      layer.innerHTML = '';
-      const sparkCount = 45;
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const c1 = currentTheme === 'ruina' ? '#38e8e5' : '#e6a100';
-      const c2 = currentTheme === 'ruina' ? '#c59f52' : '#ff3322';
-
-      for (let i = 0; i < sparkCount; i++) {
-        const spark = document.createElement('div');
-        spark.className = 'spark';
-        const angle = Math.random() * Math.PI * 2;
-        const distance = 90 + Math.random() * 180;
-        spark.style.setProperty('--dx', `${Math.cos(angle) * distance}px`);
-        spark.style.setProperty('--dy', `${Math.sin(angle) * distance}px`);
-        spark.style.background = Math.random() > 0.5 ? c1 : c2;
-        layer.appendChild(spark);
-      }
-      setTimeout(() => { if(layer) layer.innerHTML = ''; }, 750);
-    }
-
-    function triggerShatterEffect(targetElem) {
-      if (!targetElem) return;
-      playSFX('break');
-      const rect = targetElem.getBoundingClientRect();
-      const stageRect = document.getElementById('center-stage').getBoundingClientRect();
-      const cx = rect.left - stageRect.left + rect.width / 2;
-      const cy = rect.top - stageRect.top + rect.height / 2;
-      const layer = document.getElementById('spark-layer');
-      if(!layer) return;
-      
-      for (let i = 0; i < 18; i++) {
-        const piece = document.createElement('div');
-        piece.className = 'shatter-piece';
-        piece.style.left = `${cx}px`; piece.style.top = `${cy}px`;
-        const angle = Math.random() * Math.PI * 2;
-        const speed = 40 + Math.random() * 80;
-        piece.style.setProperty('--sdx', `${Math.cos(angle) * speed}px`);
-        piece.style.setProperty('--sdy', `${Math.sin(angle) * speed}px`);
-        layer.appendChild(piece);
-      }
-    }
-
-    function startMatch() {
-      validateInputs();
-      pShield = 0; eShield = 0;
-      updateHpDisplay();
-
-      const clashBtn = document.getElementById('clash-btn');
-      const roundBadge = document.getElementById('clash-round-badge');
-      if(clashBtn) clashBtn.disabled = true;
-      if(roundBadge) roundBadge.style.display = 'block';
-
-      if (pStaggerLevel > 0 || eStaggerLevel > 0) {
-        runStaggerOneSidedAttack();
-        return;
-      }
-
-      const pUsedType = playerSlots[pSelectedIndex];
-      const eUsedType = enemySlots[eSelectedIndex];
-      const isPDef = (pUsedType === 4 || pUsedType === 5);
-      const isEDef = (eUsedType === 4 || eUsedType === 5);
-
-      if (isPDef || isEDef) {
-        runSequentialDefense(isPDef, isEDef);
-        return;
-      }
-
-      const pTotal = getSkillCoins(true, pUsedType);
-      const eTotal = getSkillCoins(false, eUsedType);
-      pRemCoins = pTotal;
-      eRemCoins = eTotal;
-      pCoinStates = new Array(pTotal).fill('none');
-      eCoinStates = new Array(eTotal).fill('none');
-      currentClashRound = 1;
-
-      runClashRound();
-    }
-
-    function runStaggerOneSidedAttack() {
-      const roundBadge = document.getElementById('clash-round-badge');
-      if(roundBadge) roundBadge.innerText = 'STAGGER ATTACK';
-
-      const isPlayerStaggered = pStaggerLevel > 0;
-      const attackerIsPlayer = !isPlayerStaggered;
-      const attackType = attackerIsPlayer ? playerSlots[pSelectedIndex] : enemySlots[eSelectedIndex];
-      
-      const coinsCount = getSkillCoins(attackerIsPlayer, attackType);
-      const basePower = getSkillBasePower(attackerIsPlayer, attackType);
-      const coinPower = getSkillCoinPower(attackerIsPlayer, attackType);
-      const sanity = parseInt(document.getElementById(attackerIsPlayer ? 'p-sanity' : 'e-sanity')?.value) || 0;
-      const chance = calculateHeadsChance(sanity);
-
-      let HTML = '';
-      for (let i = 0; i < coinsCount; i++) HTML += `<div class="coin flipping" id="${attackerIsPlayer ? 'p' : 'e'}-coin-${i}"></div>`;
-
-      if (attackerIsPlayer) {
-        const pTag = document.getElementById('p-result-skill-tag');
-        const pCoinsStage = document.getElementById('p-coins-stage');
-        if(pTag) pTag.innerHTML = `<span class="skill-badge s${attackType}">${getSkillName(true, attackType)}</span>`;
-        if(pCoinsStage) pCoinsStage.innerHTML = HTML;
-      } else {
-        const eTag = document.getElementById('e-result-skill-tag');
-        const eCoinsStage = document.getElementById('e-coins-stage');
-        if(eTag) eTag.innerHTML = `<span class="skill-badge s${attackType}">${getSkillName(false, attackType)}</span>`;
-        if(eCoinsStage) eCoinsStage.innerHTML = HTML;
-      }
-
-      playSFX('spin');
-
-      let step = 0;
-      let interval = setInterval(() => {
-        if (step < coinsCount) {
-          let isHeads = Math.random() * 100 < chance;
-          let coinDmg = basePower + (isHeads ? coinPower : 0);
-          
-          let elem = document.getElementById(`${attackerIsPlayer ? 'p' : 'e'}-coin-${step}`);
-          if (elem) {
-            elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
-            elem.innerHTML = `<span class="coin-sub">${coinDmg}</span>`;
-            playSFX(isHeads ? 'heads' : 'tails');
-          }
-
-          applyDamage(isPlayerStaggered, coinDmg, false);
-
-          const statusText = document.getElementById('clash-status-text');
-          if(statusText) {
-            statusText.innerHTML = `
-              <div class="result-banner ${attackerIsPlayer ? 'player' : 'enemy'}">STAGGER ONE-SIDED STRIKE (${step + 1}/${coinsCount})</div>
-              <div style="font-size:0.9rem; color:#ff3322;">흐트러진 대상에게 ${coinDmg} 일방 타격!</div>
-            `;
-          }
-
-          step++;
-        } else {
-          clearInterval(interval);
-          setTimeout(() => { finishMatch(); }, 1200);
-        }
-      }, 500);
-    }
-
-    function runSequentialDefense(isPDef, isEDef) {
-      const roundBadge = document.getElementById('clash-round-badge');
-      if(roundBadge) roundBadge.innerText = 'E.G.O / DEFENSE PHASE';
-
-      const pSanity = parseInt(document.getElementById('p-sanity')?.value) || 0;
-      const eSanity = parseInt(document.getElementById('e-sanity')?.value) || 0;
-      const pChance = calculateHeadsChance(pSanity);
-      const eChance = calculateHeadsChance(eSanity);
-
-      const pUsedType = playerSlots[pSelectedIndex];
-      const eUsedType = enemySlots[eSelectedIndex];
-
-      const pBase = getSkillBasePower(true, pUsedType);
-      const pCP = getSkillCoinPower(true, pUsedType);
-      const pCoinsCount = getSkillCoins(true, pUsedType);
-
-      const eBase = getSkillBasePower(false, eUsedType);
-      const eCP = getSkillCoinPower(false, eUsedType);
-      const eCoinsCount = getSkillCoins(false, eUsedType);
-
-      let pHTML = '';
-      for (let i = 0; i < pCoinsCount; i++) pHTML += `<div class="coin flipping" id="p-coin-${i}"></div>`;
-      let eHTML = '';
-      for (let i = 0; i < eCoinsCount; i++) eHTML += `<div class="coin flipping" id="e-coin-${i}"></div>`;
-
-      const pTag = document.getElementById('p-result-skill-tag');
-      const pCountText = document.getElementById('p-result-count-text');
-      const pPowerScore = document.getElementById('p-power-score');
-      const pCoinsStage = document.getElementById('p-coins-stage');
-
-      if(pTag) pTag.innerHTML = `<span class="skill-badge ${pUsedType===5?'ego':('s'+pUsedType)}">${getSkillName(true, pUsedType)}</span>`;
-      if(pCountText) pCountText.innerText = pUsedType === 5 ? 'E.G.O 개시!' : '수비 진행 중...';
-      if(pPowerScore) pPowerScore.innerText = 'POWER: -';
-      if(pCoinsStage) pCoinsStage.innerHTML = pHTML;
-
-      const eTag = document.getElementById('e-result-skill-tag');
-      const eCountText = document.getElementById('e-result-count-text');
-      const ePowerScore = document.getElementById('e-power-score');
-      const eCoinsStage = document.getElementById('e-coins-stage');
-
-      if(eTag) eTag.innerHTML = `<span class="skill-badge ${eUsedType===5?'ego':('s'+eUsedType)}">${getSkillName(false, eUsedType)}</span>`;
-      if(eCountText) eCountText.innerText = eUsedType === 5 ? 'E.G.O 개시!' : '공격 진행 중...';
-      if(ePowerScore) ePowerScore.innerText = 'POWER: -';
-      if(eCoinsStage) eCoinsStage.innerHTML = eHTML;
-
-      let step = 0;
-      let maxSteps = Math.max(pCoinsCount, eCoinsCount);
-      let pRolls = [];
-      let eRolls = [];
-
-      for (let i = 0; i < pCoinsCount; i++) {
-        let isHeads = Math.random() * 100 < pChance;
-        let val = pBase + (isHeads ? pCP : 0);
-        pRolls.push({ isHeads, val });
-      }
-
-      for (let i = 0; i < eCoinsCount; i++) {
-        let isHeads = Math.random() * 100 < eChance;
-        let val = eBase + (isHeads ? eCP : 0);
-        eRolls.push({ isHeads, val });
-      }
-
-      if (pUsedType === 4 && document.getElementById('p-s4-type')?.value === 'guard') {
-        pShield = pRolls.reduce((acc, cur) => acc + cur.val, 0);
-      }
-      if (eUsedType === 4 && document.getElementById('e-s4-type')?.value === 'guard') {
-        eShield = eRolls.reduce((acc, cur) => acc + cur.val, 0);
-      }
-      updateHpDisplay();
-
-      playSFX('spin');
-
-      let interval = setInterval(() => {
-        if (step < pCoinsCount) {
-          let r = pRolls[step];
-          let elem = document.getElementById(`p-coin-${step}`);
-          if (elem) {
-            elem.className = `coin ${r.isHeads ? 'heads' : 'tails'}`;
-            elem.innerHTML = `<span class="coin-sub">${r.val}</span>`;
-            playSFX(r.isHeads ? 'heads' : 'tails');
-          }
-        }
-
-        if (step < eCoinsCount) {
-          let r = eRolls[step];
-          let elem = document.getElementById(`e-coin-${step}`);
-          if (elem) {
-            elem.className = `coin ${r.isHeads ? 'heads' : 'tails'}`;
-            elem.innerHTML = `<span class="coin-sub">${r.val}</span>`;
-            playSFX(r.isHeads ? 'heads' : 'tails');
-          }
-        }
-
-        const statusText = document.getElementById('clash-status-text');
-        if (pUsedType === 5 && step === 0) {
-          let totalEgoDmg = pRolls.reduce((acc, cur) => acc + cur.val, 0);
-          applyDamage(false, totalEgoDmg, false);
-          if(statusText) statusText.innerHTML = `<span style="color:#ff3366;">[E.G.O 개화] 강력한 환상체 침식! 적에게 ${totalEgoDmg} 피해!</span>`;
-        }
-        if (eUsedType === 5 && step === 0) {
-          let totalEgoDmg = eRolls.reduce((acc, cur) => acc + cur.val, 0);
-          applyDamage(true, totalEgoDmg, false);
-          if(statusText) statusText.innerHTML = `<span style="color:#ff3366;">[적 E.G.O 발동] 아군에게 ${totalEgoDmg} 피해!</span>`;
-        }
-
-        step++;
-        if (step >= maxSteps) {
-          clearInterval(interval);
-          setTimeout(() => { finishMatch(); }, 1600);
-        }
-      }, 500);
-    }
-
-    function runClashRound() {
-      const pSanity = parseInt(document.getElementById('p-sanity')?.value) || 0;
-      const pChance = calculateHeadsChance(pSanity);
-      const eSanity = parseInt(document.getElementById('e-sanity')?.value) || 0;
-      const eChance = calculateHeadsChance(eSanity);
-
-      const pUsedType = playerSlots[pSelectedIndex];
-      const eUsedType = enemySlots[eSelectedIndex];
-
-      const pTotalMax = getSkillCoins(true, pUsedType);
-      const eTotalMax = getSkillCoins(false, eUsedType);
-      const pBase = getSkillBasePower(true, pUsedType);
-      const pCP = getSkillCoinPower(true, pUsedType);
-      const eBase = getSkillBasePower(false, eUsedType);
-      const eCP = getSkillCoinPower(false, eUsedType);
-
-      const roundBadge = document.getElementById('clash-round-badge');
-      const statusText = document.getElementById('clash-status-text');
-      if(roundBadge) roundBadge.innerText = `ROUND ${currentClashRound}`;
-      if(statusText) statusText.innerHTML = `<span style="color: var(--accent-color); font-weight: bold;">ROUND ${currentClashRound} CLASHING...</span>`;
-      document.querySelectorAll('.coin').forEach(c => c.classList.remove('win-glow'));
-
-      playSFX('spin');
-
-      let playerRolls = [], playerHeads = 0, activePIndices = [];
-      for (let i = 0; i < pTotalMax; i++) {
-        if (!pCoinStates[i].startsWith('broken')) {
-          activePIndices.push(i);
-          const roll = Math.random() * 100;
-          const isHeads = roll < pChance;
-          if (isHeads) playerHeads++;
-          playerRolls.push({ isHeads, roll: roll.toFixed(1) });
-        }
-      }
-
-      let enemyRolls = [], enemyHeads = 0, activeEIndices = [];
-      for (let i = 0; i < eTotalMax; i++) {
-        if (!eCoinStates[i].startsWith('broken')) {
-          activeEIndices.push(i);
-          const roll = Math.random() * 100;
-          const isHeads = roll < eChance;
-          if (isHeads) enemyHeads++;
-          enemyRolls.push({ isHeads, roll: roll.toFixed(1) });
-        }
-      }
-
-      const playerFinalPower = pBase + (playerHeads * pCP);
-      const enemyFinalPower = eBase + (enemyHeads * eCP);
-
-      let pHTML = '';
-      for (let i = 0; i < pTotalMax; i++) {
-        pHTML += pCoinStates[i].startsWith('broken') ? `<div class="coin ${pCoinStates[i]}"></div>` : `<div class="coin flipping" id="p-coin-${i}"></div>`;
-      }
-      let eHTML = '';
-      for (let i = 0; i < eTotalMax; i++) {
-        eHTML += eCoinStates[i].startsWith('broken') ? `<div class="coin ${eCoinStates[i]}"></div>` : `<div class="coin flipping" id="e-coin-${i}"></div>`;
-      }
-
-      const pTag = document.getElementById('p-result-skill-tag');
-      const pCountText = document.getElementById('p-result-count-text');
-      const pPowerScore = document.getElementById('p-power-score');
-      const pCoinsStage = document.getElementById('p-coins-stage');
-
-      if(pTag) pTag.innerHTML = `<span class="skill-badge ${pUsedType===5?'ego':('s'+pUsedType)}">${getSkillName(true, pUsedType)}</span>`;
-      if(pCountText) pCountText.innerText = '판정 중...';
-      if(pPowerScore) pPowerScore.innerText = 'POWER: -';
-      if(pCoinsStage) pCoinsStage.innerHTML = pHTML;
-
-      const eTag = document.getElementById('e-result-skill-tag');
-      const eCountText = document.getElementById('e-result-count-text');
-      const ePowerScore = document.getElementById('e-power-score');
-      const eCoinsStage = document.getElementById('e-coins-stage');
-
-      if(eTag) eTag.innerHTML = `<span class="skill-badge ${eUsedType===5?'ego':('s'+eUsedType)}">${getSkillName(false, eUsedType)}</span>`;
-      if(eCountText) eCountText.innerText = '판정 중...';
-      if(ePowerScore) ePowerScore.innerText = 'POWER: -';
-      if(eCoinsStage) eCoinsStage.innerHTML = eHTML;
-
-      const maxStep = Math.max(activePIndices.length, activeEIndices.length);
-      const fixedTotalDuration = 500;
-
-      for (let i = 0; i < maxStep; i++) {
-        setTimeout(() => {
-          if (i < activePIndices.length) {
-            const coinIdx = activePIndices[i];
-            const pElem = document.getElementById(`p-coin-${coinIdx}`);
-            if (pElem) {
-              const res = playerRolls[i];
-              pCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
-              pElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
-              pElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
-              playSFX(res.isHeads ? 'heads' : 'tails');
-            }
-          }
-          if (i < activeEIndices.length) {
-            const coinIdx = activeEIndices[i];
-            const eElem = document.getElementById(`e-coin-${coinIdx}`);
-            if (eElem) {
-              const res = enemyRolls[i];
-              eCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
-              eElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
-              eElem.innerHTML = `<span class="coin-sub">${res.roll}%</span>`;
-              playSFX(res.isHeads ? 'heads' : 'tails');
-            }
-          }
-        }, fixedTotalDuration);
-      }
-
-      setTimeout(() => {
-        if(pCountText) pCountText.innerText = `HEADS ${playerHeads} / ${pRemCoins}`;
-        if(eCountText) eCountText.innerText = `HEADS ${enemyHeads} / ${eRemCoins}`;
-        if(pPowerScore) pPowerScore.innerText = `POWER: ${playerFinalPower}`;
-        if(ePowerScore) ePowerScore.innerText = `POWER: ${enemyFinalPower}`;
-
-        triggerSparks();
-
-        if (playerFinalPower === enemyFinalPower) {
-          if(statusText) statusText.innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
-          currentClashRound++; 
-          setTimeout(() => { runClashRound(); }, 400);
-
-        } else if (playerFinalPower > enemyFinalPower) {
-          const breakCoinIdx = activeEIndices[activeEIndices.length - 1];
-          const breakTarget = document.getElementById(`e-coin-${breakCoinIdx}`);
-          triggerShatterEffect(breakTarget);
-          
-          const isHeadsTarget = eCoinStates[breakCoinIdx] === 'heads';
-          eCoinStates[breakCoinIdx] = isHeadsTarget ? 'broken-heads' : 'broken-tails';
-          if (breakTarget) { breakTarget.className = `coin ${eCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
-
-          eRemCoins--;
-
-          if (eRemCoins > 0) {
-            if(statusText) statusText.innerHTML = `<div class="result-banner player">CLASH WIN</div>`;
-            currentClashRound++; 
-            setTimeout(() => { runClashRound(); }, 500);
-          } else {
-            if(statusText) statusText.innerHTML = `<div class="result-banner player">PLAYER WIN (ONE-SIDED ATTACK)</div>`;
-            
-            let activeWins = activePIndices.filter(idx => !pCoinStates[idx].startsWith('broken'));
-            let hitIndex = 0;
-
-            let hitInterval = setInterval(() => {
-              if (hitIndex < activeWins.length) {
-                let idx = activeWins[hitIndex];
-                let elem = document.getElementById(`p-coin-${idx}`);
-                if (elem) elem.classList.add('win-glow');
-
-                let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
-                applyDamage(false, coinDmg, false);
-
-                if(statusText) {
-                  statusText.innerHTML = `
-                    <div class="result-banner player">SEQUENTIAL STRIKE (${hitIndex + 1}/${activeWins.length})</div>
-                    <div style="font-size:0.9rem; color:#38ef7d;">적에게 ${coinDmg} 데미지 타격!</div>
-                  `;
-                }
-                hitIndex++;
-              } else {
-                clearInterval(hitInterval);
-                setTimeout(() => { finishMatch(); }, 1000);
-              }
-            }, 400);
-          }
-
-        } else {
-          const breakCoinIdx = activePIndices[activePIndices.length - 1];
-          const breakTarget = document.getElementById(`p-coin-${breakCoinIdx}`);
-          triggerShatterEffect(breakTarget);
-
-          const isHeadsTarget = pCoinStates[breakCoinIdx] === 'heads';
-          pCoinStates[breakCoinIdx] = isHeadsTarget ? 'broken-heads' : 'broken-tails';
-          if (breakTarget) { breakTarget.className = `coin ${pCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
-
-          pRemCoins--;
-
-          if (pRemCoins > 0) {
-            if(statusText) statusText.innerHTML = `<div class="result-banner enemy">CLASH LOSE</div>`;
-            currentClashRound++; 
-            setTimeout(() => { runClashRound(); }, 500);
-          } else {
-            if(statusText) statusText.innerHTML = `<div class="result-banner enemy">ENEMY WIN (ONE-SIDED ATTACK)</div>`;
-            
-            let activeWins = activeEIndices.filter(idx => !eCoinStates[idx].startsWith('broken'));
-            let hitIndex = 0;
-
-            let hitInterval = setInterval(() => {
-              if (hitIndex < activeWins.length) {
-                let idx = activeWins[hitIndex];
-                let elem = document.getElementById(`e-coin-${idx}`);
-                if (elem) elem.classList.add('win-glow');
-
-                let coinDmg = eBase + (eCoinStates[idx] === 'heads' ? eCP : 0);
-                applyDamage(true, coinDmg, false);
-
-                if(statusText) {
-                  statusText.innerHTML = `
-                    <div class="result-banner enemy">ENEMY STRIKE (${hitIndex + 1}/${activeWins.length})</div>
-                    <div style="font-size:0.9rem; color:#ff3322;">아군에게 ${coinDmg} 피격!</div>
-                  `;
-                }
-                hitIndex++;
-              } else {
-                clearInterval(hitInterval);
-                setTimeout(() => { finishMatch(); }, 1000);
-              }
-            }, 400);
-          }
-        }
-      }, fixedTotalDuration + 100);
-    }
-
-    function finishMatch() {
-      if (pStaggerLevel > 0) pStaggerLevel = 0;
-      if (eStaggerLevel > 0) eStaggerLevel = 0;
-
-      if (playerSlots[pSelectedIndex] === 5) playerSlots[pSelectedIndex] = 2;
-      if (enemySlots[eSelectedIndex] === 5) enemySlots[eSelectedIndex] = 2;
-      
-      const pEgoBtn = document.getElementById('p-ego-btn');
-      const eEgoBtn = document.getElementById('e-ego-btn');
-      if(pEgoBtn) pEgoBtn.classList.remove('active');
-      if(eEgoBtn) eEgoBtn.classList.remove('active');
-
-      playerSlots[pSelectedIndex] = playerNext;
-      enemySlots[eSelectedIndex] = enemyNext;
-      playerNext = drawNextSkill(true);
-      enemyNext = drawNextSkill(false);
-      renderSlots();
-      
-      const clashBtn = document.getElementById('clash-btn');
-      if(clashBtn) clashBtn.disabled = false;
-    }
-
-    initTheme();
-    playerNext = drawNextSkill(true);
-    enemyNext = drawNextSkill(false);
-    updatePresetDropdowns();
-    updateInfo();
-  </script>
-</body>
-</html>
+      else if (diff <= -1.5) { pStatus = "DISADVANTAGE"; eStatus = "ADVANTAGE"; pClass
