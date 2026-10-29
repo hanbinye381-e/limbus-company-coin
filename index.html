@@ -89,6 +89,7 @@
     .skill-badge { padding: 0.5rem 0.9rem; font-weight: bold; font-size: 0.8rem; background: #141418; color: #fff; border: 1px solid #444; cursor: pointer; clip-path: var(--badge-clip); display: inline-flex; align-items: center; justify-content: center; }
     .skill-badge.s1 { background: #0c182b; color: #70a1ff; } .skill-badge.s2 { background: #121333; color: #9aa8df; }
     .skill-badge.s3 { background: #300a12; color: #ff94a0; } .skill-badge.ego { background: #3b0514; color: #ff3366; box-shadow: 0 0 8px rgba(255, 51, 102, 0.5); }
+    .skill-badge.defense { background: #332211; color: #ffaa00; border-color: #aa6600; }
     .skill-badge.selected { border-color: var(--accent-color) !important; box-shadow: 0 0 12px var(--accent-color); transform: scale(1.06); }
     .skill-badge.next-badge { cursor: default; font-size: 0.7rem; padding: 0.25rem 0.6rem; }
 
@@ -229,7 +230,6 @@
             </div>
           </div>
 
-          <!-- 프리셋 관리 영역 복구 -->
           <div class="preset-manager">
             <div class="preset-btn-group">
               <button class="preset-btn" onclick="savePreset(true)">스킬셋 저장</button>
@@ -361,7 +361,6 @@
             </div>
           </div>
 
-          <!-- 적군 프리셋 관리 영역 복구 -->
           <div class="preset-manager">
             <div class="preset-btn-group">
               <button class="preset-btn" onclick="savePreset(false)">스킬셋 저장</button>
@@ -455,7 +454,6 @@
     renderStaggerInputs('p');
     renderStaggerInputs('e');
 
-    // 프리셋 관리 로직 복구
     function savePreset(isPlayer) {
       const prefix = isPlayer ? 'p' : 'e';
       const name = prompt("저장할 스킬 셋의 이름을 입력하세요:", isPlayer ? "아군 프리셋 1" : "적군 프리셋 1");
@@ -746,6 +744,7 @@
     function getSkillCoins(isPlayer, skillType) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
       const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) return parseInt(document.getElementById(`${prefix}-s4-coins`)?.value) || 1;
       if (skillType === 5) return parseInt(document.getElementById(`${prefix}-ego-coins`)?.value) || 1;
       return parseInt(document.getElementById(`${prefix}-s${skillType}-coins`)?.value) || 1;
     }
@@ -753,6 +752,7 @@
     function getSkillBasePower(isPlayer, skillType) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
       const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) return parseInt(document.getElementById(`${prefix}-s4-base`)?.value) || 0;
       if (skillType === 5) return parseInt(document.getElementById(`${prefix}-ego-base`)?.value) || 0;
       return parseInt(document.getElementById(`${prefix}-s${skillType}-base`)?.value) || 0;
     }
@@ -760,6 +760,7 @@
     function getSkillCoinPower(isPlayer, skillType) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
       const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) return parseInt(document.getElementById(`${prefix}-s4-coinpower`)?.value) || 0;
       if (skillType === 5) return parseInt(document.getElementById(`${prefix}-ego-coinpower`)?.value) || 0;
       return parseInt(document.getElementById(`${prefix}-s${skillType}-coinpower`)?.value) || 0;
     }
@@ -791,18 +792,18 @@
     function renderSlots() {
       document.getElementById('p-slots-display').innerHTML = playerSlots.map((s, idx) => {
         const isSelected = idx === pSelectedIndex ? 'selected' : '';
-        const badgeClass = s === 5 ? 'ego' : `s${s}`;
+        const badgeClass = s === 5 ? 'ego' : (s === 4 ? 'defense' : `s${s}`);
         return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(true, ${idx})">${getSkillName(true, s)}</span>`;
       }).join('');
 
       document.getElementById('e-slots-display').innerHTML = enemySlots.map((s, idx) => {
         const isSelected = idx === eSelectedIndex ? 'selected' : '';
-        const badgeClass = s === 5 ? 'ego' : `s${s}`;
+        const badgeClass = s === 5 ? 'ego' : (s === 4 ? 'defense' : `s${s}`);
         return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(false, ${idx})">${getSkillName(false, s)}</span>`;
       }).join('');
 
-      document.getElementById('p-next-display').innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${playerNext === 5 ? 1 : playerNext}">${getSkillName(true, playerNext)}</span>`;
-      document.getElementById('e-next-display').innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${enemyNext === 5 ? 1 : enemyNext}">${getSkillName(false, enemyNext)}</span>`;
+      document.getElementById('p-next-display').innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${playerNext === 5 ? 1 : (playerNext === 4 ? 1 : playerNext)}">${getSkillName(true, playerNext)}</span>`;
+      document.getElementById('e-next-display').innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${enemyNext === 5 ? 1 : (enemyNext === 4 ? 1 : enemyNext)}">${getSkillName(false, enemyNext)}</span>`;
 
       updateHpDisplay();
       updateMatchupAnalysis();
@@ -869,6 +870,12 @@
       const pUsedType = playerSlots[pSelectedIndex];
       const eUsedType = enemySlots[eSelectedIndex];
 
+      // 수비 스킬(유형 4)이 포함되어 있으면 합을 치지 않고 독립 수비 처리
+      if (pUsedType === 4 || eUsedType === 4) {
+        runDefenseAction(pUsedType === 4, eUsedType === 4);
+        return;
+      }
+
       pRemCoins = getSkillCoins(true, pUsedType);
       eRemCoins = getSkillCoins(false, eUsedType);
       pCoinStates = new Array(pRemCoins).fill('none');
@@ -876,6 +883,112 @@
       currentClashRound = 1;
 
       runClashRound();
+    }
+
+    // 수비 스킬 단독 판정 로직 (합을 치지 않고 방어/회피/반격 수행)
+    function runDefenseAction(isPlayerDef, isEnemyDef) {
+      const roundBadge = document.getElementById('clash-round-badge');
+      const statusText = document.getElementById('clash-status-text');
+      if(roundBadge) roundBadge.innerText = 'DEFENSE ACTION';
+
+      const pUsedType = playerSlots[pSelectedIndex];
+      const eUsedType = enemySlots[eSelectedIndex];
+
+      document.getElementById('p-result-skill-tag').innerHTML = `<span class="skill-badge ${pUsedType===4?'defense':(pUsedType===5?'ego':'s'+pUsedType)}">${getSkillName(true, pUsedType)}</span>`;
+      document.getElementById('e-result-skill-tag').innerHTML = `<span class="skill-badge ${eUsedType===4?'defense':(eUsedType===5?'ego':'s'+eUsedType)}">${getSkillName(false, eUsedType)}</span>`;
+
+      let statusMsg = "";
+
+      // 플레이어가 수비일 때
+      if (isPlayerDef) {
+        const subType = document.getElementById('p-s4-type').value;
+        const base = getSkillBasePower(true, 4);
+        const cp = getSkillCoinPower(true, 4);
+        const sanity = parseInt(document.getElementById('p-sanity').value) || 0;
+        const chance = calculateHeadsChance(sanity);
+        const isHeads = Math.random() * 100 < chance;
+        const totalVal = base + (isHeads ? cp : 0);
+
+        document.getElementById('p-coins-stage').innerHTML = `<div class="coin ${isHeads ? 'heads' : 'tails'} win-glow"><span class="coin-sub">${totalVal}</span></div>`;
+        document.getElementById('p-power-score').innerText = `DEF: ${totalVal}`;
+
+        if (subType === 'guard') {
+          pShield = totalVal;
+          document.getElementById('p-shield-bar').style.width = '100%';
+          playSFX('shield');
+          statusMsg = `[아군] 방어 성공! 보호막 ${totalVal} 획득`;
+        } else if (subType === 'evade') {
+          playSFX('counter');
+          statusMsg = `[아군] 회피 판정 완료 (회피 수치: ${totalVal})`;
+        } else if (subType === 'counter') {
+          playSFX('counter');
+          applyDamage(false, totalVal);
+          statusMsg = `[아군] 반격 발동! 적에게 ${totalVal} 피해 반사`;
+        }
+      } else {
+        // 아군이 공격할 때 (적은 수비)
+        const pCoins = getSkillCoins(true, pUsedType);
+        const pBase = getSkillBasePower(true, pUsedType);
+        const pCP = getSkillCoinPower(true, pUsedType);
+        let pDmg = pBase + pCP; // 간소화된 일방공격 피해
+        
+        let pHTML = '';
+        for (let i = 0; i < pCoins; i++) pHTML += `<div class="coin heads win-glow"></div>`;
+        document.getElementById('p-coins-stage').innerHTML = pHTML;
+        document.getElementById('p-power-score').innerText = `ATTACK`;
+
+        if (isEnemyDef) {
+          const eSubType = document.getElementById('e-s4-type').value;
+          const eBase = getSkillBasePower(false, 4);
+          const eCP = getSkillCoinPower(false, 4);
+          const eTotal = eBase + eCP;
+          document.getElementById('e-coins-stage').innerHTML = `<div class="coin heads"><span class="coin-sub">${eTotal}</span></div>`;
+          document.getElementById('e-power-score').innerText = `DEF: ${eTotal}`;
+
+          if (eSubType === 'guard') {
+            let finalDmg = Math.max(0, pDmg - eTotal);
+            applyDamage(false, finalDmg);
+            statusMsg = `[적군] 방어로 피해 경감 (남은 피해: ${finalDmg})`;
+          } else if (eSubType === 'evade') {
+            statusMsg = `[적군] 공격을 완전히 회피했습니다!`;
+          } else if (eSubType === 'counter') {
+            applyDamage(false, pDmg);
+            applyDamage(true, eTotal);
+            statusMsg = `[적군] 반격 맞대응! 양측 모두 피해 교환`;
+          }
+        }
+      }
+
+      // 적군이 수비일 때 (아군은 공격이 아닐 때)
+      if (isEnemyDef && !isPlayerDef) {
+        const subType = document.getElementById('e-s4-type').value;
+        const base = getSkillBasePower(false, 4);
+        const cp = getSkillCoinPower(false, 4);
+        const sanity = parseInt(document.getElementById('e-sanity').value) || 0;
+        const chance = calculateHeadsChance(sanity);
+        const isHeads = Math.random() * 100 < chance;
+        const totalVal = base + (isHeads ? cp : 0);
+
+        document.getElementById('e-coins-stage').innerHTML = `<div class="coin ${isHeads ? 'heads' : 'tails'} win-glow"><span class="coin-sub">${totalVal}</span></div>`;
+        document.getElementById('e-power-score').innerText = `DEF: ${totalVal}`;
+
+        if (subType === 'guard') {
+          eShield = totalVal;
+          document.getElementById('e-shield-bar').style.width = '100%';
+          playSFX('shield');
+          statusMsg = `[적군] 방어 성공! 보호막 ${totalVal} 획득`;
+        } else if (subType === 'evade') {
+          playSFX('counter');
+          statusMsg = `[적군] 회피 판정 완료 (회피 수치: ${totalVal})`;
+        } else if (subType === 'counter') {
+          playSFX('counter');
+          applyDamage(true, totalVal);
+          statusMsg = `[적군] 반격 발동! 아군에게 ${totalVal} 피해 반사`;
+        }
+      }
+
+      if(statusText) statusText.innerHTML = `<span style="color: var(--accent-color); font-weight: bold;">${statusMsg}</span>`;
+      setTimeout(() => { finishMatch(); }, 1800);
     }
 
     function runStaggerOneSidedAttack() {
@@ -1043,6 +1156,15 @@
                 let idx = activeWins[hitIndex];
                 document.getElementById(`p-coin-${idx}`)?.classList.add('win-glow');
                 let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
+                
+                // 보호막 차감 로직
+                if (eShield > 0) {
+                  let absorbed = Math.min(eShield, coinDmg);
+                  eShield -= absorbed;
+                  coinDmg -= absorbed;
+                  if (eShield <= 0) document.getElementById('e-shield-bar').style.width = '0%';
+                }
+                
                 applyDamage(false, coinDmg);
                 hitIndex++;
               } else {
@@ -1071,6 +1193,14 @@
                 let idx = activeWins[hitIndex];
                 document.getElementById(`e-coin-${idx}`)?.classList.add('win-glow');
                 let coinDmg = eBase + (eCoinStates[idx] === 'heads' ? eCP : 0);
+                
+                if (pShield > 0) {
+                  let absorbed = Math.min(pShield, coinDmg);
+                  pShield -= absorbed;
+                  coinDmg -= absorbed;
+                  if (pShield <= 0) document.getElementById('p-shield-bar').style.width = '0%';
+                }
+
                 applyDamage(true, coinDmg);
                 hitIndex++;
               } else {
@@ -1100,9 +1230,13 @@
 
       if (playerSlots[pSelectedIndex] === 5) playerSlots[pSelectedIndex] = 2;
       if (enemySlots[eSelectedIndex] === 5) enemySlots[eSelectedIndex] = 2;
+      if (playerSlots[pSelectedIndex] === 4) playerSlots[pSelectedIndex] = 2;
+      if (enemySlots[eSelectedIndex] === 4) enemySlots[eSelectedIndex] = 2;
       
       document.getElementById('p-ego-btn').classList.remove('active');
       document.getElementById('e-ego-btn').classList.remove('active');
+      document.getElementById('p-def-btn').classList.remove('active');
+      document.getElementById('e-def-btn').classList.remove('active');
 
       playerSlots[pSelectedIndex] = playerNext;
       enemySlots[eSelectedIndex] = enemyNext;
