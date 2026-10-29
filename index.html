@@ -870,7 +870,7 @@
       const pUsedType = playerSlots[pSelectedIndex];
       const eUsedType = enemySlots[eSelectedIndex];
 
-      // [버그 수정] 양쪽 모두 수비 스킬이거나, 한쪽만 수비 스킬일 때 독립 수비 대응 루프로 진입
+      // 수비 스킬이 포함된 경우 수비 선행 및 일방공격 흐름으로 진입
       if (pUsedType === 4 || eUsedType === 4) {
         runDefenseAction(pUsedType === 4, eUsedType === 4);
         return;
@@ -885,11 +885,11 @@
       runClashRound();
     }
 
-    // [버그 수정] 수비 스킬과 공격 스킬이 맞붙을 때 상대 공격이 씹히지 않고 정상 판정되도록 개선된 대응 로직
+    // [요청 반영] 수비 스킬 코인 선 굴림 -> 적의 일방공격 수행 -> 반격 처리 흐름
     function runDefenseAction(isPlayerDef, isEnemyDef) {
       const roundBadge = document.getElementById('clash-round-badge');
       const statusText = document.getElementById('clash-status-text');
-      if(roundBadge) roundBadge.innerText = 'DEFENSE ACTION';
+      if(roundBadge) roundBadge.innerText = 'DEFENSE & ONE-SIDED ATTACK';
 
       const pUsedType = playerSlots[pSelectedIndex];
       const eUsedType = enemySlots[eSelectedIndex];
@@ -899,49 +899,79 @@
 
       let statusMsg = "";
 
-      // 1. 플레이어가 수비일 때 (적이 공격이거나 수비일 때)
+      // 1단계: 플레이어 수비 코인 선 굴림
+      let pDefVal = 0, pSubType = '';
       if (isPlayerDef) {
-        const subType = document.getElementById('p-s4-type').value;
-        const base = getSkillBasePower(true, 4);
-        const cp = getSkillCoinPower(true, 4);
-        const sanity = parseInt(document.getElementById('p-sanity').value) || 0;
-        const chance = calculateHeadsChance(sanity);
-        const isHeads = Math.random() * 100 < chance;
-        const totalVal = base + (isHeads ? cp : 0);
+        pSubType = document.getElementById('p-s4-type').value;
+        const pCoins = getSkillCoins(true, 4);
+        const pBase = getSkillBasePower(true, 4);
+        const pCP = getSkillCoinPower(true, 4);
+        const pSanity = parseInt(document.getElementById('p-sanity').value) || 0;
+        const pChance = calculateHeadsChance(pSanity);
+        
+        let pHTML = '';
+        let headsCount = 0;
+        for (let i = 0; i < pCoins; i++) {
+          let isHeads = Math.random() * 100 < pChance;
+          if (isHeads) headsCount++;
+          pHTML += `<div class="coin ${isHeads ? 'heads' : 'tails'} win-glow"></div>`;
+        }
+        pDefVal = pBase + (headsCount * pCP);
+        document.getElementById('p-coins-stage').innerHTML = pHTML;
+        document.getElementById('p-power-score').innerText = `DEF: ${pDefVal}`;
+        playSFX('spin');
 
-        document.getElementById('p-coins-stage').innerHTML = `<div class="coin ${isHeads ? 'heads' : 'tails'} win-glow"><span class="coin-sub">${totalVal}</span></div>`;
-        document.getElementById('p-power-score').innerText = `DEF: ${totalVal}`;
-
-        if (subType === 'guard') {
-          pShield = totalVal;
+        if (pSubType === 'guard') {
+          pShield = pDefVal;
           document.getElementById('p-shield-bar').style.width = '100%';
           playSFX('shield');
-          statusMsg = `[아군] 방어 성공! 보호막 ${totalVal} 획득`;
-        } else if (subType === 'evade') {
+          statusMsg = `[아군] 방어 코인 굴림 완료! 보호막 ${pDefVal} 전개. `;
+        } else if (pSubType === 'evade') {
           playSFX('counter');
-          statusMsg = `[아군] 회피 판정 완료 (회피 수치: ${totalVal})`;
-        } else if (subType === 'counter') {
+          statusMsg = `[아군] 회피 코인 굴림 완료! (회피 수치: ${pDefVal}). `;
+        } else if (pSubType === 'counter') {
           playSFX('counter');
-          applyDamage(false, totalVal);
-          statusMsg = `[아군] 반격 발동! 적에게 ${totalVal} 피해 반사`;
+          statusMsg = `[아군] 반격 태세 준비 완료 (반격 수치: ${pDefVal}). `;
         }
       }
 
-      // 2. 적이 수비일 때 (아군이 공격일 때) -> 적의 수비 능력이 아군의 공격을 막거나 반사
+      // 2단계: 적군 수비 코인 선 굴림 (적이 수비일 경우)
+      let eDefVal = 0, eSubType = '';
       if (isEnemyDef) {
-        const subType = document.getElementById('e-s4-type').value;
-        const base = getSkillBasePower(false, 4);
-        const cp = getSkillCoinPower(false, 4);
-        const sanity = parseInt(document.getElementById('e-sanity').value) || 0;
-        const chance = calculateHeadsChance(sanity);
-        const isHeads = Math.random() * 100 < chance;
-        const totalVal = base + (isHeads ? cp : 0);
+        eSubType = document.getElementById('e-s4-type').value;
+        const eCoins = getSkillCoins(false, 4);
+        const eBase = getSkillBasePower(false, 4);
+        const eCP = getSkillCoinPower(false, 4);
+        const eSanity = parseInt(document.getElementById('e-sanity').value) || 0;
+        const eChance = calculateHeadsChance(eSanity);
+        
+        let eHTML = '';
+        let headsCount = 0;
+        for (let i = 0; i < eCoins; i++) {
+          let isHeads = Math.random() * 100 < eChance;
+          if (isHeads) headsCount++;
+          eHTML += `<div class="coin ${isHeads ? 'heads' : 'tails'} win-glow"></div>`;
+        }
+        eDefVal = eBase + (headsCount * eCP);
+        document.getElementById('e-coins-stage').innerHTML = eHTML;
+        document.getElementById('e-power-score').innerText = `DEF: ${eDefVal}`;
 
-        document.getElementById('e-coins-stage').innerHTML = `<div class="coin ${isHeads ? 'heads' : 'tails'} win-glow"><span class="coin-sub">${totalVal}</span></div>`;
-        document.getElementById('e-power-score').innerText = `DEF: ${totalVal}`;
+        if (eSubType === 'guard') {
+          eShield = eDefVal;
+          document.getElementById('e-shield-bar').style.width = '100%';
+          playSFX('shield');
+          statusMsg += `[적군] 방어 보호막 ${eDefVal} 전개. `;
+        } else if (eSubType === 'evade') {
+          statusMsg += `[적군] 회피 수치 ${eDefVal} 전개. `;
+        } else if (eSubType === 'counter') {
+          statusMsg += `[적군] 반격 태세 준비. `;
+        }
+      }
 
-        // 아군이 공격 중이었다면 적의 수비와 상호작용
-        if (!isPlayerDef) {
+      // 3단계: 공격 측의 일방공격 수행 및 상호작용
+      setTimeout(() => {
+        // 아군이 공격이고 적이 수비일 때 (아군의 일방공격 -> 적 수비 대응)
+        if (!isPlayerDef && isEnemyDef) {
           const pCoins = getSkillCoins(true, pUsedType);
           const pBase = getSkillBasePower(true, pUsedType);
           const pCP = getSkillCoinPower(true, pUsedType);
@@ -952,48 +982,50 @@
           document.getElementById('p-coins-stage').innerHTML = pHTML;
           document.getElementById('p-power-score').innerText = `ATTACK`;
 
-          if (subType === 'guard') {
-            let finalDmg = Math.max(0, pDmg - totalVal);
+          if (eSubType === 'guard') {
+            let finalDmg = Math.max(0, pDmg - eDefVal);
             applyDamage(false, finalDmg);
-            statusMsg = `[적군] 방어로 공격 방어 (남은 피해: ${finalDmg})`;
-          } else if (subType === 'evade') {
-            statusMsg = `[적군] 아군의 공격을 완전히 회피했습니다!`;
-          } else if (subType === 'counter') {
-            applyDamage(false, pDmg);
-            applyDamage(true, totalVal);
-            statusMsg = `[적군] 반격 발동! 아군의 공격을 맞받아침`;
-          }
-        } else {
-          if (subType === 'guard') {
-            eShield = totalVal;
-            document.getElementById('e-shield-bar').style.width = '100%';
-            playSFX('shield');
-            statusMsg += ` | [적군] 방어 성공 (보호막 ${totalVal})`;
-          } else if (subType === 'evade') {
-            statusMsg += ` | [적군] 회피 판정 완료`;
-          } else if (subType === 'counter') {
-            applyDamage(true, totalVal);
-            statusMsg += ` | [적군] 반격 발동`;
+            statusMsg = `[아군] 일방공격 (${pDmg}) -> [적군] 방어로 경감 (남은 피해: ${finalDmg})`;
+          } else if (eSubType === 'evade') {
+            statusMsg = `[적군] 회피 성공! 아군의 일방공격을 무효화했습니다.`;
+          } else if (eSubType === 'counter') {
+            applyDamage(false, pDmg); // 아군 공격 적중
+            applyDamage(true, eDefVal); // 적의 반격 일방타격
+            statusMsg = `[아군] 일방공격 적중 및 [적군] 반격으로 맞대응 피해 교환!`;
           }
         }
-      }
+        // 적이 공격이고 아군이 수비일 때 (적의 일방공격 -> 아군 수비 대응)
+        else if (isPlayerDef && !isEnemyDef) {
+          const eCoins = getSkillCoins(false, eUsedType);
+          const eBase = getSkillBasePower(false, eUsedType);
+          const eCP = getSkillCoinPower(false, eUsedType);
+          let eDmg = eBase + eCP;
 
-      // 3. 아군이 공격이고 적이 일반 공격이 아닐 때 (아군의 일방 공격)
-      if (!isPlayerDef && !isEnemyDef) {
-        const pCoins = getSkillCoins(true, pUsedType);
-        const pBase = getSkillBasePower(true, pUsedType);
-        const pCP = getSkillCoinPower(true, pUsedType);
-        let pDmg = pBase + pCP;
-        let pHTML = '';
-        for (let i = 0; i < pCoins; i++) pHTML += `<div class="coin heads win-glow"></div>`;
-        document.getElementById('p-coins-stage').innerHTML = pHTML;
-        document.getElementById('p-power-score').innerText = `ATTACK`;
-        applyDamage(false, pDmg);
-        statusMsg = `[아군] 일방 공격 적중! (${pDmg} 피해)`;
-      }
+          let eHTML = '';
+          for (let i = 0; i < eCoins; i++) eHTML += `<div class="coin heads win-glow"></div>`;
+          document.getElementById('e-coins-stage').innerHTML = eHTML;
+          document.getElementById('e-power-score').innerText = `ATTACK`;
 
-      if(statusText) statusText.innerHTML = `<span style="color: var(--accent-color); font-weight: bold;">${statusMsg}</span>`;
-      setTimeout(() => { finishMatch(); }, 1800);
+          if (pSubType === 'guard') {
+            let finalDmg = Math.max(0, eDmg - pDefVal);
+            applyDamage(true, finalDmg);
+            statusMsg = `[적군] 일방공격 (${eDmg}) -> [아군] 방어로 경감 (남은 피해: ${finalDmg})`;
+          } else if (pSubType === 'evade') {
+            statusMsg = `[아군] 회피 성공! 적의 일방공격을 완전히 회피했습니다.`;
+          } else if (pSubType === 'counter') {
+            applyDamage(true, eDmg); // 적의 일방공격 피격 먼저 당함
+            applyDamage(false, pDefVal); // 그 후 반격으로 적을 일방공격
+            statusMsg = `[적군] 일방공격 피격 후 -> [아군] 반격으로 적을 일방공격 타격!`;
+          }
+        }
+        // 양측 모두 수비일 경우
+        else if (isPlayerDef && isEnemyDef) {
+          statusMsg = `양측 모두 수비 태세를 전개하여 행동을 마쳤습니다.`;
+        }
+
+        if(statusText) statusText.innerHTML = `<span style="color: var(--accent-color); font-weight: bold;">${statusMsg}</span>`;
+        setTimeout(() => { finishMatch(); }, 2200);
+      }, 800);
     }
 
     function runStaggerOneSidedAttack() {
