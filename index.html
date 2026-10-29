@@ -434,7 +434,7 @@
       min-height: 240px;
     }
 
-    /* 체력바 및 금빛 흐트러짐 선 스타일 */
+    /* 체력바 및 명확한 실드바 스타일 */
     .hp-container {
       margin-bottom: 0.8rem;
       background: #111;
@@ -445,7 +445,7 @@
     }
     .hp-bar-bg {
       width: 100%;
-      height: 14px;
+      height: 16px;
       background: #222;
       position: relative;
       overflow: hidden;
@@ -458,25 +458,30 @@
     }
     .hp-bar-fill.enemy-hp { background: #ff3322; }
     
+    /* 육안으로 뚜렷하게 식별 가능한 단색 네온 실드바 */
     .shield-bar-fill {
       position: absolute;
       top: 0; left: 0; height: 100%;
-      background: #38e8e5;
-      opacity: 0.75;
+      background-color: #00e5ff;
+      border-right: 2px solid #ffffff;
+      box-shadow: 0 0 8px #00e5ff;
+      opacity: 0.9;
       width: 0%;
       transition: width 0.3s ease;
+      z-index: 2;
     }
 
-    /* 금빛 흐트러짐 구분선 */
+    /* HP바 내부 및 높이에 시각적으로 완벽히 맞춘 금빛 흐트러짐 선 */
     .stagger-line {
       position: absolute;
-      top: 4px;
-      bottom: 4px;
+      top: 0;
+      bottom: 0;
       width: 2px;
       background-color: #ffd700;
-      box-shadow: 0 0 8px #ffaa00;
+      box-shadow: 0 0 6px #ffaa00;
       z-index: 5;
       display: block;
+      pointer-events: none;
     }
     .stagger-line.hidden {
       display: none !important;
@@ -521,6 +526,17 @@
       0% { transform: scale(0.95); opacity: 0.8; }
       100% { transform: scale(1.05); opacity: 1; }
     }
+
+    .stagger-control-btn {
+      padding: 0.2rem 0.5rem;
+      font-size: 0.7rem;
+      background: #1f1a14;
+      color: #e6a100;
+      border: 1px solid #e6a100;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .stagger-control-btn:hover { background: #3d3121; }
 
     .coin {
       position: relative;
@@ -722,10 +738,16 @@
           <div class="coin-preview-box" id="p-coin-preview"></div>
         </div>
 
-        <!-- 금빛 흐트러짐 선 편집 옵션 -->
+        <!-- 동적 금빛 흐트러짐 선 추가/삭제 옵션 -->
         <div class="skill-config-box" style="margin-bottom: 0.9rem; border-color: #e6a100;">
-          <div class="skill-config-title" style="color: #e6a100;">금빛 흐트러짐 선 설정 (체력 %)</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <div class="skill-config-title" style="color: #e6a100; margin-bottom:0;">금빛 흐트러짐 선 설정 (최대 3개)</div>
+            <div>
+              <button class="stagger-control-btn" onclick="addStaggerLine(true)">+ 추가</button>
+              <button class="stagger-control-btn" onclick="removeStaggerLine(true)">- 삭제</button>
+            </div>
+          </div>
+          <div id="p-stagger-inputs-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
             <div><label>선 1 (%)</label><input type="number" id="p-stagger-1" value="70" min="0" max="100" onchange="updateHpDisplay();"></div>
             <div><label>선 2 (%)</label><input type="number" id="p-stagger-2" value="40" min="0" max="100" onchange="updateHpDisplay();"></div>
             <div><label>선 3 (%)</label><input type="number" id="p-stagger-3" value="20" min="0" max="100" onchange="updateHpDisplay();"></div>
@@ -768,12 +790,12 @@
               <!-- 아군 결과 박스 -->
               <div class="side-result-box">
                 <div class="hp-container" id="p-hp-container">
-                  <div class="hp-bar-bg">
+                  <div class="hp-bar-bg" id="p-hp-bar-bg">
                     <div class="hp-bar-fill" id="p-hp-bar" style="width: 100%;"></div>
                     <div class="shield-bar-fill" id="p-shield-bar" style="width: 0%;"></div>
+                    <!-- 금빛 흐트러짐 선 레이어 (HP 바 내부에 위치) -->
+                    <div id="p-stagger-lines-layer" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
                   </div>
-                  <!-- 금빛 흐트러짐 선 레이어 -->
-                  <div id="p-stagger-lines-layer"></div>
                   <div class="hp-text" id="p-hp-text">HP: 100 / 100</div>
                 </div>
                 <div id="p-result-skill-tag" style="margin-bottom: 0.4rem;"><span class="skill-badge s1">아군 스킬</span></div>
@@ -785,12 +807,12 @@
               <!-- 적군 결과 박스 -->
               <div class="side-result-box">
                 <div class="hp-container" id="e-hp-container">
-                  <div class="hp-bar-bg">
+                  <div class="hp-bar-bg" id="e-hp-bar-bg">
                     <div class="hp-bar-fill enemy-hp" id="e-hp-bar" style="width: 100%;"></div>
                     <div class="shield-bar-fill" id="e-shield-bar" style="width: 0%;"></div>
+                    <!-- 금빛 흐트러짐 선 레이어 (HP 바 내부에 위치) -->
+                    <div id="e-stagger-lines-layer" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
                   </div>
-                  <!-- 금빛 흐트러짐 선 레이어 -->
-                  <div id="e-stagger-lines-layer"></div>
                   <div class="hp-text" id="e-hp-text">HP: 100 / 100</div>
                 </div>
                 <div id="e-result-skill-tag" style="margin-bottom: 0.4rem;"><span class="skill-badge s1">적군 스킬</span></div>
@@ -895,10 +917,16 @@
           <div class="coin-preview-box" id="e-coin-preview"></div>
         </div>
 
-        <!-- 금빛 흐트러짐 선 편집 옵션 -->
+        <!-- 동적 금빛 흐트러짐 선 추가/삭제 옵션 -->
         <div class="skill-config-box" style="margin-bottom: 0.9rem; border-color: #e6a100;">
-          <div class="skill-config-title" style="color: #e6a100;">금빛 흐트러짐 선 설정 (체력 %)</div>
-          <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem;">
+            <div class="skill-config-title" style="color: #e6a100; margin-bottom:0;">금빛 흐트러짐 선 설정 (최대 3개)</div>
+            <div>
+              <button class="stagger-control-btn" onclick="addStaggerLine(false)">+ 추가</button>
+              <button class="stagger-control-btn" onclick="removeStaggerLine(false)">- 삭제</button>
+            </div>
+          </div>
+          <div id="e-stagger-inputs-container" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px;">
             <div><label>선 1 (%)</label><input type="number" id="e-stagger-1" value="70" min="0" max="100" onchange="updateHpDisplay();"></div>
             <div><label>선 2 (%)</label><input type="number" id="e-stagger-2" value="40" min="0" max="100" onchange="updateHpDisplay();"></div>
             <div><label>선 3 (%)</label><input type="number" id="e-stagger-3" value="20" min="0" max="100" onchange="updateHpDisplay();"></div>
@@ -969,6 +997,9 @@
 
     let pStaggerLevel = 0;
     let eStaggerLevel = 0;
+
+    let pStaggerCount = 3;
+    let eStaggerCount = 3;
     
     let pEgoHoldTimer = null;
     let eEgoHoldTimer = null;
@@ -983,6 +1014,44 @@
       document.documentElement.setAttribute('data-theme', savedTheme);
       const sel = document.getElementById('theme-select');
       if(sel) sel.value = savedTheme;
+    }
+
+    function addStaggerLine(isPlayer) {
+      const prefix = isPlayer ? 'p' : 'e';
+      let count = isPlayer ? pStaggerCount : eStaggerCount;
+      if (count >= 3) return;
+      count++;
+      if (isPlayer) pStaggerCount = count; else eStaggerCount = count;
+      renderStaggerInputs(isPlayer);
+      updateHpDisplay();
+    }
+
+    function removeStaggerLine(isPlayer) {
+      const prefix = isPlayer ? 'p' : 'e';
+      let count = isPlayer ? pStaggerCount : eStaggerCount;
+      if (count <= 0) return;
+      count--;
+      if (isPlayer) pStaggerCount = count; else eStaggerCount = count;
+      renderStaggerInputs(isPlayer);
+      updateHpDisplay();
+    }
+
+    function renderStaggerInputs(isPlayer) {
+      const prefix = isPlayer ? 'p' : 'e';
+      const count = isPlayer ? pStaggerCount : eStaggerCount;
+      const container = document.getElementById(`${prefix}-stagger-inputs-container`);
+      if (!container) return;
+
+      const defaultVals = [70, 40, 20];
+      let html = '';
+      container.style.gridTemplateColumns = `repeat(${Math.max(1, count)}, 1fr)`;
+
+      for (let i = 1; i <= count; i++) {
+        const existingVal = document.getElementById(`${prefix}-stagger-${i}`)?.value;
+        const val = existingVal !== undefined ? existingVal : defaultVals[i-1];
+        html += `<div><label>선 ${i} (%)</label><input type="number" id="${prefix}-stagger-${i}" value="${val}" min="0" max="100" onchange="updateHpDisplay();"></div>`;
+      }
+      container.innerHTML = html;
     }
 
     function toggleDefenseSlot(isPlayer) {
@@ -1073,30 +1142,34 @@
         const hpBar = document.getElementById(`${prefix}-hp-bar`);
         const hpText = document.getElementById(`${prefix}-hp-text`);
         if(hpBar) hpBar.style.width = `${pct}%`;
-        if(hpText) hpText.innerText = `HP: ${hp} / ${maxHp}`;
 
         let shield = isPlayer ? pShield : eShield;
         let shieldPct = Math.max(0, Math.min(100, (shield / maxHp) * 100));
         const shieldBar = document.getElementById(`${prefix}-shield-bar`);
         if(shieldBar) shieldBar.style.width = `${shieldPct}%`;
 
-        // 금빛 흐트러짐 선 렌더링 및 체력 구간에 따른 숨김 처리
+        if(hpText) {
+          hpText.innerText = shield > 0 ? `HP: ${hp} / ${maxHp} (+${shield})` : `HP: ${hp} / ${maxHp}`;
+        }
+
+        // 금빛 흐트러짐 선 렌더링 (HP 바 내부 정확한 위치에 조율)
         const linesLayer = document.getElementById(`${prefix}-stagger-lines-layer`);
+        const stCount = isPlayer ? pStaggerCount : eStaggerCount;
         if(linesLayer) {
           linesLayer.innerHTML = '';
-          let thresholds = [
-            { id: 1, val: parseFloat(document.getElementById(`${prefix}-stagger-1`)?.value) || 0 },
-            { id: 2, val: parseFloat(document.getElementById(`${prefix}-stagger-2`)?.value) || 0 },
-            { id: 3, val: parseFloat(document.getElementById(`${prefix}-stagger-3`)?.value) || 0 }
-          ];
+          let thresholds = [];
+          for (let i = 1; i <= stCount; i++) {
+            let val = parseFloat(document.getElementById(`${prefix}-stagger-${i}`)?.value);
+            if (!isNaN(val)) thresholds.push(val);
+          }
 
-          thresholds.forEach(th => {
-            if (th.val > 0 && th.val < 100) {
+          thresholds.forEach(val => {
+            if (val > 0 && val < 100) {
               let line = document.createElement('div');
               line.className = 'stagger-line';
-              line.style.left = `${th.val}%`;
+              line.style.left = `${val}%`;
               
-              if (pct <= th.val) {
+              if (pct <= val) {
                 line.classList.add('hidden');
               }
               
@@ -1105,7 +1178,7 @@
           });
         }
 
-        // 흐트러짐 이미지 갱신 (현재 상태에 맞춰 즉시 갱신)
+        // 흐트러짐 이미지 갱신
         const currentStaggerLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
         const stageElem = document.getElementById(`${prefix}-coins-stage`);
         if (currentStaggerLvl > 0 && stageElem && !stageElem.querySelector('.stagger-img')) {
@@ -1115,28 +1188,23 @@
       });
     }
 
-    // 데미지 차감 및 흐트러짐 선 도달 체크 (즉시 발동 및 누적 피해 배율 적용)
-    function applyDamage(isPlayer, amount, isGuardReduced = false) {
+    // 데미지 차감 및 방어(실드) 흡수, 흐트러짐 10% 추가 피해 연동
+    function applyDamage(isPlayer, amount) {
       if (amount <= 0) return;
 
       const prefix = isPlayer ? 'p' : 'e';
       const currentStaggerLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
 
-      // 흐트러짐 상태에서 추가로 맞을 때마다 10%씩 추가 피해 (단계별 배율 적용: 1단계=+10%, 2단계=+20%, 3단계=+30%)
+      // 흐트러짐 상태에서 추가 피해 (+10%, +20%, +30%)
       if (currentStaggerLvl > 0) {
         amount = Math.round(amount * (1 + 0.1 * currentStaggerLvl));
       }
 
-      if (isGuardReduced) {
-        amount = Math.round(amount * 0.9);
-        playSFX('shield');
-      } else {
-        playSFX('hit');
-      }
-
       let currentShield = isPlayer ? pShield : eShield;
 
+      // 방어 스킬로 생성된 실드가 모든 피해를 먼저 차감 흡수
       if (currentShield > 0) {
+        playSFX('shield');
         if (currentShield >= amount) {
           if (isPlayer) pShield -= amount; else eShield -= amount;
           amount = 0;
@@ -1147,6 +1215,7 @@
       }
 
       if (amount > 0) {
+        playSFX('hit');
         let hpElem = document.getElementById(`${prefix}-hp`);
         let maxHp = parseInt(document.getElementById(`${prefix}-max-hp`).value) || 100;
         let hp = parseInt(hpElem.value) || 0;
@@ -1155,11 +1224,13 @@
         if(hpElem) hpElem.value = hp;
         let newPct = (hp / maxHp) * 100;
 
-        let thresholds = [
-          parseFloat(document.getElementById(`${prefix}-stagger-1`)?.value) || 0,
-          parseFloat(document.getElementById(`${prefix}-stagger-2`)?.value) || 0,
-          parseFloat(document.getElementById(`${prefix}-stagger-3`)?.value) || 0
-        ].sort((a, b) => b - a);
+        const stCount = isPlayer ? pStaggerCount : eStaggerCount;
+        let thresholds = [];
+        for (let i = 1; i <= stCount; i++) {
+          let val = parseFloat(document.getElementById(`${prefix}-stagger-${i}`)?.value);
+          if (!isNaN(val)) thresholds.push(val);
+        }
+        thresholds.sort((a, b) => b - a);
 
         thresholds.forEach((th) => {
           if (th > 0 && oldPct > th && newPct <= th) {
@@ -1287,6 +1358,12 @@
       const name = prompt("저장할 스킬 셋의 이름을 입력하세요:", isPlayer ? "아군 프리셋 1" : "적군 프리셋 1");
       if (!name || name.trim() === "") return;
 
+      const stCount = isPlayer ? pStaggerCount : eStaggerCount;
+      let staggerArray = [];
+      for(let i = 1; i <= stCount; i++) {
+        staggerArray.push(document.getElementById(`${prefix}-stagger-${i}`)?.value || 0);
+      }
+
       const presetData = {
         name: name.trim(),
         s1: { name: document.getElementById(`${prefix}-s1-name`).value, base: document.getElementById(`${prefix}-s1-base`).value, cp: document.getElementById(`${prefix}-s1-coinpower`).value, coins: document.getElementById(`${prefix}-s1-coins`).value },
@@ -1294,7 +1371,7 @@
         s3: { name: document.getElementById(`${prefix}-s3-name`).value, base: document.getElementById(`${prefix}-s3-base`).value, cp: document.getElementById(`${prefix}-s3-coinpower`).value, coins: document.getElementById(`${prefix}-s3-coins`).value },
         s4: { type: document.getElementById(`${prefix}-s4-type`).value, base: document.getElementById(`${prefix}-s4-base`).value, cp: document.getElementById(`${prefix}-s4-coinpower`).value, coins: document.getElementById(`${prefix}-s4-coins`).value },
         ego: { name: document.getElementById(`${prefix}-ego-name`).value, base: document.getElementById(`${prefix}-ego-base`).value, cp: document.getElementById(`${prefix}-ego-coinpower`).value, coins: document.getElementById(`${prefix}-ego-coins`).value },
-        stagger: [document.getElementById(`${prefix}-stagger-1`).value, document.getElementById(`${prefix}-stagger-2`).value, document.getElementById(`${prefix}-stagger-3`).value]
+        stagger: staggerArray
       };
 
       let presets = JSON.parse(localStorage.getItem('trpg_skill_presets') || '[]');
@@ -1356,10 +1433,15 @@
         document.getElementById(`${prefix}-ego-coins`).value = p.ego.coins;
       }
 
-      if (p.stagger) {
-        document.getElementById(`${prefix}-stagger-1`).value = p.stagger[0] || 70;
-        document.getElementById(`${prefix}-stagger-2`).value = p.stagger[1] || 40;
-        document.getElementById(`${prefix}-stagger-3`).value = p.stagger[2] || 20;
+      if (p.stagger && Array.isArray(p.stagger)) {
+        if (isPlayer) pStaggerCount = Math.min(3, p.stagger.length);
+        else eStaggerCount = Math.min(3, p.stagger.length);
+        renderStaggerInputs(isPlayer);
+
+        p.stagger.forEach((val, i) => {
+          let elem = document.getElementById(`${prefix}-stagger-${i+1}`);
+          if (elem) elem.value = val;
+        });
       }
 
       validateInputs();
@@ -1605,7 +1687,7 @@
             playSFX(isHeads ? 'heads' : 'tails');
           }
 
-          applyDamage(isPlayerStaggered, coinDmg, false);
+          applyDamage(isPlayerStaggered, coinDmg);
 
           const statusText = document.getElementById('clash-status-text');
           if(statusText) {
@@ -1873,7 +1955,7 @@
                 if (elem) elem.classList.add('win-glow');
 
                 let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
-                applyDamage(false, coinDmg, false);
+                applyDamage(false, coinDmg);
 
                 if(statusText) {
                   statusText.innerHTML = `
@@ -1917,7 +1999,7 @@
                 if (elem) elem.classList.add('win-glow');
 
                 let coinDmg = eBase + (eCoinStates[idx] === 'heads' ? eCP : 0);
-                applyDamage(true, coinDmg, false);
+                applyDamage(true, coinDmg);
 
                 if(statusText) {
                   statusText.innerHTML = `
@@ -1937,7 +2019,7 @@
     }
 
     function finishMatch() {
-      // 턴이 종료되면 흐트러짐 상태 초기화 (다음 턴 행동 불가 처리 반영 완료 후)
+      // 턴이 종료되면 흐트러짐 상태 초기화
       pStaggerLevel = 0;
       eStaggerLevel = 0;
 
