@@ -78,7 +78,7 @@
     .def-toggle-btn, .ego-toggle-btn { padding: 0.4rem 0.6rem; font-size: 0.75rem; font-weight: bold; cursor: pointer; border: 1px solid; transition: all 0.2s; }
     .def-toggle-btn { background: #332211; color: #ffaa00; border-color: #aa6600; }
     .def-toggle-btn.active { background: #aa6600; color: #fff; }
-    .ego-toggle-btn { background: #2b0c12; color: #ff4466; border-color: #aa1133; position: relative; }
+    .ego-toggle-btn { background: #2b0c12; color: #ff4466; border-color: #aa1133; position: relative; user-select: none; }
     .ego-toggle-btn.active { background: #aa1133; color: #fff; box-shadow: 0 0 10px #ff3355; }
     .ego-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: #ff3355; width: 0%; }
 
@@ -221,7 +221,7 @@
           <div class="skill-config-title">스킬 / 수비 / E.G.O 옵션 설정</div>
           <div class="config-grid">
             <div class="config-card">
-              <label>1스킬 이름</label><input type="text" id="p-s1-name" value="1ส킬" onchange="renderSlots()">
+              <label>1스킬 이름</label><input type="text" id="p-s1-name" value="1스킬" onchange="renderSlots()">
               <label>기본 위력</label><input type="number" id="p-s1-base" value="3" onchange="validateInputs(); renderSlots();">
               <label>코인 위력</label><input type="number" id="p-s1-coinpower" value="4" onchange="validateInputs(); renderSlots();">
               <label>코인 수</label><input type="number" id="p-s1-coins" value="1" min="1" max="9" onchange="validateInputs(); renderSlots();">
@@ -621,6 +621,20 @@
       });
     }
 
+    function updateMatchupAnalysis() {
+      const pInd = document.getElementById('p-matchup');
+      const eInd = document.getElementById('e-matchup');
+      if(!pInd || !eInd) return;
+
+      if (pStaggerLevel > 0 || eStaggerLevel > 0) {
+        pInd.innerText = pStaggerLevel > 0 ? "STAGGER (행동 불능)" : "ONE-SIDED ATTACK";
+        eInd.innerText = eStaggerLevel > 0 ? "STAGGER (행동 불능)" : "ONE-SIDED ATTACK";
+        return;
+      }
+      pInd.innerText = "BALANCED";
+      eInd.innerText = "BALANCED";
+    }
+
     function getSkillName(isPlayer, skillType) {
       const lvl = isPlayer ? pStaggerLevel : eStaggerLevel;
       if (lvl > 0) return '[STAGGER] 행동 불능';
@@ -700,6 +714,7 @@
       document.getElementById('e-next-display').innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${enemyNext === 5 ? 1 : enemyNext}">${getSkillName(false, enemyNext)}</span>`;
 
       updateHpDisplay();
+      updateMatchupAnalysis();
     }
 
     function triggerSparks() {
