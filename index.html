@@ -114,7 +114,7 @@
     .center-arena-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.2rem; z-index: 2; }
     .side-result-box { background: var(--sub-card-bg); border: var(--border-style); padding: 1.2rem; min-height: 240px; }
 
-    /* HP바 및 흐트러짐 선 레이아웃 (HP바 내부에 완벽히 맞춤) */
+    /* HP바 및 흐트러짐 선 완벽 밀착 */
     .hp-container { margin-bottom: 0.8rem; background: #111; border: 1px solid #444; padding: 4px; position: relative; }
     .hp-bar-bg { width: 100%; height: 14px; background: #222; position: relative; overflow: hidden; }
     .hp-bar-fill { height: 100%; width: 100%; background: #38ef7d; transition: width 0.3s; }
@@ -178,21 +178,99 @@
     </div>
 
     <div class="battle-layout">
-      <div class="side-box player" id="box-p"></div>
-      
+      <!-- 1. 아군 설정창 -->
+      <div class="side-box player">
+        <div class="side-title">PLAYER</div>
+        <div class="slot-container">
+          <div class="slot-header">보유 스킬 슬롯</div>
+          <div class="slots-wrapper">
+            <div id="p-slots-display" style="display:flex; gap:6px;"></div>
+            <button class="def-toggle-btn" id="p-def-btn" onclick="toggleDefenseSlot(true)">수비</button>
+            <button class="ego-toggle-btn" id="p-ego-btn" onmousedown="startEgoHold(true)" onmouseup="cancelEgoHold(true)" onmouseleave="cancelEgoHold(true)">
+              E.G.O (1초 꾹)<div class="ego-progress" id="p-ego-progress"></div>
+            </button>
+          </div>
+          <div class="next-box" id="p-next-display"><span>[NEXT]:</span></div>
+          <div class="matchup-indicator balanced" id="p-matchup">상성 분석 중...</div>
+        </div>
+
+        <div class="skill-config-box">
+          <div class="skill-config-title">스킬 / 수비 / E.G.O 옵션 설정</div>
+          <div class="config-grid">
+            <div class="config-card">
+              <label>1스킬 이름</label><input type="text" id="p-s1-name" value="1스킬" onchange="renderSlots()">
+              <label>기본 위력</label><input type="number" id="p-s1-base" value="3" onchange="validateInputs(); renderSlots();">
+              <label>코인 위력</label><input type="number" id="p-s1-coinpower" value="4" onchange="validateInputs(); renderSlots();">
+              <label>코인 수</label><input type="number" id="p-s1-coins" value="1" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+            <div class="config-card">
+              <label>2스킬 이름</label><input type="text" id="p-s2-name" value="2스킬" onchange="renderSlots()">
+              <label>기본 위력</label><input type="number" id="p-s2-base" value="4" onchange="validateInputs(); renderSlots();">
+              <label>코인 위력</label><input type="number" id="p-s2-coinpower" value="4" onchange="validateInputs(); renderSlots();">
+              <label>코인 수</label><input type="number" id="p-s2-coins" value="2" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+            <div class="config-card">
+              <label>3스킬 이름</label><input type="text" id="p-s3-name" value="3스킬" onchange="renderSlots()">
+              <label>기본 위력</label><input type="number" id="p-s3-base" value="5" onchange="validateInputs(); renderSlots();">
+              <label>코인 위력</label><input type="number" id="p-s3-coinpower" value="5" onchange="validateInputs(); renderSlots();">
+              <label>코인 수</label><input type="number" id="p-s3-coins" value="3" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+            <div class="config-card">
+              <label style="color: #ffd166; font-weight: bold;">수비 스킬</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
+                <div><label>유형</label><select id="p-s4-type" onchange="renderSlots()"><option value="guard">방어</option><option value="evade">회피</option><option value="counter">반격</option></select></div>
+                <div><label>기본</label><input type="number" id="p-s4-base" value="10"></div>
+                <div><label>코인위력</label><input type="number" id="p-s4-coinpower" value="4"></div>
+                <div><label>코인수</label><input type="number" id="p-s4-coins" value="1" min="1" max="5"></div>
+              </div>
+            </div>
+            <div class="config-card" style="border-color: #aa1133;">
+              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬</label>
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
+                <div><label>이름</label><input type="text" id="p-ego-name" value="홍염살"></div>
+                <div><label>기본</label><input type="number" id="p-ego-base" value="15"></div>
+                <div><label>코인위력</label><input type="number" id="p-ego-coinpower" value="6"></div>
+                <div><label>코인수</label><input type="number" id="p-ego-coins" value="2" min="1" max="5"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="skill-config-box" style="border-color: #e6a100;">
+          <div class="skill-config-title" style="color: #e6a100;">금빛 흐트러짐 선 설정 (%)</div>
+          <div id="p-stagger-inputs" style="display:flex; flex-direction:column; gap:4px;"></div>
+          <div style="display:flex; gap:6px; margin-top:6px;">
+            <button class="preset-btn" onclick="addStagger('p')">+ 선 추가</button>
+            <button class="preset-btn" onclick="removeStagger('p')">- 선 삭제</button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div><label for="p-max-hp">최대 체력</label><input type="number" id="p-max-hp" value="100" onchange="updateHpDisplay()"></div>
+          <div><label for="p-hp">현재 체력</label><input type="number" id="p-hp" value="100" onchange="updateHpDisplay()"></div>
+        </div>
+        <div class="control-group" style="margin-top: 0.8rem;">
+          <label for="p-sanity">정신력 (-45 ~ +45)</label><input type="number" id="p-sanity" value="0" min="-45" max="45" onchange="updateInfo()">
+        </div>
+        <div class="coin-preview-item" id="p-info" style="margin-top:0.4rem; width:100%;">앞면 확률: 50%</div>
+      </div>
+
+      <!-- 2. 중앙 대결 무대 -->
       <div class="center-stage" id="center-stage">
         <div id="spark-layer"></div>
         <div>
           <button class="clash-btn" id="clash-btn" onclick="startMatch()">START CLASH</button>
           <div id="result-box-container" style="margin-top: 1.2rem;">
-            <div id="clash-round-badge" style="display:none;" class="power-score-badge">ROUND 1</div>
+            <div id="clash-round-badge" class="power-score-badge" style="display: none;">ROUND 1</div>
             <div id="clash-status-text" style="color: #888; font-size: 1.05rem;">좌우 설정창에서 스킬을 선택한 후 합을 진행하세요.</div>
             <div class="center-arena-grid">
               <div class="side-result-box">
                 <div class="hp-container">
                   <div class="hp-bar-bg">
-                    <div class="hp-bar-fill" id="p-hp-bar" style="width:100%;"></div>
-                    <div class="shield-bar-fill" id="p-shield-bar" style="width:0%;"></div>
+                    <div class="hp-bar-fill" id="p-hp-bar" style="width: 100%;"></div>
+                    <div class="shield-bar-fill" id="p-shield-bar" style="width: 0%;"></div>
                     <div class="stagger-lines-layer" id="p-stagger-lines-layer"></div>
                   </div>
                   <div class="hp-text" id="p-hp-text">HP: 100 / 100</div>
@@ -205,8 +283,8 @@
               <div class="side-result-box">
                 <div class="hp-container">
                   <div class="hp-bar-bg">
-                    <div class="hp-bar-fill enemy-hp" id="e-hp-bar" style="width:100%;"></div>
-                    <div class="shield-bar-fill" id="e-shield-bar" style="width:0%;"></div>
+                    <div class="hp-bar-fill enemy-hp" id="e-hp-bar" style="width: 100%;"></div>
+                    <div class="shield-bar-fill" id="e-shield-bar" style="width: 0%;"></div>
                     <div class="stagger-lines-layer" id="e-stagger-lines-layer"></div>
                   </div>
                   <div class="hp-text" id="e-hp-text">HP: 100 / 100</div>
@@ -221,305 +299,453 @@
         </div>
       </div>
 
-      <div class="side-box enemy" id="box-e"></div>
+      <!-- 3. 적군 설정창 -->
+      <div class="side-box enemy">
+        <div class="side-title">ENEMY</div>
+        <div class="slot-container">
+          <div class="slot-header">보유 스킬 슬롯</div>
+          <div class="slots-wrapper">
+            <div id="e-slots-display" style="display:flex; gap:6px;"></div>
+            <button class="def-toggle-btn" id="e-def-btn" onclick="toggleDefenseSlot(false)">수비</button>
+            <button class="ego-toggle-btn" id="e-ego-btn" onmousedown="startEgoHold(false)" onmouseup="cancelEgoHold(false)" onmouseleave="cancelEgoHold(false)">
+              E.G.O (1초 꾹)<div class="ego-progress" id="e-ego-progress"></div>
+            </button>
+          </div>
+          <div class="next-box" id="e-next-display"><span>[NEXT]:</span></div>
+          <div class="matchup-indicator balanced" id="e-matchup">상성 분석 중...</div>
+        </div>
+
+        <div class="skill-config-box">
+          <div class="skill-config-title">스킬 / 수비 / E.G.O 옵션 설정</div>
+          <div class="config-grid">
+            <div class="config-card">
+              <label>1스킬 이름</label><input type="text" id="e-s1-name" value="1스킬" onchange="renderSlots()">
+              <label>기본 위력</label><input type="number" id="e-s1-base" value="3" onchange="validateInputs(); renderSlots();">
+              <label>코인 위력</label><input type="number" id="e-s1-coinpower" value="4" onchange="validateInputs(); renderSlots();">
+              <label>코인 수</label><input type="number" id="e-s1-coins" value="1" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+            <div class="config-card">
+              <label>2스킬 이름</label><input type="text" id="e-s2-name" value="2스킬" onchange="renderSlots()">
+              <label>기본 위력</label><input type="number" id="e-s2-base" value="4" onchange="validateInputs(); renderSlots();">
+              <label>코인 위력</label><input type="number" id="e-s2-coinpower" value="4" onchange="validateInputs(); renderSlots();">
+              <label>코인 수</label><input type="number" id="e-s2-coins" value="2" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+            <div class="config-card">
+              <label>3스킬 이름</label><input type="text" id="e-s3-name" value="3스킬" onchange="renderSlots()">
+              <label>기본 위력</label><input type="number" id="e-s3-base" value="5" onchange="validateInputs(); renderSlots();">
+              <label>코인 위력</label><input type="number" id="e-s3-coinpower" value="5" onchange="validateInputs(); renderSlots();">
+              <label>코인 수</label><input type="number" id="e-s3-coins" value="3" min="1" max="9" onchange="validateInputs(); renderSlots();">
+            </div>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-top: 6px;">
+            <div class="config-card">
+              <label style="color: #ffd166; font-weight: bold;">수비 스킬</label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
+                <div><label>유형</label><select id="e-s4-type" onchange="renderSlots()"><option value="guard">방어</option><option value="evade">회피</option><option value="counter">반격</option></select></div>
+                <div><label>기본</label><input type="number" id="e-s4-base" value="10"></div>
+                <div><label>코인위력</label><input type="number" id="e-s4-coinpower" value="4"></div>
+                <div><label>코인수</label><input type="number" id="e-s4-coins" value="1" min="1" max="5"></div>
+              </div>
+            </div>
+            <div class="config-card" style="border-color: #aa1133;">
+              <label style="color: #ff3366; font-weight: bold;">E.G.O 스킬</label>
+              <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 2px; margin-top: 4px;">
+                <div><label>이름</label><input type="text" id="e-ego-name" value="여우비"></div>
+                <div><label>기본</label><input type="number" id="e-ego-base" value="15"></div>
+                <div><label>코인위력</label><input type="number" id="e-ego-coinpower" value="6"></div>
+                <div><label>코인수</label><input type="number" id="e-ego-coins" value="2" min="1" max="5"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="skill-config-box" style="border-color: #e6a100;">
+          <div class="skill-config-title" style="color: #e6a100;">금빛 흐트러짐 선 설정 (%)</div>
+          <div id="e-stagger-inputs" style="display:flex; flex-direction:column; gap:4px;"></div>
+          <div style="display:flex; gap:6px; margin-top:6px;">
+            <button class="preset-btn" onclick="addStagger('e')">+ 선 추가</button>
+            <button class="preset-btn" onclick="removeStagger('e')">- 선 삭제</button>
+          </div>
+        </div>
+
+        <div class="control-row">
+          <div><label for="e-max-hp">최대 체력</label><input type="number" id="e-max-hp" value="100" onchange="updateHpDisplay()"></div>
+          <div><label for="e-hp">현재 체력</label><input type="number" id="e-hp" value="100" onchange="updateHpDisplay()"></div>
+        </div>
+        <div class="control-group" style="margin-top: 0.8rem;">
+          <label for="e-sanity">정신력 (-45 ~ +45)</label><input type="number" id="e-sanity" value="0" min="-45" max="45" onchange="updateInfo()">
+        </div>
+        <div class="coin-preview-item" id="e-info" style="margin-top:0.4rem; width:100%;">앞면 확률: 50%</div>
+      </div>
     </div>
   </div>
 
   <script>
-    const sfx = {
-      spin: new Audio('sounds/coin-spin.mp3'), heads: new Audio('sounds/coin-heads.mp3'),
-      tails: new Audio('sounds/coin-tails.mp3'), break: new Audio('sounds/coin-break.mp3'),
-      hit: new Audio('sounds/hit.mp3'), shield: new Audio('sounds/shield.mp3')
+    const soundEffects = {
+      spin: new Audio('sounds/coin-spin.mp3'),
+      heads: new Audio('sounds/coin-heads.mp3'),
+      tails: new Audio('sounds/coin-tails.mp3'),
+      break: new Audio('sounds/coin-break.mp3'),
+      hit: new Audio('sounds/hit.mp3'),
+      shield: new Audio('sounds/shield.mp3'),
+      counter: new Audio('sounds/counter.mp3')
     };
-    const playSFX = k => sfx[k] && sfx[k].cloneNode().play().catch(() => {});
 
-    let state = {
-      p: { pool: [], slots: [1, 2], next: 1, selIdx: 0, shield: 0, staggerLevel: 0, nextStagger: false, staggerValues: [70, 40, 20], timer: null },
-      e: { pool: [], slots: [1, 2], next: 1, selIdx: 0, shield: 0, staggerLevel: 0, nextStagger: false, staggerValues: [70, 40, 20], timer: null },
-      round: 1, pRem: 0, eRem: 0
-    };
-    const baseCycle = [1, 1, 1, 2, 2, 3];
-
-    function renderSideBox(isP) {
-      const id = isP ? 'p' : 'e';
-      const title = isP ? 'PLAYER' : 'ENEMY';
-      const defaultEgo = isP ? '홍염살' : '여우비';
-      return `
-        <div class="side-title">${title}</div>
-        <div class="slot-container">
-          <div class="slot-header">보유 스킬 슬롯</div>
-          <div class="slots-wrapper">
-            <div id="${id}-slots-display" style="display:flex; gap:6px;"></div>
-            <button class="def-toggle-btn" id="${id}-def-btn" onclick="toggleDef('${id}')">수비</button>
-            <button class="ego-toggle-btn" id="${id}-ego-btn" onmousedown="startEgo('${id}')" onmouseup="cancelEgo('${id}')" onmouseleave="cancelEgo('${id}')">
-              E.G.O (1초 꾹)<div class="ego-progress" id="${id}-ego-progress"></div>
-            </button>
-          </div>
-          <div class="next-box" id="${id}-next-display"><span>[NEXT]:</span></div>
-          <div class="matchup-indicator balanced" id="${id}-matchup">상성 분석 중...</div>
-        </div>
-        <div class="skill-config-box">
-          <div class="skill-config-title">스킬 옵션 설정</div>
-          <div class="config-grid">
-            ${[1, 2, 3].map(n => `
-              <div class="config-card">
-                <label>${n}스킬 명</label><input type="text" id="${id}-s${n}-name" value="${n}스킬" onchange="renderSlots()">
-                <label>기본</label><input type="number" id="${id}-s${n}-base" value="${n+2}" onchange="validate(); renderSlots()">
-                <label>코인위력</label><input type="number" id="${id}-s${n}-coinpower" value="4" onchange="validate(); renderSlots()">
-                <label>코인수</label><input type="number" id="${id}-s${n}-coins" value="${n}" min="1" max="9" onchange="validate(); renderSlots()">
-              </div>
-            `).join('')}
-          </div>
-          <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; margin-top:6px;">
-            <div class="config-card">
-              <label style="color:#ffd166;">수비 스킬</label>
-              <select id="${id}-s4-type" onchange="renderSlots()"><option value="guard">방어</option><option value="evade">회피</option><option value="counter">반격</option></select>
-              <label>기본/코인/수</label>
-              <div style="display:flex; gap:2px;"><input type="number" id="${id}-s4-base" value="10"><input type="number" id="${id}-s4-coinpower" value="4"><input type="number" id="${id}-s4-coins" value="1"></div>
-            </div>
-            <div class="config-card" style="border-color:#aa1133;">
-              <label style="color:#ff3366;">E.G.O</label>
-              <input type="text" id="${id}-ego-name" value="${defaultEgo}">
-              <div style="display:flex; gap:2px; margin-top:2px;"><input type="number" id="${id}-ego-base" value="15"><input type="number" id="${id}-ego-coinpower" value="6"><input type="number" id="${id}-ego-coins" value="2"></div>
-            </div>
-          </div>
-        </div>
-        <div class="skill-config-box" style="border-color:#e6a100;">
-          <div class="skill-config-title" style="color:#e6a100;">금빛 흐트러짐 선 설정 (%)</div>
-          <div id="${id}-stagger-inputs-container" style="display:flex; flex-direction:column; gap:4px;"></div>
-          <div style="display:flex; gap:6px; margin-top:6px;">
-            <button class="preset-btn" onclick="addStaggerInput('${id}')">+ 선 추가</button>
-            <button class="preset-btn" onclick="removeStaggerInput('${id}')">- 선 삭제</button>
-          </div>
-        </div>
-        <div class="control-row">
-          <div><label>최대 체력</label><input type="number" id="${id}-max-hp" value="100" onchange="updateHp()"></div>
-          <div><label>현재 체력</label><input type="number" id="${id}-hp" value="100" onchange="updateHp()"></div>
-        </div>
-        <div><label>정신력 (-45 ~ 45)</label><input type="number" id="${id}-sanity" value="0" min="-45" max="45" onchange="updateInfo()"></div>
-        <div class="coin-preview-item" id="${id}-info" style="margin-top:0.4rem; width:100%;">앞면 확률: 50%</div>
-      `;
-    }
-
-    document.getElementById('box-p').innerHTML = renderSideBox(true);
-    document.getElementById('box-e').innerHTML = renderSideBox(false);
-
-    function renderStaggerInputs(id) {
-      const container = document.getElementById(`${id}-stagger-inputs-container`);
-      container.innerHTML = state[id].staggerValues.map((val, idx) => `
-        <div style="display:flex; align-items:center; gap:6px;">
-          <label style="font-size:0.7rem; width:40px;">선 ${idx+1}</label>
-          <input type="number" value="${val}" min="0" max="100" onchange="updateStaggerValue('${id}', ${idx}, this.value)">
-        </div>
-      `).join('');
-      updateHp();
-    }
-
-    function addStaggerInput(id) {
-      state[id].staggerValues.push(50);
-      renderStaggerInputs(id);
-    }
-
-    function removeStaggerInput(id) {
-      if (state[id].staggerValues.length > 0) {
-        state[id].staggerValues.pop();
-        renderStaggerInputs(id);
+    function playSFX(key) {
+      if (soundEffects[key]) {
+        const sound = soundEffects[key].cloneNode();
+        sound.play().catch(() => {});
       }
     }
 
-    function updateStaggerValue(id, idx, val) {
-      state[id].staggerValues[idx] = parseFloat(val) || 0;
-      updateHp();
+    const baseCycle = [1, 1, 1, 2, 2, 3];
+    let playerPool = [], enemyPool = [];
+    let playerSlots = [1, 2], enemySlots = [1, 2];
+    let playerNext = 1, enemyNext = 1;
+    let pSelectedIndex = 0, eSelectedIndex = 0;
+    
+    // 흐트러짐 및 선 설정 데이터
+    let staggerData = {
+      p: [70, 40, 20],
+      e: [70, 40, 20]
+    };
+    let pStaggerLevel = 0, eStaggerLevel = 0;
+    let pIsStaggeredNextTurn = false, eIsStaggeredNextTurn = false;
+    let pEgoHoldTimer = null, eEgoHoldTimer = null;
+    let pShield = 0, eShield = 0;
+
+    function renderStaggerInputs(prefix) {
+      const box = document.getElementById(`${prefix}-stagger-inputs`);
+      box.innerHTML = staggerData[prefix].map((val, idx) => `
+        <div style="display:flex; align-items:center; gap:6px;">
+          <label style="font-size:0.7rem; width:40px;">선 ${idx+1}</label>
+          <input type="number" value="${val}" min="0" max="100" onchange="staggerData['${prefix}'][${idx}] = parseFloat(this.value)||0; updateHpDisplay();">
+        </div>
+      `).join('');
+    }
+
+    function addStagger(prefix) {
+      staggerData[prefix].push(50);
+      renderStaggerInputs(prefix);
+      updateHpDisplay();
+    }
+
+    function removeStagger(prefix) {
+      if (staggerData[prefix].length > 0) {
+        staggerData[prefix].pop();
+        renderStaggerInputs(prefix);
+        updateHpDisplay();
+      }
     }
 
     renderStaggerInputs('p');
     renderStaggerInputs('e');
 
-    function changeTheme(theme) {
-      document.documentElement.setAttribute('data-theme', theme);
-      localStorage.setItem('trpg_sim_theme', theme);
+    function changeTheme(themeName) {
+      document.documentElement.setAttribute('data-theme', themeName);
+      localStorage.setItem('trpg_sim_theme', themeName);
     }
 
-    function init() {
-      const theme = localStorage.getItem('trpg_sim_theme') || 'limbus';
-      document.documentElement.setAttribute('data-theme', theme);
-      document.getElementById('theme-select').value = theme;
-      state.p.next = drawNext('p');
-      state.e.next = drawNext('e');
-      renderSlots();
+    function initTheme() {
+      const savedTheme = localStorage.getItem('trpg_sim_theme') || 'limbus';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+      const sel = document.getElementById('theme-select');
+      if(sel) sel.value = savedTheme;
     }
 
-    function drawNext(id) {
-      let pool = state[id].pool;
-      if (!pool.length) pool = [...baseCycle];
-      return pool.splice(Math.floor(Math.random() * pool.length), 1)[0];
-    }
-
-    function getVal(id, key) { return parseInt(document.getElementById(`${id}-${key}`)?.value) || 0; }
-    function getString(id, key) { return document.getElementById(`${id}-${key}`)?.value || ''; }
-
-    function toggleDef(id) {
-      if (state[id].staggerLevel > 0) return;
-      let slots = state[id].slots, btn = document.getElementById(`${id}-def-btn`);
+    function toggleDefenseSlot(isPlayer) {
+      if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return;
+      const slots = isPlayer ? playerSlots : enemySlots;
+      const btn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
       if (slots[1] === 5) return;
-      slots[1] = slots[1] === 4 ? (btn.classList.remove('active'), 2) : (btn.classList.add('active'), 4);
-      document.getElementById(`${id}-ego-btn`).classList.remove('active');
+
+      if (slots[1] === 4) {
+        slots[1] = 2;
+        if(btn) btn.classList.remove('active');
+      } else {
+        slots[1] = 4;
+        if(btn) btn.classList.add('active');
+        const egoBtn = document.getElementById(isPlayer ? 'p-ego-btn' : 'e-ego-btn');
+        if(egoBtn) egoBtn.classList.remove('active');
+      }
       renderSlots();
     }
 
-    function startEgo(id) {
-      if (state[id].staggerLevel > 0) return;
-      let prog = document.getElementById(`${id}-ego-progress`), start = Date.now();
-      state[id].timer = setInterval(() => {
-        let pct = Math.min(100, ((Date.now() - start) / 1000) * 100);
-        prog.style.width = `${pct}%`;
-        if (pct >= 100) {
-          clearInterval(state[id].timer);
-          prog.style.width = '0%';
-          let slots = state[id].slots, btn = document.getElementById(`${id}-ego-btn`);
-          slots[1] = slots[1] === 5 ? (btn.classList.remove('active'), 2) : (btn.classList.add('active'), 5);
-          document.getElementById(`${id}-def-btn`).classList.remove('active');
-          playSFX('spin');
+    function startEgoHold(isPlayer) {
+      if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return;
+      const progressElem = document.getElementById(isPlayer ? 'p-ego-progress' : 'e-ego-progress');
+      const btnElem = document.getElementById(isPlayer ? 'p-ego-btn' : 'e-ego-btn');
+      const slots = isPlayer ? playerSlots : enemySlots;
+      let startTime = Date.now();
+      const duration = 1000;
+
+      const timer = setInterval(() => {
+        let elapsed = Date.now() - startTime;
+        let pct = Math.min(100, (elapsed / duration) * 100);
+        if(progressElem) progressElem.style.width = `${pct}%`;
+
+        if (elapsed >= duration) {
+          clearInterval(timer);
+          if(progressElem) progressElem.style.width = '0%';
+          if (slots[1] === 5) {
+            slots[1] = 2;
+            if(btnElem) btnElem.classList.remove('active');
+          } else {
+            slots[1] = 5;
+            if(btnElem) btnElem.classList.add('active');
+            const defBtn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
+            if(defBtn) defBtn.classList.remove('active');
+            playSFX('spin');
+          }
           renderSlots();
         }
       }, 30);
-    }
-    function cancelEgo(id) {
-      clearInterval(state[id].timer);
-      document.getElementById(`${id}-ego-progress`).style.width = '0%';
+
+      if (isPlayer) pEgoHoldTimer = timer; else eEgoHoldTimer = timer;
     }
 
-    function validate() {
-      ['p', 'e'].forEach(id => {
-        let hp = document.getElementById(`${id}-hp`), maxHp = document.getElementById(`${id}-max-hp`);
-        if (getVal(id, 'hp') > getVal(id, 'max-hp')) hp.value = maxHp.value;
-      });
+    function cancelEgoHold(isPlayer) {
+      const timer = isPlayer ? pEgoHoldTimer : eEgoHoldTimer;
+      if (timer) {
+        clearInterval(timer);
+        if (isPlayer) pEgoHoldTimer = null; else eEgoHoldTimer = null;
+      }
+      const progressElem = document.getElementById(isPlayer ? 'p-ego-progress' : 'e-ego-progress');
+      if (progressElem) progressElem.style.width = '0%';
     }
 
-    function updateHp() {
-      validate();
-      ['p', 'e'].forEach(id => {
-        let max = getVal(id, 'max-hp'), cur = getVal(id, 'hp'), pct = Math.max(0, Math.min(100, (cur / max) * 100));
-        document.getElementById(`${id}-hp-bar`).style.width = `${pct}%`;
-        document.getElementById(`${id}-hp-text`).innerText = `HP: ${cur} / ${max}`;
+    function calculateHeadsChance(sanity) {
+      let s = Number(sanity) || 0;
+      let chance = 50 + s;
+      if (chance > 95) chance = 95;
+      if (chance < 5) chance = 5;
+      return chance;
+    }
+
+    function updateHpDisplay() {
+      ['p', 'e'].forEach(prefix => {
+        let maxHp = parseInt(document.getElementById(`${prefix}-max-hp`).value) || 100;
+        let hp = parseInt(document.getElementById(`${prefix}-hp`).value) || 0;
+        if (hp > maxHp) { hp = maxHp; document.getElementById(`${prefix}-hp`).value = hp; }
         
-        let layer = document.getElementById(`${id}-stagger-lines-layer`);
-        layer.innerHTML = '';
-        state[id].staggerValues.forEach(th => {
-          if (th > 0 && th < 100) {
-            let line = document.createElement('div');
-            line.className = `stagger-line ${pct <= th ? 'hidden' : ''}`;
-            line.style.left = `${th}%`;
-            layer.appendChild(line);
-          }
-        });
+        let pct = Math.max(0, Math.min(100, (hp / maxHp) * 100));
+        const hpBar = document.getElementById(`${prefix}-hp-bar`);
+        const hpText = document.getElementById(`${prefix}-hp-text`);
+        if(hpBar) hpBar.style.width = `${pct}%`;
+        if(hpText) hpText.innerText = `HP: ${hp} / ${maxHp}`;
 
-        const stageElem = document.getElementById(`${id}-coins-stage`);
-        const lvl = state[id].staggerLevel;
-        if (lvl > 0 && stageElem && !stageElem.querySelector('.stagger-img')) {
-          const imgName = lvl === 1 ? 'stagger.png' : (lvl === 2 ? 'stagger1.png' : 'stagger2.png');
+        // 흐트러짐 선 레이어 렌더링
+        const linesLayer = document.getElementById(`${prefix}-stagger-lines-layer`);
+        if(linesLayer) {
+          linesLayer.innerHTML = '';
+          staggerData[prefix].forEach(th => {
+            if (th > 0 && th < 100) {
+              let line = document.createElement('div');
+              line.className = 'stagger-line';
+              line.style.left = `${th}%`;
+              if (pct <= th) line.classList.add('hidden');
+              linesLayer.appendChild(line);
+            }
+          });
+        }
+
+        // 흐트러짐 이미지 이펙트 갱신
+        const currentLvl = (prefix === 'p') ? pStaggerLevel : eStaggerLevel;
+        const stageElem = document.getElementById(`${prefix}-coins-stage`);
+        if (currentLvl > 0 && stageElem) {
+          const imgName = currentLvl === 1 ? 'stagger.png' : (currentLvl === 2 ? 'stagger1.png' : 'stagger2.png');
           stageElem.innerHTML = `<img src="images/${imgName}" class="stagger-img" alt="STAGGER">`;
         }
       });
     }
 
-    function updateInfo() {
-      ['p', 'e'].forEach(id => {
-        let s = getVal(id, 'sanity'), chance = Math.max(5, Math.min(95, 50 + s));
-        document.getElementById(`${id}-info`).innerText = `앞면 확률: ${chance}%`;
+    function applyDamage(isPlayer, amount) {
+      if (amount <= 0) return;
+      playSFX('hit');
+      const prefix = isPlayer ? 'p' : 'e';
+      
+      // 흐트러짐 단계별 10% 추가피해 적용 (중첩)
+      let currentLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
+      if (currentLvl > 0) {
+        amount = Math.round(amount * (1 + 0.1 * currentLvl));
+      }
+
+      let hpElem = document.getElementById(`${prefix}-hp`);
+      let maxHp = parseInt(document.getElementById(`${prefix}-max-hp`).value) || 100;
+      let hp = parseInt(hpElem.value) || 0;
+      let oldPct = (hp / maxHp) * 100;
+      hp = Math.max(0, hp - amount);
+      hpElem.value = hp;
+      let newPct = (hp / maxHp) * 100;
+
+      staggerData[prefix].forEach(th => {
+        if (th > 0 && oldPct > th && newPct <= th) {
+          if (isPlayer) {
+            if (pStaggerLevel === 0) { pStaggerLevel = 1; pIsStaggeredNextTurn = true; }
+            else { pStaggerLevel = Math.min(3, pStaggerLevel + 1); }
+          } else {
+            if (eStaggerLevel === 0) { eStaggerLevel = 1; eIsStaggeredNextTurn = true; }
+            else { eStaggerLevel = Math.min(3, eStaggerLevel + 1); }
+          }
+        }
       });
+      updateHpDisplay();
+    }
+
+    function validateInputs() {
+      ['p', 'e'].forEach(prefix => {
+        let maxHpElem = document.getElementById(`${prefix}-max-hp`);
+        let hpElem = document.getElementById(`${prefix}-hp`);
+        if (maxHpElem && (maxHpElem.value === '' || maxHpElem.value < 1)) maxHpElem.value = 100;
+        if (hpElem && hpElem.value === '') hpElem.value = maxHpElem.value;
+      });
+    }
+
+    function getSkillName(isPlayer, skillType) {
+      const lvl = isPlayer ? pStaggerLevel : eStaggerLevel;
+      if (lvl > 0) return '[STAGGER] 행동 불능';
+      const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) {
+        const subType = document.getElementById(`${prefix}-s4-type`)?.value || 'guard';
+        const typeMap = { guard: '방어', evade: '회피', counter: '반격' };
+        return `[수비] ${typeMap[subType]}`;
+      }
+      if (skillType === 5) {
+        const egoName = document.getElementById(`${prefix}-ego-name`)?.value;
+        return egoName && egoName.trim() !== '' ? `[E.G.O] ${egoName}` : '[E.G.O] 스킬';
+      }
+      const inputVal = document.getElementById(`${prefix}-s${skillType}-name`)?.value;
+      return inputVal && inputVal.trim() !== '' ? inputVal : `${skillType}스킬`;
+    }
+
+    function getSkillCoins(isPlayer, skillType) {
+      if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
+      const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 5) return parseInt(document.getElementById(`${prefix}-ego-coins`)?.value) || 1;
+      return parseInt(document.getElementById(`${prefix}-s${skillType}-coins`)?.value) || 1;
+    }
+
+    function getSkillBasePower(isPlayer, skillType) {
+      if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
+      const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 5) return parseInt(document.getElementById(`${prefix}-ego-base`)?.value) || 0;
+      return parseInt(document.getElementById(`${prefix}-s${skillType}-base`)?.value) || 0;
+    }
+
+    function getSkillCoinPower(isPlayer, skillType) {
+      if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
+      const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 5) return parseInt(document.getElementById(`${prefix}-ego-coinpower`)?.value) || 0;
+      return parseInt(document.getElementById(`${prefix}-s${skillType}-coinpower`)?.value) || 0;
+    }
+
+    function drawNextSkill(isPlayer) {
+      let pool = isPlayer ? playerPool : enemyPool;
+      if (pool.length === 0) pool = [...baseCycle];
+      const idx = Math.floor(Math.random() * pool.length);
+      const drawn = pool.splice(idx, 1)[0];
+      if (isPlayer) playerPool = pool; else enemyPool = pool;
+      return drawn;
+    }
+
+    function updateInfo() {
+      validateInputs();
+      const pSanity = document.getElementById('p-sanity')?.value || 0;
+      const eSanity = document.getElementById('e-sanity')?.value || 0;
+      document.getElementById('p-info').innerText = `앞면 확률: ${calculateHeadsChance(pSanity)}%`;
+      document.getElementById('e-info').innerText = `앞면 확률: ${calculateHeadsChance(eSanity)}%`;
+      renderSlots();
+    }
+
+    function selectSkill(isPlayer, index) {
+      if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return;
+      if (isPlayer) pSelectedIndex = index; else eSelectedIndex = index;
       renderSlots();
     }
 
     function renderSlots() {
-      ['p', 'e'].forEach(id => {
-        let st = state[id];
-        document.getElementById(`${id}-slots-display`).innerHTML = st.slots.map((s, idx) => `
-          <span class="skill-badge ${s===5?'ego':'s'+s} ${idx===st.selIdx?'selected':''}" onclick="state['${id}'].selIdx=${idx}; renderSlots()">${getSkillName(id, s)}</span>
-        `).join('');
-        document.getElementById(`${id}-next-display`).innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${st.next===5?1:st.next}">${getSkillName(id, st.next)}</span>`;
-      });
-      updateHp();
-    }
+      document.getElementById('p-slots-display').innerHTML = playerSlots.map((s, idx) => {
+        const isSelected = idx === pSelectedIndex ? 'selected' : '';
+        const badgeClass = s === 5 ? 'ego' : `s${s}`;
+        return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(true, ${idx})">${getSkillName(true, s)}</span>`;
+      }).join('');
 
-    function getSkillName(id, type) {
-      if (state[id].staggerLevel > 0) return '[STAGGER] 행동 불능';
-      if (type === 4) return `[수비] ${getString(id, 's4-type')}`;
-      if (type === 5) return `[E.G.O] ${getString(id, 'ego-name')}`;
-      return getString(id, `s${type}-name`) || `${type}스킬`;
-    }
+      document.getElementById('e-slots-display').innerHTML = enemySlots.map((s, idx) => {
+        const isSelected = idx === eSelectedIndex ? 'selected' : '';
+        const badgeClass = s === 5 ? 'ego' : `s${s}`;
+        return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(false, ${idx})">${getSkillName(false, s)}</span>`;
+      }).join('');
 
-    function applyDamage(isPlayer, amount) {
-      if (amount <= 0) return;
-      playSFX('hit');
-      const id = isPlayer ? 'p' : 'e';
-      
-      if (state[id].staggerLevel > 0) {
-        amount = Math.round(amount * (1 + 0.1 * state[id].staggerLevel));
-      }
+      document.getElementById('p-next-display').innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${playerNext === 5 ? 1 : playerNext}">${getSkillName(true, playerNext)}</span>`;
+      document.getElementById('e-next-display').innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${enemyNext === 5 ? 1 : enemyNext}">${getSkillName(false, enemyNext)}</span>`;
 
-      let max = getVal(id, 'max-hp'), hpElem = document.getElementById(`${id}-hp`), cur = getVal(id, 'hp');
-      let oldPct = (cur / max) * 100;
-      cur = Math.max(0, cur - amount);
-      hpElem.value = cur;
-      let newPct = (cur / max) * 100;
-
-      state[id].staggerValues.forEach(th => {
-        if (th > 0 && oldPct > th && newPct <= th) {
-          if (state[id].staggerLevel === 0) {
-            state[id].staggerLevel = 1;
-            state[id].nextStagger = true;
-          } else {
-            state[id].staggerLevel = Math.min(3, state[id].staggerLevel + 1);
-          }
-        }
-      });
-      updateHp();
+      updateHpDisplay();
     }
 
     function startMatch() {
+      validateInputs();
+      pShield = 0; eShield = 0;
+      updateHpDisplay();
+
       document.getElementById('clash-btn').disabled = true;
       document.getElementById('clash-round-badge').style.display = 'block';
 
-      if (state.p.staggerLevel > 0 || state.e.staggerLevel > 0) {
-        runStaggerOneSided();
+      if (pStaggerLevel > 0 || eStaggerLevel > 0) {
+        runStaggerOneSidedAttack();
         return;
       }
 
       setTimeout(() => { finishMatch(); }, 1000);
     }
 
-    function runStaggerOneSided() {
-      const isPStagger = state.p.staggerLevel > 0;
-      const attackerId = isPStagger ? 'e' : 'p';
-      const type = state[attackerId].slots[state[attackerId].selIdx];
-      const base = getVal(attackerId, type===5?'ego':'s'+type+'-base');
-      const cp = getVal(attackerId, type===5?'ego':'s'+type+'-coinpower');
+    function runStaggerOneSidedAttack() {
+      const isPlayerStaggered = pStaggerLevel > 0;
+      const attackerIsPlayer = !isPlayerStaggered;
+      const attackType = attackerIsPlayer ? playerSlots[pSelectedIndex] : enemySlots[eSelectedIndex];
       
-      let dmg = base + cp;
-      applyDamage(isPStagger, dmg);
-      
+      const basePower = getSkillBasePower(attackerIsPlayer, attackType);
+      const coinPower = getSkillCoinPower(attackerIsPlayer, attackType);
+      let coinDmg = basePower + coinPower;
+
+      applyDamage(isPlayerStaggered, coinDmg);
       setTimeout(() => { finishMatch(); }, 1200);
     }
 
     function finishMatch() {
-      ['p', 'e'].forEach(id => {
-        if (state[id].nextStagger) {
-          state[id].nextStagger = false;
-        } else if (state[id].staggerLevel > 0) {
-          state[id].staggerLevel = 0;
-          const stageElem = document.getElementById(`${id}-coins-stage`);
-          if (stageElem) stageElem.innerHTML = '';
-        }
+      // 턴 종료 시 다음 턴 행동불능 반영 및 흐트러짐 해제
+      if (pIsStaggeredNextTurn) {
+        pIsStaggeredNextTurn = false;
+      } else {
+        pStaggerLevel = 0;
+        document.getElementById('p-coins-stage').innerHTML = '';
+      }
 
-        state[id].slots[state[id].selIdx] = state[id].next;
-        state[id].next = drawNext(id);
-      });
-      document.getElementById('clash-btn').disabled = false;
+      if (eIsStaggeredNextTurn) {
+        eIsStaggeredNextTurn = false;
+      } else {
+        eStaggerLevel = 0;
+        document.getElementById('e-coins-stage').innerHTML = '';
+      }
+
+      if (playerSlots[pSelectedIndex] === 5) playerSlots[pSelectedIndex] = 2;
+      if (enemySlots[eSelectedIndex] === 5) enemySlots[eSelectedIndex] = 2;
+      
+      document.getElementById('p-ego-btn').classList.remove('active');
+      document.getElementById('e-ego-btn').classList.remove('active');
+
+      playerSlots[pSelectedIndex] = playerNext;
+      enemySlots[eSelectedIndex] = enemyNext;
+      playerNext = drawNextSkill(true);
+      enemyNext = drawNextSkill(false);
       renderSlots();
+      
+      document.getElementById('clash-btn').disabled = false;
     }
 
-    init();
+    initTheme();
+    playerNext = drawNextSkill(true);
+    enemyNext = drawNextSkill(false);
+    updateInfo();
   </script>
 </body>
 </html>
