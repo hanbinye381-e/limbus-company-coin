@@ -870,6 +870,7 @@
       const pUsedType = playerSlots[pSelectedIndex];
       const eUsedType = enemySlots[eSelectedIndex];
 
+      // [버그 수정] 양쪽 모두 수비 스킬이거나, 한쪽만 수비 스킬일 때 독립 수비 대응 루프로 진입
       if (pUsedType === 4 || eUsedType === 4) {
         runDefenseAction(pUsedType === 4, eUsedType === 4);
         return;
@@ -884,6 +885,7 @@
       runClashRound();
     }
 
+    // [버그 수정] 수비 스킬과 공격 스킬이 맞붙을 때 상대 공격이 씹히지 않고 정상 판정되도록 개선된 대응 로직
     function runDefenseAction(isPlayerDef, isEnemyDef) {
       const roundBadge = document.getElementById('clash-round-badge');
       const statusText = document.getElementById('clash-status-text');
@@ -897,6 +899,7 @@
 
       let statusMsg = "";
 
+      // 1. 플레이어가 수비일 때 (적이 공격이거나 수비일 때)
       if (isPlayerDef) {
         const subType = document.getElementById('p-s4-type').value;
         const base = getSkillBasePower(true, 4);
@@ -922,40 +925,10 @@
           applyDamage(false, totalVal);
           statusMsg = `[아군] 반격 발동! 적에게 ${totalVal} 피해 반사`;
         }
-      } else {
-        const pCoins = getSkillCoins(true, pUsedType);
-        const pBase = getSkillBasePower(true, pUsedType);
-        const pCP = getSkillCoinPower(true, pUsedType);
-        let pDmg = pBase + pCP;
-        
-        let pHTML = '';
-        for (let i = 0; i < pCoins; i++) pHTML += `<div class="coin heads win-glow"></div>`;
-        document.getElementById('p-coins-stage').innerHTML = pHTML;
-        document.getElementById('p-power-score').innerText = `ATTACK`;
-
-        if (isEnemyDef) {
-          const eSubType = document.getElementById('e-s4-type').value;
-          const eBase = getSkillBasePower(false, 4);
-          const eCP = getSkillCoinPower(false, 4);
-          const eTotal = eBase + eCP;
-          document.getElementById('e-coins-stage').innerHTML = `<div class="coin heads"><span class="coin-sub">${eTotal}</span></div>`;
-          document.getElementById('e-power-score').innerText = `DEF: ${eTotal}`;
-
-          if (eSubType === 'guard') {
-            let finalDmg = Math.max(0, pDmg - eTotal);
-            applyDamage(false, finalDmg);
-            statusMsg = `[적군] 방어로 피해 경감 (남은 피해: ${finalDmg})`;
-          } else if (eSubType === 'evade') {
-            statusMsg = `[적군] 공격을 완전히 회피했습니다!`;
-          } else if (eSubType === 'counter') {
-            applyDamage(false, pDmg);
-            applyDamage(true, eTotal);
-            statusMsg = `[적군] 반격 맞대응! 양측 모두 피해 교환`;
-          }
-        }
       }
 
-      if (isEnemyDef && !isPlayerDef) {
+      // 2. 적이 수비일 때 (아군이 공격일 때) -> 적의 수비 능력이 아군의 공격을 막거나 반사
+      if (isEnemyDef) {
         const subType = document.getElementById('e-s4-type').value;
         const base = getSkillBasePower(false, 4);
         const cp = getSkillCoinPower(false, 4);
@@ -967,19 +940,56 @@
         document.getElementById('e-coins-stage').innerHTML = `<div class="coin ${isHeads ? 'heads' : 'tails'} win-glow"><span class="coin-sub">${totalVal}</span></div>`;
         document.getElementById('e-power-score').innerText = `DEF: ${totalVal}`;
 
-        if (subType === 'guard') {
-          eShield = totalVal;
-          document.getElementById('e-shield-bar').style.width = '100%';
-          playSFX('shield');
-          statusMsg = `[적군] 방어 성공! 보호막 ${totalVal} 획득`;
-        } else if (subType === 'evade') {
-          playSFX('counter');
-          statusMsg = `[적군] 회피 판정 완료 (회피 수치: ${totalVal})`;
-        } else if (subType === 'counter') {
-          playSFX('counter');
-          applyDamage(true, totalVal);
-          statusMsg = `[적군] 반격 발동! 아군에게 ${totalVal} 피해 반사`;
+        // 아군이 공격 중이었다면 적의 수비와 상호작용
+        if (!isPlayerDef) {
+          const pCoins = getSkillCoins(true, pUsedType);
+          const pBase = getSkillBasePower(true, pUsedType);
+          const pCP = getSkillCoinPower(true, pUsedType);
+          let pDmg = pBase + pCP;
+          
+          let pHTML = '';
+          for (let i = 0; i < pCoins; i++) pHTML += `<div class="coin heads win-glow"></div>`;
+          document.getElementById('p-coins-stage').innerHTML = pHTML;
+          document.getElementById('p-power-score').innerText = `ATTACK`;
+
+          if (subType === 'guard') {
+            let finalDmg = Math.max(0, pDmg - totalVal);
+            applyDamage(false, finalDmg);
+            statusMsg = `[적군] 방어로 공격 방어 (남은 피해: ${finalDmg})`;
+          } else if (subType === 'evade') {
+            statusMsg = `[적군] 아군의 공격을 완전히 회피했습니다!`;
+          } else if (subType === 'counter') {
+            applyDamage(false, pDmg);
+            applyDamage(true, totalVal);
+            statusMsg = `[적군] 반격 발동! 아군의 공격을 맞받아침`;
+          }
+        } else {
+          if (subType === 'guard') {
+            eShield = totalVal;
+            document.getElementById('e-shield-bar').style.width = '100%';
+            playSFX('shield');
+            statusMsg += ` | [적군] 방어 성공 (보호막 ${totalVal})`;
+          } else if (subType === 'evade') {
+            statusMsg += ` | [적군] 회피 판정 완료`;
+          } else if (subType === 'counter') {
+            applyDamage(true, totalVal);
+            statusMsg += ` | [적군] 반격 발동`;
+          }
         }
+      }
+
+      // 3. 아군이 공격이고 적이 일반 공격이 아닐 때 (아군의 일방 공격)
+      if (!isPlayerDef && !isEnemyDef) {
+        const pCoins = getSkillCoins(true, pUsedType);
+        const pBase = getSkillBasePower(true, pUsedType);
+        const pCP = getSkillCoinPower(true, pUsedType);
+        let pDmg = pBase + pCP;
+        let pHTML = '';
+        for (let i = 0; i < pCoins; i++) pHTML += `<div class="coin heads win-glow"></div>`;
+        document.getElementById('p-coins-stage').innerHTML = pHTML;
+        document.getElementById('p-power-score').innerText = `ATTACK`;
+        applyDamage(false, pDmg);
+        statusMsg = `[아군] 일방 공격 적중! (${pDmg} 피해)`;
       }
 
       if(statusText) statusText.innerHTML = `<span style="color: var(--accent-color); font-weight: bold;">${statusMsg}</span>`;
