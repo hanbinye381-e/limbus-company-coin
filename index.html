@@ -68,7 +68,8 @@
 
     .side-box { background: var(--card-bg); padding: 1.4rem; border: var(--border-style); box-shadow: var(--card-box-shadow); position: relative; }
     .side-title { font-family: var(--font-title); font-size: 1.4rem; font-weight: bold; margin-bottom: 1rem; text-align: center; letter-spacing: 2px; text-transform: uppercase; }
-    .player .side-title { color: #38ef7d; } .enemy .side-title { color: #ff3322; }
+    .side-box.player .side-title { color: #38ef7d; } 
+    .side-box.enemy .side-title { color: #ff3322; }
 
     .slot-container, .skill-config-box { width: 100%; background: var(--sub-card-bg); border: var(--border-style); padding: 0.8rem; margin-bottom: 0.9rem; }
     .slot-header, .skill-config-title { font-size: 0.75rem; color: #888892; margin-bottom: 0.5rem; text-align: center; text-transform: uppercase; letter-spacing: 1px; }
@@ -81,7 +82,7 @@
     .ego-toggle-btn.active { background: #aa1133; color: #fff; box-shadow: 0 0 10px #ff3355; }
     .ego-progress { position: absolute; bottom: 0; left: 0; height: 3px; background: #ff3355; width: 0%; }
 
-    .next-box, .preset-manager { margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.15); font-size: 0.75rem; }
+    .next-box { margin-top: 0.6rem; padding-top: 0.5rem; border-top: 1px dashed rgba(255,255,255,0.15); font-size: 0.75rem; color: var(--accent-color); display: flex; justify-content: center; align-items: center; gap: 6px; }
     .matchup-indicator { margin-top: 0.7rem; padding: 0.45rem; font-size: 0.8rem; font-weight: bold; text-align: center; border: var(--border-style); }
     .matchup-indicator.balanced { color: var(--accent-color); background: rgba(230, 161, 0, 0.08); }
 
@@ -94,7 +95,7 @@
     .config-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
     .config-card { background: var(--card-bg); border: var(--border-style); padding: 0.5rem 0.3rem; text-align: center; }
     .config-card label { font-size: 0.65rem; color: #999; display: block; margin: 2px 0; }
-    .config-card input, .config-card select { font-size: 0.750rem !important; padding: 0.25rem !important; text-align: center; width: 100%; }
+    .config-card input, .config-card select { font-size: 0.75rem !important; padding: 0.25rem !important; text-align: center; width: 100%; }
 
     .preset-btn-group { display: flex; gap: 6px; }
     .preset-btn { flex: 1; padding: 0.4rem; font-size: 0.72rem; background: #181820; color: #ccc; border: 1px solid #333; cursor: pointer; }
@@ -300,8 +301,8 @@
       `;
     }
 
-    document.getElementById('box-p').innerHTML = renderSideBox('p');
-    document.getElementById('box-e').innerHTML = renderSideBox('e');
+    document.getElementById('box-p').innerHTML = renderSideBox(true);
+    document.getElementById('box-e').innerHTML = renderSideBox(false);
 
     function renderStaggerInputs(id) {
       const container = document.getElementById(`${id}-stagger-inputs-container`);
@@ -453,7 +454,6 @@
       playSFX('hit');
       const id = isPlayer ? 'p' : 'e';
       
-      // 흐트러짐 단계별 10% 추가 피해 적용 (중첩 가능)
       if (state[id].staggerLevel > 0) {
         amount = Math.round(amount * (1 + 0.1 * state[id].staggerLevel));
       }
@@ -468,7 +468,7 @@
         if (th > 0 && oldPct > th && newPct <= th) {
           if (state[id].staggerLevel === 0) {
             state[id].staggerLevel = 1;
-            state[id].nextStagger = true; // 다음 턴 행동 불능 예약
+            state[id].nextStagger = true;
           } else {
             state[id].staggerLevel = Math.min(3, state[id].staggerLevel + 1);
           }
@@ -481,7 +481,6 @@
       document.getElementById('clash-btn').disabled = true;
       document.getElementById('clash-round-badge').style.display = 'block';
 
-      // 만약 이미 흐트러진 상태라면 즉시 피격 단일 행동 처리
       if (state.p.staggerLevel > 0 || state.e.staggerLevel > 0) {
         runStaggerOneSided();
         return;
@@ -493,7 +492,6 @@
     function runStaggerOneSided() {
       const isPStagger = state.p.staggerLevel > 0;
       const attackerId = isPStagger ? 'e' : 'p';
-      const defId = isPStagger ? 'p' : 'e';
       const type = state[attackerId].slots[state[attackerId].selIdx];
       const base = getVal(attackerId, type===5?'ego':'s'+type+'-base');
       const cp = getVal(attackerId, type===5?'ego':'s'+type+'-coinpower');
@@ -506,7 +504,6 @@
 
     function finishMatch() {
       ['p', 'e'].forEach(id => {
-        // 흐트러짐 상태 관리 갱신
         if (state[id].nextStagger) {
           state[id].nextStagger = false;
         } else if (state[id].staggerLevel > 0) {
