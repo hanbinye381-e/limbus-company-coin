@@ -97,7 +97,10 @@
     .config-card label { font-size: 0.65rem; color: #999; display: block; margin: 2px 0; }
     .config-card input, .config-card select { font-size: 0.75rem !important; padding: 0.25rem !important; text-align: center; width: 100%; }
 
-    .preset-btn { flex: 1; padding: 0.4rem; font-size: 0.72rem; background: #181820; color: #ccc; border: 1px solid #333; cursor: pointer; }
+    .preset-manager { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px dashed rgba(255,255,255,0.15); display: flex; flex-direction: column; gap: 6px; }
+    .preset-btn-group { display: flex; gap: 6px; }
+    .preset-btn { flex: 1; padding: 0.4rem; font-size: 0.72rem; background: #181820; color: #ccc; border: 1px solid #333344; cursor: pointer; font-family: var(--font-body); }
+    .preset-btn:hover { background: #252532; color: #fff; }
 
     .coin-preview-box { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin-top: 0.6rem; }
     .coin-preview-item { font-size: 0.6rem; padding: 0.3rem; background: var(--card-bg); color: var(--accent-color); text-align: center; border: var(--border-style); }
@@ -113,44 +116,22 @@
     .center-arena-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-top: 1.2rem; z-index: 2; }
     .side-result-box { background: var(--sub-card-bg); border: var(--border-style); padding: 1.2rem; min-height: 240px; }
 
-    /* HP바 및 흐트러짐 선 완벽 밀착 */
     .hp-container { margin-bottom: 0.8rem; background: #111; border: 1px solid #444; padding: 4px; position: relative; }
     .hp-bar-bg { width: 100%; height: 14px; background: #222; position: relative; overflow: hidden; }
     .hp-bar-fill { height: 100%; width: 100%; background: #38ef7d; transition: width 0.3s; }
     .hp-bar-fill.enemy-hp { background: #ff3322; }
     .shield-bar-fill { position: absolute; top: 0; left: 0; height: 100%; background: #38e8e5; opacity: 0.75; width: 0%; }
     
-    .stagger-lines-layer {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      pointer-events: none;
-      overflow: hidden;
-      z-index: 5;
-    }
-    .stagger-line {
-      position: absolute;
-      top: 0; bottom: 0;
-      width: 2px;
-      background: #ffd700;
-      box-shadow: 0 0 6px #ffaa00;
-    }
+    .stagger-lines-layer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; pointer-events: none; overflow: hidden; z-index: 5; }
+    .stagger-line { position: absolute; top: 0; bottom: 0; width: 2px; background: #ffd700; box-shadow: 0 0 6px #ffaa00; }
     .stagger-line.hidden { display: none !important; }
 
     .hp-text { font-size: 0.75rem; font-weight: bold; color: #fff; margin-top: 2px; }
     .power-score-badge { font-family: var(--font-title); font-size: 1.3rem; font-weight: bold; color: var(--accent-color); margin-top: 4px; }
     .coins-wrapper { display: flex; flex-wrap: wrap; gap: 12px; justify-content: center; margin-top: 0.8rem; min-height: 70px; align-items: center; }
 
-    .stagger-img {
-      max-width: 180px;
-      max-height: 80px;
-      object-fit: contain;
-      filter: drop-shadow(0 0 10px #ffaa00);
-      animation: staggerPulse 0.8s infinite alternate;
-    }
-    @keyframes staggerPulse {
-      0% { transform: scale(0.95); opacity: 0.8; }
-      100% { transform: scale(1.05); opacity: 1; }
-    }
+    .stagger-img { max-width: 180px; max-height: 80px; object-fit: contain; filter: drop-shadow(0 0 10px #ffaa00); animation: staggerPulse 0.8s infinite alternate; }
+    @keyframes staggerPulse { 0% { transform: scale(0.95); opacity: 0.8; } 100% { transform: scale(1.05); opacity: 1; } }
 
     .coin { position: relative; width: 60px; height: 60px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-weight: bold; font-size: 0.75rem; background-size: contain; background-repeat: no-repeat; background-position: center; border: none !important; background-color: transparent !important; }
     .coin.flipping { animation: coinFlip 0.3s infinite linear; background-image: url('images/coin-heads.png'); filter: brightness(0.9); }
@@ -165,25 +146,13 @@
       30% { transform: scale(1.2) rotate(12deg); }
       100% { transform: scale(0.85) rotate(-8deg); opacity: 0.6; }
     }
-    @keyframes coinFlip {
-      0% { transform: rotateY(0deg); }
-      50% { transform: rotateY(180deg); }
-      100% { transform: rotateY(360deg); }
-    }
-    .coin-sub {
-      position: absolute; bottom: -16px; font-size: 0.6rem; color: #aaa; font-weight: normal; background: rgba(0,0,0,0.85); padding: 1px 4px; font-family: var(--font-body);
-    }
+    @keyframes coinFlip { 0% { transform: rotateY(0deg); } 50% { transform: rotateY(180deg); } 100% { transform: rotateY(360deg); } }
+    .coin-sub { position: absolute; bottom: -16px; font-size: 0.6rem; color: #aaa; font-weight: normal; background: rgba(0,0,0,0.85); padding: 1px 4px; font-family: var(--font-body); }
     .spark-container { position: absolute; top: 55%; left: 50%; width: 0; height: 0; pointer-events: none; z-index: 10; }
     .spark { position: absolute; width: 6px; height: 6px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px var(--spark-color-1), 0 0 20px var(--spark-color-2); animation: sparkFly 0.6s ease-out forwards; }
-    @keyframes sparkFly {
-      0% { opacity: 1; transform: translate(0, 0) scale(1.5); }
-      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); }
-    }
+    @keyframes sparkFly { 0% { opacity: 1; transform: translate(0, 0) scale(1.5); } 100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0.2); } }
     .shatter-piece { position: absolute; width: 8px; height: 8px; background: var(--accent-color); box-shadow: 0 0 8px var(--primary-color); animation: shatterFly 0.5s ease-out forwards; pointer-events: none; }
-    @keyframes shatterFly {
-      0% { opacity: 1; transform: translate(0,0) scale(1); }
-      100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
-    }
+    @keyframes shatterFly { 0% { opacity: 1; transform: translate(0,0) scale(1); } 100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); } }
   </style>
 </head>
 <body>
@@ -258,6 +227,17 @@
                 <div><label>코인수</label><input type="number" id="p-ego-coins" value="2" min="1" max="5"></div>
               </div>
             </div>
+          </div>
+
+          <!-- 프리셋 관리 영역 복구 -->
+          <div class="preset-manager">
+            <div class="preset-btn-group">
+              <button class="preset-btn" onclick="savePreset(true)">스킬셋 저장</button>
+              <button class="preset-btn" onclick="deletePreset(true)">저장 삭제</button>
+            </div>
+            <select id="p-preset-select" onchange="loadPreset(true)">
+              <option value="">-- 저장된 스킬셋 선택 --</option>
+            </select>
           </div>
         </div>
 
@@ -380,6 +360,17 @@
               </div>
             </div>
           </div>
+
+          <!-- 적군 프리셋 관리 영역 복구 -->
+          <div class="preset-manager">
+            <div class="preset-btn-group">
+              <button class="preset-btn" onclick="savePreset(false)">스킬셋 저장</button>
+              <button class="preset-btn" onclick="deletePreset(false)">저장 삭제</button>
+            </div>
+            <select id="e-preset-select" onchange="loadPreset(false)">
+              <option value="">-- 저장된 스킬셋 선택 --</option>
+            </select>
+          </div>
         </div>
 
         <div class="skill-config-box" style="border-color: #e6a100;">
@@ -463,6 +454,106 @@
 
     renderStaggerInputs('p');
     renderStaggerInputs('e');
+
+    // 프리셋 관리 로직 복구
+    function savePreset(isPlayer) {
+      const prefix = isPlayer ? 'p' : 'e';
+      const name = prompt("저장할 스킬 셋의 이름을 입력하세요:", isPlayer ? "아군 프리셋 1" : "적군 프리셋 1");
+      if (!name || name.trim() === "") return;
+
+      const presetData = {
+        name: name.trim(),
+        s1: { name: document.getElementById(`${prefix}-s1-name`).value, base: document.getElementById(`${prefix}-s1-base`).value, cp: document.getElementById(`${prefix}-s1-coinpower`).value, coins: document.getElementById(`${prefix}-s1-coins`).value },
+        s2: { name: document.getElementById(`${prefix}-s2-name`).value, base: document.getElementById(`${prefix}-s2-base`).value, cp: document.getElementById(`${prefix}-s2-coinpower`).value, coins: document.getElementById(`${prefix}-s2-coins`).value },
+        s3: { name: document.getElementById(`${prefix}-s3-name`).value, base: document.getElementById(`${prefix}-s3-base`).value, cp: document.getElementById(`${prefix}-s3-coinpower`).value, coins: document.getElementById(`${prefix}-s3-coins`).value },
+        s4: { type: document.getElementById(`${prefix}-s4-type`).value, base: document.getElementById(`${prefix}-s4-base`).value, cp: document.getElementById(`${prefix}-s4-coinpower`).value, coins: document.getElementById(`${prefix}-s4-coins`).value },
+        ego: { name: document.getElementById(`${prefix}-ego-name`).value, base: document.getElementById(`${prefix}-ego-base`).value, cp: document.getElementById(`${prefix}-ego-coinpower`).value, coins: document.getElementById(`${prefix}-ego-coins`).value },
+        stagger: [...staggerData[prefix]]
+      };
+
+      let presets = JSON.parse(localStorage.getItem('trpg_skill_presets') || '[]');
+      presets.push(presetData);
+      localStorage.setItem('trpg_skill_presets', JSON.stringify(presets));
+      alert("스킬 셋이 저장되었습니다.");
+      updatePresetDropdowns();
+    }
+
+    function updatePresetDropdowns() {
+      const presets = JSON.parse(localStorage.getItem('trpg_skill_presets') || '[]');
+      ['p', 'e'].forEach(prefix => {
+        const select = document.getElementById(`${prefix}-preset-select`);
+        if(!select) return;
+        const currentVal = select.value;
+        select.innerHTML = `<option value="">-- 저장된 스킬셋 선택 --</option>` +
+          presets.map((p, idx) => `<option value="${idx}">${p.name}</option>`).join('');
+        select.value = currentVal;
+      });
+    }
+
+    function loadPreset(isPlayer) {
+      const prefix = isPlayer ? 'p' : 'e';
+      const select = document.getElementById(`${prefix}-preset-select`);
+      if(!select) return;
+      const idx = select.value;
+      if (idx === "") return;
+
+      const presets = JSON.parse(localStorage.getItem('trpg_skill_presets') || '[]');
+      const p = presets[idx];
+      if (!p) return;
+
+      document.getElementById(`${prefix}-s1-name`).value = p.s1.name;
+      document.getElementById(`${prefix}-s1-base`).value = p.s1.base;
+      document.getElementById(`${prefix}-s1-coinpower`).value = p.s1.cp;
+      document.getElementById(`${prefix}-s1-coins`).value = p.s1.coins;
+
+      document.getElementById(`${prefix}-s2-name`).value = p.s2.name;
+      document.getElementById(`${prefix}-s2-base`).value = p.s2.base;
+      document.getElementById(`${prefix}-s2-coinpower`).value = p.s2.cp;
+      document.getElementById(`${prefix}-s2-coins`).value = p.s2.coins;
+
+      document.getElementById(`${prefix}-s3-name`).value = p.s3.name;
+      document.getElementById(`${prefix}-s3-base`).value = p.s3.base;
+      document.getElementById(`${prefix}-s3-coinpower`).value = p.s3.cp;
+      document.getElementById(`${prefix}-s3-coins`).value = p.s3.coins;
+
+      if (p.s4) {
+        document.getElementById(`${prefix}-s4-type`).value = p.s4.type;
+        document.getElementById(`${prefix}-s4-base`).value = p.s4.base;
+        document.getElementById(`${prefix}-s4-coinpower`).value = p.s4.cp;
+        document.getElementById(`${prefix}-s4-coins`).value = p.s4.coins;
+      }
+
+      if (p.ego) {
+        document.getElementById(`${prefix}-ego-name`).value = p.ego.name;
+        document.getElementById(`${prefix}-ego-base`).value = p.ego.base;
+        document.getElementById(`${prefix}-ego-coinpower`).value = p.ego.cp;
+        document.getElementById(`${prefix}-ego-coins`).value = p.ego.coins;
+      }
+
+      if (p.stagger) {
+        staggerData[prefix] = [...p.stagger];
+        renderStaggerInputs(prefix);
+      }
+
+      validateInputs();
+      renderSlots();
+    }
+
+    function deletePreset(isPlayer) {
+      const prefix = isPlayer ? 'p' : 'e';
+      const select = document.getElementById(`${prefix}-preset-select`);
+      if(!select) return;
+      const idx = select.value;
+      if (idx === "") { alert("삭제할 프리셋을 선택해주세요."); return; }
+
+      let presets = JSON.parse(localStorage.getItem('trpg_skill_presets') || '[]');
+      if (confirm(`'${presets[idx].name}' 스킬셋을 삭제하시겠습니까?`)) {
+        presets.splice(idx, 1);
+        localStorage.setItem('trpg_skill_presets', JSON.stringify(presets));
+        updatePresetDropdowns();
+        renderSlots();
+      }
+    }
 
     function changeTheme(themeName) {
       document.documentElement.setAttribute('data-theme', themeName);
@@ -1023,6 +1114,7 @@
     }
 
     initTheme();
+    updatePresetDropdowns();
     playerNext = drawNextSkill(true);
     enemyNext = drawNextSkill(false);
     updateInfo();
