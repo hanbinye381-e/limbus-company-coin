@@ -471,7 +471,7 @@
       z-index: 2;
     }
 
-    /* HP바 내부 및 높이에 시각적으로 완벽히 맞춘 금빛 흐트러짐 선 */
+    /* HP바 내부 높이에 정확히 맞춘 금빛 흐트러짐 선 */
     .stagger-line {
       position: absolute;
       top: 0;
@@ -513,7 +513,6 @@
       align-items: center;
     }
 
-    /* 흐트러짐 이미지 스타일 */
     .stagger-img {
       max-width: 180px;
       max-height: 80px;
@@ -1017,7 +1016,6 @@
     }
 
     function addStaggerLine(isPlayer) {
-      const prefix = isPlayer ? 'p' : 'e';
       let count = isPlayer ? pStaggerCount : eStaggerCount;
       if (count >= 3) return;
       count++;
@@ -1027,7 +1025,6 @@
     }
 
     function removeStaggerLine(isPlayer) {
-      const prefix = isPlayer ? 'p' : 'e';
       let count = isPlayer ? pStaggerCount : eStaggerCount;
       if (count <= 0) return;
       count--;
@@ -1152,7 +1149,7 @@
           hpText.innerText = shield > 0 ? `HP: ${hp} / ${maxHp} (+${shield})` : `HP: ${hp} / ${maxHp}`;
         }
 
-        // 금빛 흐트러짐 선 렌더링 (HP 바 내부 정확한 위치에 조율)
+        // 금빛 흐트러짐 선 렌더링
         const linesLayer = document.getElementById(`${prefix}-stagger-lines-layer`);
         const stCount = isPlayer ? pStaggerCount : eStaggerCount;
         if(linesLayer) {
@@ -1202,7 +1199,7 @@
 
       let currentShield = isPlayer ? pShield : eShield;
 
-      // 방어 스킬로 생성된 실드가 모든 피해를 먼저 차감 흡수
+      // 실드가 피해를 먼저 차감 흡수
       if (currentShield > 0) {
         playSFX('shield');
         if (currentShield >= amount) {
@@ -1628,7 +1625,7 @@
       const isEDef = (eUsedType === 4);
 
       if (isPDef || isEDef) {
-        runSequentialDefense(isPDef, isEDef);
+        runDefensePhase(isPDef, isEDef);
         return;
       }
 
@@ -1705,105 +1702,194 @@
       }, 500);
     }
 
-    function runSequentialDefense(isPDef, isEDef) {
+    // 재설계된 수비 스킬 통합 로직 (방어, 회피, 반격)
+    function runDefensePhase(isPDef, isEDef) {
       const roundBadge = document.getElementById('clash-round-badge');
       if(roundBadge) roundBadge.innerText = 'DEFENSE PHASE';
 
-      const pSanity = parseInt(document.getElementById('p-sanity')?.value) || 0;
-      const eSanity = parseInt(document.getElementById('e-sanity')?.value) || 0;
-      const pChance = calculateHeadsChance(pSanity);
-      const eChance = calculateHeadsChance(eSanity);
+      // 방어 사용자 설정 확인 (아군이 수비 스킬을 썼는지, 적군이 수비 스킬을 썼는지)
+      const defenderIsPlayer = isPDef;
+      const defPrefix = defenderIsPlayer ? 'p' : 'e';
+      const atkPrefix = defenderIsPlayer ? 'e' : 'p';
+      const defenderType = defenderIsPlayer ? 'guard' : (document.getElementById(`${defPrefix}-s4-type`)?.value || 'guard');
+      const defSubType = document.getElementById(`${defPrefix}-s4-type`)?.value || 'guard';
 
-      const pUsedType = playerSlots[pSelectedIndex];
-      const eUsedType = enemySlots[eSelectedIndex];
+      const defUsedType = defenderIsPlayer ? playerSlots[pSelectedIndex] : enemySlots[eSelectedIndex];
+      const atkUsedType = defenderIsPlayer ? enemySlots[eSelectedIndex] : playerSlots[pSelectedIndex];
 
-      const pBase = getSkillBasePower(true, pUsedType);
-      const pCP = getSkillCoinPower(true, pUsedType);
-      const pCoinsCount = getSkillCoins(true, pUsedType);
+      const defSanity = parseInt(document.getElementById(`${defPrefix}-sanity`)?.value) || 0;
+      const atkSanity = parseInt(document.getElementById(`${atkPrefix}-sanity`)?.value) || 0;
+      const defChance = calculateHeadsChance(defSanity);
+      const atkChance = calculateHeadsChance(atkSanity);
 
-      const eBase = getSkillBasePower(false, eUsedType);
-      const eCP = getSkillCoinPower(false, eUsedType);
-      const eCoinsCount = getSkillCoins(false, eUsedType);
+      const defBase = getSkillBasePower(defenderIsPlayer, defUsedType);
+      const defCP = getSkillCoinPower(defenderIsPlayer, defUsedType);
+      const defCoinsCount = getSkillCoins(defenderIsPlayer, defUsedType);
 
-      let pHTML = '';
-      for (let i = 0; i < pCoinsCount; i++) pHTML += `<div class="coin flipping" id="p-coin-${i}"></div>`;
-      let eHTML = '';
-      for (let i = 0; i < eCoinsCount; i++) eHTML += `<div class="coin flipping" id="e-coin-${i}"></div>`;
+      const atkBase = getSkillBasePower(!defenderIsPlayer, atkUsedType);
+      const atkCP = getSkillCoinPower(!defenderIsPlayer, atkUsedType);
+      const atkCoinsCount = getSkillCoins(!defenderIsPlayer, atkUsedType);
 
-      const pTag = document.getElementById('p-result-skill-tag');
-      const pCountText = document.getElementById('p-result-count-text');
-      const pPowerScore = document.getElementById('p-power-score');
-      const pCoinsStage = document.getElementById('p-coins-stage');
+      // UI 요소 준비
+      let defHTML = '', atkHTML = '';
+      for (let i = 0; i < defCoinsCount; i++) defHTML += `<div class="coin flipping" id="${defPrefix}-coin-${i}"></div>`;
+      for (let i = 0; i < atkCoinsCount; i++) atkHTML += `<div class="coin flipping" id="${atkPrefix}-coin-${i}"></div>`;
 
-      if(pTag) pTag.innerHTML = `<span class="skill-badge ${pUsedType===5?'ego':('s'+pUsedType)}">${getSkillName(true, pUsedType)}</span>`;
-      if(pCountText) pCountText.innerText = '수비 진행 중...';
-      if(pPowerScore) pPowerScore.innerText = 'POWER: -';
-      if(pCoinsStage) pCoinsStage.innerHTML = pHTML;
+      document.getElementById(`${defPrefix}-result-skill-tag`).innerHTML = `<span class="skill-badge s4">${getSkillName(defenderIsPlayer, defUsedType)}</span>`;
+      document.getElementById(`${defPrefix}-coins-stage`).innerHTML = defHTML;
 
-      const eTag = document.getElementById('e-result-skill-tag');
-      const eCountText = document.getElementById('e-result-count-text');
-      const ePowerScore = document.getElementById('e-power-score');
-      const eCoinsStage = document.getElementById('e-coins-stage');
-
-      if(eTag) eTag.innerHTML = `<span class="skill-badge ${eUsedType===5?'ego':('s'+eUsedType)}">${getSkillName(false, eUsedType)}</span>`;
-      if(eCountText) eCountText.innerText = '진행 중...';
-      if(ePowerScore) ePowerScore.innerText = 'POWER: -';
-      if(eCoinsStage) eCoinsStage.innerHTML = eHTML;
-
-      let step = 0;
-      let maxSteps = Math.max(pCoinsCount, eCoinsCount);
-      let pRolls = [];
-      let eRolls = [];
-
-      for (let i = 0; i < pCoinsCount; i++) {
-        let isHeads = Math.random() * 100 < pChance;
-        let val = pBase + (isHeads ? pCP : 0);
-        pRolls.push({ isHeads, val });
-      }
-
-      for (let i = 0; i < eCoinsCount; i++) {
-        let isHeads = Math.random() * 100 < eChance;
-        let val = eBase + (isHeads ? eCP : 0);
-        eRolls.push({ isHeads, val });
-      }
-
-      if (pUsedType === 4 && document.getElementById('p-s4-type')?.value === 'guard') {
-        pShield = pRolls.reduce((acc, cur) => acc + cur.val, 0);
-      }
-      if (eUsedType === 4 && document.getElementById('e-s4-type')?.value === 'guard') {
-        eShield = eRolls.reduce((acc, cur) => acc + cur.val, 0);
-      }
-      updateHpDisplay();
+      document.getElementById(`${atkPrefix}-result-skill-tag`).innerHTML = `<span class="skill-badge ${atkUsedType===5?'ego':('s'+atkUsedType)}">${getSkillName(!defenderIsPlayer, atkUsedType)}</span>`;
+      document.getElementById(`${atkPrefix}-coins-stage`).innerHTML = atkHTML;
 
       playSFX('spin');
 
-      let interval = setInterval(() => {
-        if (step < pCoinsCount) {
-          let r = pRolls[step];
-          let elem = document.getElementById(`p-coin-${step}`);
-          if (elem) {
-            elem.className = `coin ${r.isHeads ? 'heads' : 'tails'}`;
-            elem.innerHTML = `<span class="coin-sub">${r.val}</span>`;
-            playSFX(r.isHeads ? 'heads' : 'tails');
+      // 1. 방어 (Guard) 모드: 방어막 생성 후 적의 일방 공격 적용
+      if (defSubType === 'guard') {
+        let defRollSum = defBase;
+        for (let i = 0; i < defCoinsCount; i++) {
+          let isHeads = Math.random() * 100 < defChance;
+          defRollSum += (isHeads ? defCP : 0);
+          let elem = document.getElementById(`${defPrefix}-coin-${i}`);
+          if(elem) {
+            elem.className = `coin ${isHeads ? 'heads' : 'tails'}`;
+            elem.innerHTML = `<span class="coin-sub">${isHeads ? defBase + defCP : defBase}</span>`;
           }
         }
 
-        if (step < eCoinsCount) {
-          let r = eRolls[step];
-          let elem = document.getElementById(`e-coin-${step}`);
-          if (elem) {
-            elem.className = `coin ${r.isHeads ? 'heads' : 'tails'}`;
-            elem.innerHTML = `<span class="coin-sub">${r.val}</span>`;
-            playSFX(r.isHeads ? 'heads' : 'tails');
-          }
-        }
+        if (defenderIsPlayer) pShield = defRollSum; else eShield = defRollSum;
+        updateHpDisplay();
 
-        step++;
-        if (step >= maxSteps) {
-          clearInterval(interval);
-          setTimeout(() => { finishMatch(); }, 1600);
-        }
-      }, 500);
+        let statusText = document.getElementById('clash-status-text');
+        if(statusText) statusText.innerHTML = `<div class="result-banner">방어막 ${defRollSum} 생성! 적 일방 공격 진행중...</div>`;
+
+        let step = 0;
+        let interval = setInterval(() => {
+          if (step < atkCoinsCount) {
+            let isHeads = Math.random() * 100 < atkChance;
+            let atkDmg = atkBase + (isHeads ? atkCP : 0);
+            let elem = document.getElementById(`${atkPrefix}-coin-${step}`);
+            if (elem) {
+              elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
+              elem.innerHTML = `<span class="coin-sub">${atkDmg}</span>`;
+              playSFX(isHeads ? 'heads' : 'tails');
+            }
+
+            applyDamage(defenderIsPlayer, atkDmg);
+            step++;
+          } else {
+            clearInterval(interval);
+            setTimeout(() => { finishMatch(); }, 1200);
+          }
+        }, 500);
+      }
+
+      // 2. 회피 (Evade) 모드: 위력 비교 회피 -> 실패 시 남은 공격 마저 받음
+      else if (defSubType === 'evade') {
+        let step = 0;
+        let isEvadeFailed = false;
+
+        let interval = setInterval(() => {
+          if (step < atkCoinsCount) {
+            let atkIsHeads = Math.random() * 100 < atkChance;
+            let atkVal = atkBase + (atkIsHeads ? atkCP : 0);
+            let atkElem = document.getElementById(`${atkPrefix}-coin-${step}`);
+            if (atkElem) {
+              atkElem.className = `coin ${atkIsHeads ? 'heads' : 'tails'}`;
+              atkElem.innerHTML = `<span class="coin-sub">${atkVal}</span>`;
+            }
+
+            if (!isEvadeFailed) {
+              let defIsHeads = Math.random() * 100 < defChance;
+              let defVal = defBase + (defIsHeads ? defCP : 0);
+              let defElem = document.getElementById(`${defPrefix}-coin-0`);
+              if (defElem) {
+                defElem.className = `coin ${defIsHeads ? 'heads' : 'tails'}`;
+                defElem.innerHTML = `<span class="coin-sub">${defVal}</span>`;
+              }
+
+              if (defVal >= atkVal) {
+                // 회피 성공
+                playSFX('shield');
+                let statusText = document.getElementById('clash-status-text');
+                if(statusText) statusText.innerHTML = `<div class="result-banner player">EVADE SUCCESS! (회피 성공)</div>`;
+              } else {
+                // 회피 실패! 이후 남은 공격도 모두 피격 처리
+                isEvadeFailed = true;
+                playSFX('hit');
+                applyDamage(defenderIsPlayer, atkVal);
+                let statusText = document.getElementById('clash-status-text');
+                if(statusText) statusText.innerHTML = `<div class="result-banner enemy">EVADE FAILED! (회피 실패, 피격!)</div>`;
+              }
+            } else {
+              // 회피 실패 후 남은 공격 마저 피격
+              playSFX('hit');
+              applyDamage(defenderIsPlayer, atkVal);
+            }
+
+            step++;
+          } else {
+            clearInterval(interval);
+            setTimeout(() => { finishMatch(); }, 1200);
+          }
+        }, 600);
+      }
+
+      // 3. 반격 (Counter) 모드: 적 일방 공격 피격 후 반격 되갚아주기
+      else if (defSubType === 'counter') {
+        let statusText = document.getElementById('clash-status-text');
+        if(statusText) statusText.innerHTML = `<div class="result-banner enemy">적 일방 공격 피격 중... (반격 대기)</div>`;
+
+        let atkStep = 0;
+        let atkInterval = setInterval(() => {
+          if (atkStep < atkCoinsCount) {
+            let isHeads = Math.random() * 100 < atkChance;
+            let atkDmg = atkBase + (isHeads ? atkCP : 0);
+            let elem = document.getElementById(`${atkPrefix}-coin-${atkStep}`);
+            if (elem) {
+              elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
+              elem.innerHTML = `<span class="coin-sub">${atkDmg}</span>`;
+              playSFX(isHeads ? 'heads' : 'tails');
+            }
+
+            applyDamage(defenderIsPlayer, atkDmg);
+            atkStep++;
+          } else {
+            clearInterval(atkInterval);
+
+            // 상대 공격 종료 후 살아있으면 반격 되갚아주기 실행
+            setTimeout(() => {
+              const currentDefenderStagger = defenderIsPlayer ? pStaggerLevel : eStaggerLevel;
+              if (currentDefenderStagger > 0) {
+                if(statusText) statusText.innerHTML = `<div class="result-banner enemy">흐트러짐 상태로 반격 불가!</div>`;
+                setTimeout(() => { finishMatch(); }, 1000);
+                return;
+              }
+
+              if(statusText) statusText.innerHTML = `<div class="result-banner player">COUNTER STRIKE! (반격 실행)</div>`;
+
+              let defStep = 0;
+              let defInterval = setInterval(() => {
+                if (defStep < defCoinsCount) {
+                  let isHeads = Math.random() * 100 < defChance;
+                  let defDmg = defBase + (isHeads ? defCP : 0);
+                  let elem = document.getElementById(`${defPrefix}-coin-${defStep}`);
+                  if (elem) {
+                    elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
+                    elem.innerHTML = `<span class="coin-sub">${defDmg}</span>`;
+                    playSFX('counter');
+                  }
+
+                  applyDamage(!defenderIsPlayer, defDmg);
+                  defStep++;
+                } else {
+                  clearInterval(defInterval);
+                  setTimeout(() => { finishMatch(); }, 1200);
+                }
+              }, 500);
+            }, 800);
+          }
+        }, 500);
+      }
     }
 
     function runClashRound() {
