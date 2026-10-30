@@ -309,7 +309,7 @@
 
     .coin-preview-box {
       display: grid;
-      grid-template-columns: 1fr 1fr 1fr 1fr;
+      grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
       gap: 4px;
       width: 100%;
       margin-top: 0.6rem;
@@ -434,7 +434,6 @@
       min-height: 240px;
     }
 
-    /* 체력바 및 명확한 실드바 스타일 */
     .hp-container {
       margin-bottom: 0.8rem;
       background: #111;
@@ -458,7 +457,6 @@
     }
     .hp-bar-fill.enemy-hp { background: #ff3322; }
     
-    /* 육안으로 뚜렷하게 식별 가능한 단색 네온 실드바 */
     .shield-bar-fill {
       position: absolute;
       top: 0; left: 0; height: 100%;
@@ -471,7 +469,6 @@
       z-index: 2;
     }
 
-    /* HP바 내부 높이에 정확히 맞춘 금빛 흐트러짐 선 */
     .stagger-line {
       position: absolute;
       top: 0;
@@ -792,7 +789,6 @@
                   <div class="hp-bar-bg" id="p-hp-bar-bg">
                     <div class="hp-bar-fill" id="p-hp-bar" style="width: 100%;"></div>
                     <div class="shield-bar-fill" id="p-shield-bar" style="width: 0%;"></div>
-                    <!-- 금빛 흐트러짐 선 레이어 (HP 바 내부에 위치) -->
                     <div id="p-stagger-lines-layer" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
                   </div>
                   <div class="hp-text" id="p-hp-text">HP: 100 / 100</div>
@@ -809,7 +805,6 @@
                   <div class="hp-bar-bg" id="e-hp-bar-bg">
                     <div class="hp-bar-fill enemy-hp" id="e-hp-bar" style="width: 100%;"></div>
                     <div class="shield-bar-fill" id="e-shield-bar" style="width: 0%;"></div>
-                    <!-- 금빛 흐트러짐 선 레이어 (HP 바 내부에 위치) -->
                     <div id="e-stagger-lines-layer" style="position: absolute; top:0; left:0; width:100%; height:100%; pointer-events:none;"></div>
                   </div>
                   <div class="hp-text" id="e-hp-text">HP: 100 / 100</div>
@@ -994,8 +989,11 @@
     let pShield = 0;
     let eShield = 0;
 
+    // 흐트러짐 레벨 및 다음 턴 행동 불능 보장 플래그
     let pStaggerLevel = 0;
     let eStaggerLevel = 0;
+    let pIsStaggeredActiveTurn = false;
+    let eIsStaggeredActiveTurn = false;
 
     let pStaggerCount = 3;
     let eStaggerCount = 3;
@@ -1536,22 +1534,27 @@
       if(pNextDisp) pNextDisp.innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${playerNext === 5 ? 1 : playerNext}">${getSkillName(true, playerNext)}</span>`;
       if(eNextDisp) eNextDisp.innerHTML = `<span>[NEXT]:</span><span class="skill-badge next-badge s${enemyNext === 5 ? 1 : enemyNext}">${getSkillName(false, enemyNext)}</span>`;
 
+      // 프리뷰 박스에 수비 스킬의 코인 위력 포함 표기 (+N)
       const pCoinPrev = document.getElementById('p-coin-preview');
       const eCoinPrev = document.getElementById('e-coin-preview');
       if(pCoinPrev) {
         pCoinPrev.innerHTML = [1, 2, 3, 4, 5].map(s => {
+          const cpVal = getSkillCoinPower(true, s);
+          const cpStr = cpVal >= 0 ? `+${cpVal}` : `${cpVal}`;
           if(s === 5) {
-            return `<div class="coin-preview-item" style="border-color:#aa1133;">E.G.O<br>위력 ${getSkillBasePower(true, 5)}+${getSkillCoinPower(true, 5)}<br><strong>${getSkillCoins(true, 5)}C</strong></div>`;
+            return `<div class="coin-preview-item" style="border-color:#aa1133;">E.G.O<br>위력 ${getSkillBasePower(true, 5)}${cpStr}<br><strong>${getSkillCoins(true, 5)}C</strong></div>`;
           }
-          return `<div class="coin-preview-item">${getSkillName(true, s)}<br>위력 ${getSkillBasePower(true, s)}+${getSkillCoinPower(true, s)}<br><strong>${getSkillCoins(true, s)}C</strong></div>`;
+          return `<div class="coin-preview-item">${getSkillName(true, s)}<br>위력 ${getSkillBasePower(true, s)}${cpStr}<br><strong>${getSkillCoins(true, s)}C</strong></div>`;
         }).join('');
       }
       if(eCoinPrev) {
         eCoinPrev.innerHTML = [1, 2, 3, 4, 5].map(s => {
+          const cpVal = getSkillCoinPower(false, s);
+          const cpStr = cpVal >= 0 ? `+${cpVal}` : `${cpVal}`;
           if(s === 5) {
-            return `<div class="coin-preview-item" style="border-color:#aa1133;">E.G.O<br>위력 ${getSkillBasePower(false, 5)}+${getSkillCoinPower(false, 5)}<br><strong>${getSkillCoins(false, 5)}C</strong></div>`;
+            return `<div class="coin-preview-item" style="border-color:#aa1133;">E.G.O<br>위력 ${getSkillBasePower(false, 5)}${cpStr}<br><strong>${getSkillCoins(false, 5)}C</strong></div>`;
           }
-          return `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}+${getSkillCoinPower(false, s)}<br><strong>${getSkillCoins(false, s)}C</strong></div>`;
+          return `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}${cpStr}<br><strong>${getSkillCoins(false, s)}C</strong></div>`;
         }).join('');
       }
 
@@ -1613,8 +1616,10 @@
       if(clashBtn) clashBtn.disabled = true;
       if(roundBadge) roundBadge.style.display = 'block';
 
-      // 턴 시작 시 흐트러져 있다면 즉시 일방 공격 수행
+      // 턴 시작 시 흐트러져 있다면 다음 턴 일방 공격 수행
       if (pStaggerLevel > 0 || eStaggerLevel > 0) {
+        if (pStaggerLevel > 0) pIsStaggeredActiveTurn = true;
+        if (eStaggerLevel > 0) eIsStaggeredActiveTurn = true;
         runStaggerOneSidedAttack();
         return;
       }
@@ -1702,16 +1707,13 @@
       }, 500);
     }
 
-    // 재설계된 수비 스킬 통합 로직 (방어, 회피, 반격)
     function runDefensePhase(isPDef, isEDef) {
       const roundBadge = document.getElementById('clash-round-badge');
       if(roundBadge) roundBadge.innerText = 'DEFENSE PHASE';
 
-      // 방어 사용자 설정 확인 (아군이 수비 스킬을 썼는지, 적군이 수비 스킬을 썼는지)
       const defenderIsPlayer = isPDef;
       const defPrefix = defenderIsPlayer ? 'p' : 'e';
       const atkPrefix = defenderIsPlayer ? 'e' : 'p';
-      const defenderType = defenderIsPlayer ? 'guard' : (document.getElementById(`${defPrefix}-s4-type`)?.value || 'guard');
       const defSubType = document.getElementById(`${defPrefix}-s4-type`)?.value || 'guard';
 
       const defUsedType = defenderIsPlayer ? playerSlots[pSelectedIndex] : enemySlots[eSelectedIndex];
@@ -1730,7 +1732,6 @@
       const atkCP = getSkillCoinPower(!defenderIsPlayer, atkUsedType);
       const atkCoinsCount = getSkillCoins(!defenderIsPlayer, atkUsedType);
 
-      // UI 요소 준비
       let defHTML = '', atkHTML = '';
       for (let i = 0; i < defCoinsCount; i++) defHTML += `<div class="coin flipping" id="${defPrefix}-coin-${i}"></div>`;
       for (let i = 0; i < atkCoinsCount; i++) atkHTML += `<div class="coin flipping" id="${atkPrefix}-coin-${i}"></div>`;
@@ -1743,7 +1744,6 @@
 
       playSFX('spin');
 
-      // 1. 방어 (Guard) 모드: 방어막 생성 후 적의 일방 공격 적용
       if (defSubType === 'guard') {
         let defRollSum = defBase;
         for (let i = 0; i < defCoinsCount; i++) {
@@ -1782,8 +1782,6 @@
           }
         }, 500);
       }
-
-      // 2. 회피 (Evade) 모드: 위력 비교 회피 -> 실패 시 남은 공격 마저 받음
       else if (defSubType === 'evade') {
         let step = 0;
         let isEvadeFailed = false;
@@ -1808,12 +1806,10 @@
               }
 
               if (defVal >= atkVal) {
-                // 회피 성공
                 playSFX('shield');
                 let statusText = document.getElementById('clash-status-text');
                 if(statusText) statusText.innerHTML = `<div class="result-banner player">EVADE SUCCESS! (회피 성공)</div>`;
               } else {
-                // 회피 실패! 이후 남은 공격도 모두 피격 처리
                 isEvadeFailed = true;
                 playSFX('hit');
                 applyDamage(defenderIsPlayer, atkVal);
@@ -1821,7 +1817,6 @@
                 if(statusText) statusText.innerHTML = `<div class="result-banner enemy">EVADE FAILED! (회피 실패, 피격!)</div>`;
               }
             } else {
-              // 회피 실패 후 남은 공격 마저 피격
               playSFX('hit');
               applyDamage(defenderIsPlayer, atkVal);
             }
@@ -1833,8 +1828,6 @@
           }
         }, 600);
       }
-
-      // 3. 반격 (Counter) 모드: 적 일방 공격 피격 후 반격 되갚아주기
       else if (defSubType === 'counter') {
         let statusText = document.getElementById('clash-status-text');
         if(statusText) statusText.innerHTML = `<div class="result-banner enemy">적 일방 공격 피격 중... (반격 대기)</div>`;
@@ -1856,7 +1849,6 @@
           } else {
             clearInterval(atkInterval);
 
-            // 상대 공격 종료 후 살아있으면 반격 되갚아주기 실행
             setTimeout(() => {
               const currentDefenderStagger = defenderIsPlayer ? pStaggerLevel : eStaggerLevel;
               if (currentDefenderStagger > 0) {
@@ -2105,9 +2097,15 @@
     }
 
     function finishMatch() {
-      // 턴이 종료되면 흐트러짐 상태 초기화
-      pStaggerLevel = 0;
-      eStaggerLevel = 0;
+      // 이번 턴에 행동 불능(Stagger)으로 일방 공격을 당했었다면 턴 종료 시 해제
+      if (pIsStaggeredActiveTurn) {
+        pStaggerLevel = 0;
+        pIsStaggeredActiveTurn = false;
+      }
+      if (eIsStaggeredActiveTurn) {
+        eStaggerLevel = 0;
+        eIsStaggeredActiveTurn = false;
+      }
 
       if (playerSlots[pSelectedIndex] === 5) playerSlots[pSelectedIndex] = 2;
       if (enemySlots[eSelectedIndex] === 5) enemySlots[eSelectedIndex] = 2;
