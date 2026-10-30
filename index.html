@@ -1161,11 +1161,7 @@
               let line = document.createElement('div');
               line.className = 'stagger-line';
               line.style.left = `${val}%`;
-              
-              if (pct <= val) {
-                line.classList.add('hidden');
-              }
-              
+              if (pct <= val) line.classList.add('hidden');
               linesLayer.appendChild(line);
             }
           });
@@ -1173,13 +1169,14 @@
 
         const currentStaggerLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
         const stageElem = document.getElementById(`${prefix}-coins-stage`);
-        if (currentStaggerLvl > 0 && stageElem && !stageElem.querySelector('.stagger-img')) {
+        if (currentStaggerLvl > 0 && stageElem) {
           const imgName = currentStaggerLvl === 1 ? 'stagger.png' : (currentStaggerLvl === 2 ? 'stagger1.png' : 'stagger2.png');
-          stageElem.innerHTML = `<img src="images/${imgName}" class="stagger-img" alt="STAGGER">`;
+          stageElem.innerHTML = `<img src="images/${imgName}" class="stagger-img" alt="STAGGER ${currentStaggerLvl}">`;
         }
       });
     }
 
+    // 데미지 정산 및 흐트러짐 임계선 돌파 체크 수정
     function applyDamage(isPlayer, amount) {
       if (amount <= 0) return;
 
@@ -1265,6 +1262,7 @@
       });
     }
 
+    // 수비 스킬(4번) 고유 설정값 참조 함수 분리
     function getSkillName(isPlayer, skillType) {
       if (isPlayer && pStaggerLevel > 0) return '[STAGGER] 행동 불능';
       if (!isPlayer && eStaggerLevel > 0) return '[STAGGER] 행동 불능';
@@ -1286,6 +1284,10 @@
     function getSkillCoins(isPlayer, skillType) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
       const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) {
+        const val = parseInt(document.getElementById(`${prefix}-s4-coins`)?.value);
+        return isNaN(val) ? 1 : val;
+      }
       if (skillType === 5) {
         const val = parseInt(document.getElementById(`${prefix}-ego-coins`)?.value);
         return isNaN(val) ? 1 : val;
@@ -1297,6 +1299,10 @@
     function getSkillBasePower(isPlayer, skillType) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
       const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) {
+        const val = parseInt(document.getElementById(`${prefix}-s4-base`)?.value);
+        return isNaN(val) ? 0 : val;
+      }
       if (skillType === 5) {
         const val = parseInt(document.getElementById(`${prefix}-ego-base`)?.value);
         return isNaN(val) ? 0 : val;
@@ -1308,6 +1314,10 @@
     function getSkillCoinPower(isPlayer, skillType) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return 0;
       const prefix = isPlayer ? 'p' : 'e';
+      if (skillType === 4) {
+        const val = parseInt(document.getElementById(`${prefix}-s4-coinpower`)?.value);
+        return isNaN(val) ? 0 : val;
+      }
       if (skillType === 5) {
         const val = parseInt(document.getElementById(`${prefix}-ego-coinpower`)?.value);
         return isNaN(val) ? 0 : val;
@@ -1774,10 +1784,7 @@
           }
         }, 500);
       }
-      
-      // 회피 (Evade): 상대 모든 코인 합 vs 내 회피 총합 비교
       else if (defSubType === 'evade') {
-        // 1. 적의 모든 공격 코인 굴림 계산
         let atkTotalSum = atkBase;
         let atkCoinResults = [];
         for (let i = 0; i < atkCoinsCount; i++) {
@@ -1787,7 +1794,6 @@
           atkCoinResults.push({ isHeads, val: atkBase + val });
         }
 
-        // 2. 내 회피 코인들의 총합 계산
         let defTotalSum = defBase;
         let defCoinResults = [];
         for (let i = 0; i < defCoinsCount; i++) {
@@ -1797,7 +1803,6 @@
           defCoinResults.push({ isHeads, val: defBase + val });
         }
 
-        // 애니메이션 및 결과 시각화
         for (let i = 0; i < atkCoinsCount; i++) {
           let elem = document.getElementById(`${atkPrefix}-coin-${i}`);
           if (elem) {
@@ -1816,14 +1821,12 @@
         let statusText = document.getElementById('clash-status-text');
 
         if (defTotalSum >= atkTotalSum) {
-          // 회피 성공: 모든 공격 회피
           playSFX('shield');
-          if(statusText) statusText.innerHTML = `<div class="result-banner player">EVADE SUCCESS! (회피 총합 ${defTotalSum} vs 적 총합 ${atkTotalSum})</div>`;
+          if(statusText) statusText.innerHTML = `<div class="result-banner player">EVADE SUCCESS! (총합 ${defTotalSum} vs ${atkTotalSum})</div>`;
           setTimeout(() => { finishMatch(); }, 1500);
         } else {
-          // 회피 실패: 남은 적 코인(전체)의 공격 그대로 피격
           playSFX('hit');
-          if(statusText) statusText.innerHTML = `<div class="result-banner enemy">EVADE FAILED! (회피 총합 ${defTotalSum} < 적 총합 ${atkTotalSum}) 피격 시작</div>`;
+          if(statusText) statusText.innerHTML = `<div class="result-banner enemy">EVADE FAILED! (총합 ${defTotalSum} < ${atkTotalSum}) 피격 시작</div>`;
 
           let step = 0;
           let interval = setInterval(() => {
@@ -1839,7 +1842,6 @@
           }, 500);
         }
       }
-
       else if (defSubType === 'counter') {
         let statusText = document.getElementById('clash-status-text');
         if(statusText) statusText.innerHTML = `<div class="result-banner enemy">적 일방 공격 피격 중... (반격 대기)</div>`;
