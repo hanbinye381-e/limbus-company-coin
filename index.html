@@ -1059,11 +1059,13 @@
       if (slots[1] === 4) {
         slots[1] = 2;
         if(btn) btn.classList.remove('active');
+        if (isPlayer) pSelectedIndex = 0; else eSelectedIndex = 0;
       } else {
         slots[1] = 4;
         if(btn) btn.classList.add('active');
         const egoBtn = document.getElementById(isPlayer ? 'p-ego-btn' : 'e-ego-btn');
         if(egoBtn) egoBtn.classList.remove('active');
+        if (isPlayer) pSelectedIndex = 1; else eSelectedIndex = 1;
       }
       renderSlots();
     }
@@ -1092,11 +1094,13 @@
           if (slots[1] === 5) {
             slots[1] = 2;
             if(btnElem) btnElem.classList.remove('active');
+            if (isPlayer) pSelectedIndex = 0; else eSelectedIndex = 0;
           } else {
             slots[1] = 5;
             if(btnElem) btnElem.classList.add('active');
             const defBtn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
             if(defBtn) defBtn.classList.remove('active');
+            if (isPlayer) pSelectedIndex = 1; else eSelectedIndex = 1;
             playSFX('spin');
           }
           renderSlots();
@@ -1176,7 +1180,6 @@
       });
     }
 
-    // 데미지 정산 및 흐트러짐 임계선 돌파 체크 수정
     function applyDamage(isPlayer, amount) {
       if (amount <= 0) return;
 
@@ -1262,7 +1265,6 @@
       });
     }
 
-    // 수비 스킬(4번) 고유 설정값 참조 함수 분리
     function getSkillName(isPlayer, skillType) {
       if (isPlayer && pStaggerLevel > 0) return '[STAGGER] 행동 불능';
       if (!isPlayer && eStaggerLevel > 0) return '[STAGGER] 행동 불능';
@@ -1520,7 +1522,7 @@
       if(pWrapper) {
         pWrapper.innerHTML = playerSlots.map((s, idx) => {
           const isSelected = idx === pSelectedIndex ? 'selected' : '';
-          const badgeClass = s === 5 ? 'ego' : `s${s}`;
+          const badgeClass = s === 5 ? 'ego' : (s === 4 ? 's4' : `s${s}`);
           return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(true, ${idx})">${getSkillName(true, s)}</span>`;
         }).join('');
       }
@@ -1528,7 +1530,7 @@
       if(eWrapper) {
         eWrapper.innerHTML = enemySlots.map((s, idx) => {
           const isSelected = idx === eSelectedIndex ? 'selected' : '';
-          const badgeClass = s === 5 ? 'ego' : `s${s}`;
+          const badgeClass = s === 5 ? 'ego' : (s === 4 ? 's4' : `s${s}`);
           return `<span class="skill-badge ${badgeClass} ${isSelected}" onclick="selectSkill(false, ${idx})">${getSkillName(false, s)}</span>`;
         }).join('');
       }
@@ -1547,6 +1549,11 @@
           if(s === 5) {
             return `<div class="coin-preview-item" style="border-color:#aa1133;">E.G.O<br>위력 ${getSkillBasePower(true, 5)}${cpStr}<br><strong>${getSkillCoins(true, 5)}C</strong></div>`;
           }
+          if(s === 4) {
+            const subType = document.getElementById('p-s4-type')?.value || 'guard';
+            const typeMap = { guard: '방어', evade: '회피', counter: '반격' };
+            return `<div class="coin-preview-item" style="border-color:#e6a100;">수비(${typeMap[subType]})<br>위력 ${getSkillBasePower(true, 4)}${cpStr}<br><strong>${getSkillCoins(true, 4)}C</strong></div>`;
+          }
           return `<div class="coin-preview-item">${getSkillName(true, s)}<br>위력 ${getSkillBasePower(true, s)}${cpStr}<br><strong>${getSkillCoins(true, s)}C</strong></div>`;
         }).join('');
       }
@@ -1557,7 +1564,12 @@
           if(s === 5) {
             return `<div class="coin-preview-item" style="border-color:#aa1133;">E.G.O<br>위력 ${getSkillBasePower(false, 5)}${cpStr}<br><strong>${getSkillCoins(false, 5)}C</strong></div>`;
           }
-          return `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}${cpStr}<br><strong>${getSkillCoins(false, 5)}C</strong></div>`;
+          if(s === 4) {
+            const subType = document.getElementById('e-s4-type')?.value || 'guard';
+            const typeMap = { guard: '방어', evade: '회피', counter: '반격' };
+            return `<div class="coin-preview-item" style="border-color:#e6a100;">수비(${typeMap[subType]})<br>위력 ${getSkillBasePower(false, 4)}${cpStr}<br><strong>${getSkillCoins(false, 4)}C</strong></div>`;
+          }
+          return `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}${cpStr}<br><strong>${getSkillCoins(false, s)}C</strong></div>`;
         }).join('');
       }
 
@@ -1667,12 +1679,12 @@
       if (attackerIsPlayer) {
         const pTag = document.getElementById('p-result-skill-tag');
         const pCoinsStage = document.getElementById('p-coins-stage');
-        if(pTag) pTag.innerHTML = `<span class="skill-badge ${attackType===5?'ego':('s'+attackType)}">${getSkillName(true, attackType)}</span>`;
+        if(pTag) pTag.innerHTML = `<span class="skill-badge ${attackType===5?'ego':(attackType===4?'s4':'s'+attackType)}">${getSkillName(true, attackType)}</span>`;
         if(pCoinsStage) pCoinsStage.innerHTML = HTML;
       } else {
         const eTag = document.getElementById('e-result-skill-tag');
         const eCoinsStage = document.getElementById('e-coins-stage');
-        if(eTag) eTag.innerHTML = `<span class="skill-badge ${attackType===5?'ego':('s'+attackType)}">${getSkillName(false, attackType)}</span>`;
+        if(eTag) eTag.innerHTML = `<span class="skill-badge ${attackType===5?'ego':(attackType===4?'s4':'s'+attackType)}">${getSkillName(false, attackType)}</span>`;
         if(eCoinsStage) eCoinsStage.innerHTML = HTML;
       }
 
@@ -1718,7 +1730,7 @@
       const atkPrefix = defenderIsPlayer ? 'e' : 'p';
       const defSubType = document.getElementById(`${defPrefix}-s4-type`)?.value || 'guard';
 
-      const defUsedType = defenderIsPlayer ? playerSlots[pSelectedIndex] : enemySlots[eSelectedIndex];
+      const defUsedType = 4; // 수비 스킬 4번 전용 수치 고정 참조
       const atkUsedType = defenderIsPlayer ? enemySlots[eSelectedIndex] : playerSlots[pSelectedIndex];
 
       const defSanity = parseInt(document.getElementById(`${defPrefix}-sanity`)?.value) || 0;
@@ -1741,7 +1753,7 @@
       document.getElementById(`${defPrefix}-result-skill-tag`).innerHTML = `<span class="skill-badge s4">${getSkillName(defenderIsPlayer, defUsedType)}</span>`;
       document.getElementById(`${defPrefix}-coins-stage`).innerHTML = defHTML;
 
-      document.getElementById(`${atkPrefix}-result-skill-tag`).innerHTML = `<span class="skill-badge ${atkUsedType===5?'ego':('s'+atkUsedType)}">${getSkillName(!defenderIsPlayer, atkUsedType)}</span>`;
+      document.getElementById(`${atkPrefix}-result-skill-tag`).innerHTML = `<span class="skill-badge ${atkUsedType===5?'ego':(atkUsedType===4?'s4':'s'+atkUsedType)}">${getSkillName(!defenderIsPlayer, atkUsedType)}</span>`;
       document.getElementById(`${atkPrefix}-coins-stage`).innerHTML = atkHTML;
 
       playSFX('spin');
@@ -1961,7 +1973,7 @@
       const pPowerScore = document.getElementById('p-power-score');
       const pCoinsStage = document.getElementById('p-coins-stage');
 
-      if(pTag) pTag.innerHTML = `<span class="skill-badge ${pUsedType===5?'ego':('s'+pUsedType)}">${getSkillName(true, pUsedType)}</span>`;
+      if(pTag) pTag.innerHTML = `<span class="skill-badge ${pUsedType===5?'ego':(pUsedType===4?'s4':'s'+pUsedType)}">${getSkillName(true, pUsedType)}</span>`;
       if(pCountText) pCountText.innerText = '판정 중...';
       if(pPowerScore) pPowerScore.innerText = 'POWER: -';
       if(pCoinsStage) pCoinsStage.innerHTML = pHTML;
@@ -1971,7 +1983,7 @@
       const ePowerScore = document.getElementById('e-power-score');
       const eCoinsStage = document.getElementById('e-coins-stage');
 
-      if(eTag) eTag.innerHTML = `<span class="skill-badge ${eUsedType===5?'ego':('s'+eUsedType)}">${getSkillName(false, eUsedType)}</span>`;
+      if(eTag) eTag.innerHTML = `<span class="skill-badge ${eUsedType===5?'ego':(eUsedType===4?'s4':'s'+eUsedType)}">${getSkillName(false, eUsedType)}</span>`;
       if(eCountText) eCountText.innerText = '판정 중...';
       if(ePowerScore) ePowerScore.innerText = 'POWER: -';
       if(eCoinsStage) eCoinsStage.innerHTML = eHTML;
