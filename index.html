@@ -1072,7 +1072,7 @@
 
 
 
-    /* 코인 기본 스타일 및 수치 배지 보증 */
+    /* 코인 기본 스타일 */
 
     .coin {
 
@@ -1182,37 +1182,7 @@
 
 
 
-    .coin-sub {
-
-      position: absolute;
-
-      bottom: -18px;
-
-      font-size: 0.7rem;
-
-      font-weight: bold;
-
-      color: #ffffff;
-
-      background: rgba(10, 8, 6, 0.95);
-
-      padding: 1px 6px;
-
-      border: 1px solid var(--accent-color);
-
-      border-radius: 2px;
-
-      font-family: var(--font-body);
-
-      white-space: nowrap;
-
-      z-index: 10;
-
-      box-shadow: 0 0 6px rgba(0, 0, 0, 0.8);
-
-    }
-
-
+    /* 이펙트 레이어 */
 
     .spark-container {
 
@@ -2001,6 +1971,20 @@
     let pEgoHoldTimer = null;
 
     let eEgoHoldTimer = null;
+
+
+
+    // 합 가속 딜레이 계산 (10합(라운드) 진행 시 최대 5배속까지 가속)
+
+    // 1합: 1.0배 (기본 딜레이), 10합: 5.0배 (기본 딜레이 / 5)
+
+    function getClashSpeedDelay(baseDelay = 500) {
+
+      const multiplier = Math.min(5.0, 1.0 + (currentClashRound - 1) * (4.0 / 9.0));
+
+      return Math.max(50, Math.round(baseDelay / multiplier));
+
+    }
 
 
 
@@ -3178,6 +3162,8 @@
 
 
 
+    // 불꽃 및 파편 이펙트
+
     function triggerSparks() {
 
       const layer = document.getElementById('spark-layer');
@@ -3192,7 +3178,7 @@
 
       const c1 = currentTheme === 'ruina' ? '#38e8e5' : '#e6a100';
 
-      const c2 = currentTheme === 'ruina' ? '#c59f52' : '#ff3322';
+      const c2 = currentTheme === 'ruina' ? '#ff3322' : '#ffaa00';
 
 
 
@@ -3378,7 +3364,7 @@
 
       let HTML = '';
 
-      for (let i = 0; i < coinsCount; i++) HTML += `<div class="coin flipping" id="${attackerIsPlayer ? 'p' : 'e'}-coin-${i}"><span class="coin-sub">굴리는 중...</span></div>`;
+      for (let i = 0; i < coinsCount; i++) HTML += `<div class="coin flipping" id="${attackerIsPlayer ? 'p' : 'e'}-coin-${i}"></div>`;
 
 
 
@@ -3419,8 +3405,6 @@
           if (elem) {
 
             elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
-
-            elem.innerHTML = `<span class="coin-sub">위력 ${coinDmg} (${isHeads ? '앞면' : '뒷면'})</span>`;
 
             playSFX(isHeads ? 'heads' : 'tails');
 
@@ -3464,7 +3448,7 @@
 
 
 
-    /* 수비 스킬 판정 처리 */
+    /* 수비/회피/반격 스킬 처리 */
 
     function runDefensePhase(isPDef, isEDef) {
 
@@ -3514,13 +3498,13 @@
 
       let atkHTML = '';
 
-      for (let i = 0; i < atkCoinsCount; i++) atkHTML += `<div class="coin flipping" id="${atkPrefix}-coin-${i}"><span class="coin-sub">굴리는 중...</span></div>`;
+      for (let i = 0; i < atkCoinsCount; i++) atkHTML += `<div class="coin flipping" id="${atkPrefix}-coin-${i}"></div>`;
 
 
 
       document.getElementById(`${defPrefix}-result-skill-tag`).innerHTML = `<span class="skill-badge s4">${getSkillName(defenderIsPlayer, 4)}</span>`;
 
-      document.getElementById(`${defPrefix}-coins-stage`).innerHTML = `<div class="coin flipping" id="${defPrefix}-evade-coin"><span class="coin-sub">대기 중...</span></div>`;
+      document.getElementById(`${defPrefix}-coins-stage`).innerHTML = `<div class="coin flipping" id="${defPrefix}-evade-coin"></div>`;
 
 
 
@@ -3552,7 +3536,7 @@
 
         document.getElementById(`${defPrefix}-result-count-text`).innerText = `HEADS ${defHeads} / ${defCoinsCount}`;
 
-        document.getElementById(`${defPrefix}-coins-stage`).innerHTML = `<div class="coin heads win-glow"><span class="coin-sub">방어력 ${defRollSum}</span></div>`;
+        document.getElementById(`${defPrefix}-coins-stage`).innerHTML = `<div class="coin heads win-glow"></div>`;
 
 
 
@@ -3583,8 +3567,6 @@
             if (elem) {
 
               elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
-
-              elem.innerHTML = `<span class="coin-sub">위력 ${atkDmg}</span>`;
 
               playSFX(isHeads ? 'heads' : 'tails');
 
@@ -3630,8 +3612,6 @@
 
           if (atkStep < atkCoinsCount) {
 
-            // 1. 회피 코인 매 타격마다 리롤
-
             let evadeIsHeads = Math.random() * 100 < defChance;
 
             let evadePower = defBase + (evadeIsHeads ? defCP : 0);
@@ -3644,15 +3624,11 @@
 
               evadeCoinElem.className = `coin ${evadeIsHeads ? 'heads' : 'tails'} win-glow`;
 
-              evadeCoinElem.innerHTML = `<span class="coin-sub">회피 ${evadePower}</span>`;
-
             }
 
             document.getElementById(`${defPrefix}-power-score`).innerText = isEvadeBroken ? `EVADE: BROKEN` : `EVADE: ${evadePower}`;
 
 
-
-            // 2. 적 공격 코인 굴림 및 위력 누적 합산
 
             let isHeads = Math.random() * 100 < atkChance;
 
@@ -3668,8 +3644,6 @@
 
               atkElem.className = `coin ${isHeads ? 'heads' : 'tails'}`;
 
-              atkElem.innerHTML = `<span class="coin-sub">누적 ${atkCumulativePower} (+${coinPowerVal})</span>`;
-
             }
 
 
@@ -3680,9 +3654,9 @@
 
 
 
-            // 3. 회피 여부 판정
-
             if (!isEvadeBroken && evadePower >= atkCumulativePower) {
+
+              triggerSparks();
 
               playSFX('shield');
 
@@ -3694,8 +3668,6 @@
 
             } else {
 
-              // 회피 실패 시 코인 파괴 처리 및 남은/현재 코인부터 전량 피격
-
               if (!isEvadeBroken) {
 
                 isEvadeBroken = true;
@@ -3705,8 +3677,6 @@
                   triggerShatterEffect(evadeCoinElem);
 
                   evadeCoinElem.className = `coin broken-heads`;
-
-                  evadeCoinElem.innerHTML = `<span class="coin-sub">회피 실패</span>`;
 
                 }
 
@@ -3770,8 +3740,6 @@
 
               elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
 
-              elem.innerHTML = `<span class="coin-sub">위력 ${atkDmg}</span>`;
-
               playSFX(isHeads ? 'heads' : 'tails');
 
             }
@@ -3830,8 +3798,6 @@
 
                     elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
 
-                    elem.innerHTML = `<span class="coin-sub">반격 ${defDmg}</span>`;
-
                     playSFX('counter');
 
                   }
@@ -3870,6 +3836,8 @@
 
 
 
+    // 합(Clash) 판정 및 라운드 가속 계산
+
     function runClashRound() {
 
       const pSanity = parseInt(document.getElementById('p-sanity')?.value) || 0;
@@ -3902,11 +3870,17 @@
 
 
 
+      // 10턴(합) 시 5배 가속 딜레이 산출
+
+      const currentStepDelay = getClashSpeedDelay(500); // 1합: 500ms -> 10합: 100ms
+
+
+
       const roundBadge = document.getElementById('clash-round-badge');
 
       const statusText = document.getElementById('clash-status-text');
 
-      if(roundBadge) roundBadge.innerText = `ROUND ${currentClashRound}`;
+      if(roundBadge) roundBadge.innerText = `ROUND ${currentClashRound} (SPEED x${(500 / currentStepDelay).toFixed(1)})`;
 
       if(statusText) statusText.innerHTML = `<span style="color: var(--accent-color); font-weight: bold;">ROUND ${currentClashRound} CLASHING...</span>`;
 
@@ -3966,6 +3940,8 @@
 
 
 
+      // 표준 최종 위력 = 기본 위력 + (앞면 코인 수 x 코인 위력)
+
       const playerFinalPower = pBase + (playerHeads * pCP);
 
       const enemyFinalPower = eBase + (enemyHeads * eCP);
@@ -3976,7 +3952,7 @@
 
       for (let i = 0; i < pTotalMax; i++) {
 
-        pHTML += pCoinStates[i].startsWith('broken') ? `<div class="coin ${pCoinStates[i]}"></div>` : `<div class="coin flipping" id="p-coin-${i}"><span class="coin-sub">...</span></div>`;
+        pHTML += pCoinStates[i].startsWith('broken') ? `<div class="coin ${pCoinStates[i]}"></div>` : `<div class="coin flipping" id="p-coin-${i}"></div>`;
 
       }
 
@@ -3984,7 +3960,7 @@
 
       for (let i = 0; i < eTotalMax; i++) {
 
-        eHTML += eCoinStates[i].startsWith('broken') ? `<div class="coin ${eCoinStates[i]}"></div>` : `<div class="coin flipping" id="e-coin-${i}"><span class="coin-sub">...</span></div>`;
+        eHTML += eCoinStates[i].startsWith('broken') ? `<div class="coin ${eCoinStates[i]}"></div>` : `<div class="coin flipping" id="e-coin-${i}"></div>`;
 
       }
 
@@ -4014,6 +3990,8 @@
 
 
 
+      // 코인 롤링 애니메이션 단계별 가속 타이머 바인딩
+
       for (let i = 0; i < maxStep; i++) {
 
         setTimeout(() => {
@@ -4031,8 +4009,6 @@
               pCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
 
               pElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
-
-              pElem.innerHTML = `<span class="coin-sub">위력 ${res.val} (${res.isHeads ? '앞면' : '뒷면'})</span>`;
 
               playSFX(res.isHeads ? 'heads' : 'tails');
 
@@ -4054,17 +4030,19 @@
 
               eElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
 
-              eElem.innerHTML = `<span class="coin-sub">위력 ${res.val} (${res.isHeads ? '앞면' : '뒷면'})</span>`;
-
               playSFX(res.isHeads ? 'heads' : 'tails');
 
             }
 
           }
 
-        }, 500);
+        }, (i + 1) * currentStepDelay);
 
       }
+
+
+
+      const totalRollTime = (maxStep + 1) * currentStepDelay;
 
 
 
@@ -4084,13 +4062,17 @@
 
 
 
+        const roundNextDelay = getClashSpeedDelay(600);
+
+
+
         if (playerFinalPower === enemyFinalPower) {
 
           if(statusText) statusText.innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
 
           currentClashRound++; 
 
-          setTimeout(() => { runClashRound(); }, 400);
+          setTimeout(() => { runClashRound(); }, roundNextDelay);
 
 
 
@@ -4108,7 +4090,7 @@
 
           eCoinStates[breakCoinIdx] = isHeadsTarget ? 'broken-heads' : 'broken-tails';
 
-          if (breakTarget) { breakTarget.className = `coin ${eCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
+          if (breakTarget) { breakTarget.className = `coin ${eCoinStates[breakCoinIdx]}`; }
 
 
 
@@ -4122,7 +4104,7 @@
 
             currentClashRound++; 
 
-            setTimeout(() => { runClashRound(); }, 500);
+            setTimeout(() => { runClashRound(); }, roundNextDelay);
 
           } else {
 
@@ -4133,6 +4115,8 @@
             let activeWins = activePIndices.filter(idx => !pCoinStates[idx].startsWith('broken'));
 
             let hitIndex = 0;
+
+            let hitSpeed = getClashSpeedDelay(400);
 
 
 
@@ -4176,7 +4160,7 @@
 
               }
 
-            }, 400);
+            }, hitSpeed);
 
           }
 
@@ -4196,7 +4180,7 @@
 
           pCoinStates[breakCoinIdx] = isHeadsTarget ? 'broken-heads' : 'broken-tails';
 
-          if (breakTarget) { breakTarget.className = `coin ${pCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
+          if (breakTarget) { breakTarget.className = `coin ${pCoinStates[breakCoinIdx]}`; }
 
 
 
@@ -4210,7 +4194,7 @@
 
             currentClashRound++; 
 
-            setTimeout(() => { runClashRound(); }, 500);
+            setTimeout(() => { runClashRound(); }, roundNextDelay);
 
           } else {
 
@@ -4221,6 +4205,8 @@
             let activeWins = activeEIndices.filter(idx => !eCoinStates[idx].startsWith('broken'));
 
             let hitIndex = 0;
+
+            let hitSpeed = getClashSpeedDelay(400);
 
 
 
@@ -4264,13 +4250,13 @@
 
               }
 
-            }, 400);
+            }, hitSpeed);
 
           }
 
         }
 
-      }, 600);
+      }, totalRollTime);
 
     }
 
