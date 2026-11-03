@@ -348,7 +348,7 @@
     .stagger-control-btn { padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #1f1a14; color: #e6a100; border: 1px solid #e6a100; cursor: pointer; font-weight: bold; }
     .stagger-control-btn:hover { background: #3d3121; }
 
-    /* 코인 UI */
+    /* 코인 UI (하단 텍스트 배지 제거 완료) */
     .coin {
       position: relative;
       width: 60px;
@@ -408,11 +408,11 @@
       100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
     }
 
-    /* 🔥 전투 결과 오버레이 (BattleUI_Result.jpg 원본 스프라이트 맵핑) 🔥 */
+    /* 🔥 전투 결과 오버레이 (클릭 간섭 방지 및 올바른 투명도 적용) 🔥 */
     .battle-result-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(5, 5, 8, 0.92);
+      background: rgba(5, 5, 8, 0.82);
       z-index: 100;
       display: flex;
       flex-direction: column;
@@ -420,7 +420,8 @@
       align-items: center;
       opacity: 0;
       pointer-events: none;
-      transition: opacity 0.5s ease;
+      transition: opacity 0.4s ease;
+      cursor: pointer;
     }
     .battle-result-overlay.active {
       opacity: 1;
@@ -434,13 +435,12 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      gap: 2rem;
+      gap: 2.2rem;
     }
     .sprite-victory {
       width: 420px;
       height: 110px;
       background-image: url('images/BattleUI_Result.jpg');
-      /* 원본 이미지에서 VICTORY 텍스트 위치 크롭 (우측 상단 부근) */
       background-position: 72% 17%;
       background-size: 420% 420%;
       background-repeat: no-repeat;
@@ -451,7 +451,6 @@
       width: 460px;
       height: 90px;
       background-image: url('images/BattleUI_Result.jpg');
-      /* 원본 이미지에서 긴 월계수 가지 위치 크롭 (상단 중앙 부근) */
       background-position: 32% 28%;
       background-size: 550% 550%;
       background-repeat: no-repeat;
@@ -469,13 +468,12 @@
       align-items: center;
       justify-content: center;
       position: relative;
-      gap: 2rem;
+      gap: 2.2rem;
     }
     .sprite-defeat {
       width: 420px;
       height: 110px;
       background-image: url('images/BattleUI_Result.jpg');
-      /* 원본 이미지에서 DEFEAT 텍스트 위치 크롭 (좌측 상단 부근) */
       background-position: 7% 4%;
       background-size: 420% 420%;
       background-repeat: no-repeat;
@@ -486,7 +484,6 @@
       width: 420px;
       height: 40px;
       background-image: url('images/BattleUI_Result.jpg');
-      /* 원본 이미지에서 하단 붉은 광원 선 위치 크롭 (하단 왼쪽 부근) */
       background-position: 12% 82%;
       background-size: 700% 700%;
       background-repeat: no-repeat;
@@ -2035,7 +2032,7 @@
 
             let hitInterval = setInterval(() => {
               if (hitIndex < activeWins.length) {
-                let idx = activeWins[hitIndex];
+                let idx = activeWins[idx];
                 let elem = document.getElementById(`e-coin-${idx}`);
                 if (elem) elem.classList.add('win-glow');
 
