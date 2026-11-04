@@ -348,7 +348,7 @@
     .stagger-control-btn { padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #1f1a14; color: #e6a100; border: 1px solid #e6a100; cursor: pointer; font-weight: bold; }
     .stagger-control-btn:hover { background: #3d3121; }
 
-    /* 코인 UI (하단 텍스트 배지 제거 완료) */
+    /* 코인 UI (중앙 텍스트 완전 제거) */
     .coin {
       position: relative;
       width: 60px;
@@ -357,11 +357,6 @@
       flex-direction: column;
       justify-content: center;
       align-items: center;
-      font-family: var(--font-title);
-      font-weight: 900;
-      font-size: 1.35rem;
-      color: #ffffff !important;
-      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 0 6px #000;
       background-size: contain;
       background-repeat: no-repeat;
       background-position: center;
@@ -376,14 +371,11 @@
       background-image: url('images/coin-win.png') !important;
       filter: var(--glow-filter);
       transform: scale(1.12);
-      color: #ffffdd !important;
-      text-shadow: -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 2px 2px 0 #000, 0 0 10px #ffaa00;
     }
     .coin.broken-heads, .coin.broken-tails {
       background-image: url('images/coin-broken-heads.png') !important;
-      opacity: 0.6; transform: scale(0.85); color: #ff4433 !important;
+      opacity: 0.6; transform: scale(0.85);
     }
-    .coin-val-main { z-index: 3; line-height: 1; margin-top: -2px; }
 
     @keyframes coinFlip {
       0% { transform: rotateY(0deg); } 50% { transform: rotateY(180deg); } 100% { transform: rotateY(360deg); }
@@ -408,11 +400,11 @@
       100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
     }
 
-    /* 🔥 전투 결과 오버레이 (클릭 간섭 방지 및 올바른 투명도 적용) 🔥 */
+    /* 🔥 전투 결과 오버레이 (암전 제거 및 상단 연출 레이아웃) 🔥 */
     .battle-result-overlay {
       position: absolute;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(5, 5, 8, 0.82);
+      background: transparent;
       z-index: 100;
       display: flex;
       flex-direction: column;
@@ -421,7 +413,6 @@
       opacity: 0;
       pointer-events: none;
       transition: opacity 0.4s ease;
-      cursor: pointer;
     }
     .battle-result-overlay.active {
       opacity: 1;
@@ -1605,7 +1596,7 @@
       const chance = calculateHeadsChance(sanity);
 
       let HTML = '';
-      for (let i = 0; i < coinsCount; i++) HTML += `<div class="coin flipping" id="${attackerIsPlayer ? 'p' : 'e'}-coin-${i}"><span class="coin-val-main">?</span></div>`;
+      for (let i = 0; i < coinsCount; i++) HTML += `<div class="coin flipping" id="${attackerIsPlayer ? 'p' : 'e'}-coin-${i}"></div>`;
 
       if (attackerIsPlayer) {
         document.getElementById('p-result-skill-tag').innerHTML = `<span class="skill-badge ${attackType===5?'ego':(attackType===4?'s4':'s'+attackType)}">${getSkillName(true, attackType)}</span>`;
@@ -1626,7 +1617,6 @@
           let elem = document.getElementById(`${attackerIsPlayer ? 'p' : 'e'}-coin-${step}`);
           if (elem) {
             elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
-            elem.innerHTML = `<span class="coin-val-main">${coinDmg}</span>`;
             playSFX(isHeads ? 'heads' : 'tails');
           }
 
@@ -1667,8 +1657,8 @@
       const atkCoinsCount = getSkillCoins(!defenderIsPlayer, atkUsedType);
 
       let defHTML = '', atkHTML = '';
-      for (let i = 0; i < defCoinsCount; i++) defHTML += `<div class="coin flipping" id="${defPrefix}-coin-${i}"><span class="coin-val-main">?</span></div>`;
-      for (let i = 0; i < atkCoinsCount; i++) atkHTML += `<div class="coin flipping" id="${atkPrefix}-coin-${i}"><span class="coin-val-main">?</span></div>`;
+      for (let i = 0; i < defCoinsCount; i++) defHTML += `<div class="coin flipping" id="${defPrefix}-coin-${i}"></div>`;
+      for (let i = 0; i < atkCoinsCount; i++) atkHTML += `<div class="coin flipping" id="${atkPrefix}-coin-${i}"></div>`;
 
       document.getElementById(`${defPrefix}-result-skill-tag`).innerHTML = `<span class="skill-badge s4">${getSkillName(defenderIsPlayer, 4)}</span>`;
       document.getElementById(`${defPrefix}-coins-stage`).innerHTML = defHTML;
@@ -1683,11 +1673,9 @@
         for (let i = 0; i < defCoinsCount; i++) {
           let isHeads = Math.random() * 100 < 50;
           if (isHeads) defHeads++;
-          let val = defBase + (isHeads ? defCP : 0);
           let elem = document.getElementById(`${defPrefix}-coin-${i}`);
           if(elem) {
             elem.className = `coin ${isHeads ? 'heads' : 'tails'}`;
-            elem.innerHTML = `<span class="coin-val-main">${val}</span>`;
           }
         }
         let defRollSum = defBase + (defHeads * defCP);
@@ -1708,7 +1696,6 @@
             let elem = document.getElementById(`${atkPrefix}-coin-${step}`);
             if (elem) {
               elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
-              elem.innerHTML = `<span class="coin-val-main">${atkDmg}</span>`;
               playSFX(isHeads ? 'heads' : 'tails');
             }
 
@@ -1740,7 +1727,6 @@
             let atkElem = document.getElementById(`${atkPrefix}-coin-${atkStep}`);
             if (atkElem) {
               atkElem.className = `coin ${isAtkHeads ? 'heads' : 'tails'}`;
-              atkElem.innerHTML = `<span class="coin-val-main">${enemyAccumulatedPower}</span>`;
             }
 
             document.getElementById(`${atkPrefix}-power-score`).innerText = `TOTAL POWER: ${enemyAccumulatedPower}`;
@@ -1758,7 +1744,6 @@
               let defElem = document.getElementById(`${defPrefix}-coin-0`);
               if (defElem) {
                 defElem.className = `coin ${isDefHeads ? 'heads' : 'tails'} win-glow`;
-                defElem.innerHTML = `<span class="coin-val-main">${currentEvadePower}</span>`;
                 playSFX(isDefHeads ? 'heads' : 'tails');
               }
               document.getElementById(`${defPrefix}-power-score`).innerText = `EVADE POWER: ${currentEvadePower}`;
@@ -1772,7 +1757,6 @@
                 isEvadeBroken = true;
                 if (defElem) {
                   defElem.className = `coin broken-heads`;
-                  defElem.innerHTML = '';
                   triggerShatterEffect(defElem);
                 }
                 if (atkElem) atkElem.classList.add('win-glow');
@@ -1800,7 +1784,6 @@
             let elem = document.getElementById(`${atkPrefix}-coin-${atkStep}`);
             if (elem) {
               elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
-              elem.innerHTML = `<span class="coin-val-main">${atkDmg}</span>`;
               playSFX(isHeads ? 'heads' : 'tails');
             }
 
@@ -1830,7 +1813,6 @@
                   let elem = document.getElementById(`${defPrefix}-coin-${defStep}`);
                   if (elem) {
                     elem.className = `coin ${isHeads ? 'heads' : 'tails'} win-glow`;
-                    elem.innerHTML = `<span class="coin-val-main">${defDmg}</span>`;
                     playSFX('counter');
                   }
 
@@ -1901,11 +1883,11 @@
 
       let pHTML = '';
       for (let i = 0; i < pTotalMax; i++) {
-        pHTML += pCoinStates[i].startsWith('broken') ? `<div class="coin ${pCoinStates[i]}"></div>` : `<div class="coin flipping" id="p-coin-${i}"><span class="coin-val-main">?</span></div>`;
+        pHTML += pCoinStates[i].startsWith('broken') ? `<div class="coin ${pCoinStates[i]}"></div>` : `<div class="coin flipping" id="p-coin-${i}"></div>`;
       }
       let eHTML = '';
       for (let i = 0; i < eTotalMax; i++) {
-        eHTML += eCoinStates[i].startsWith('broken') ? `<div class="coin ${eCoinStates[i]}"></div>` : `<div class="coin flipping" id="e-coin-${i}"><span class="coin-val-main">?</span></div>`;
+        eHTML += eCoinStates[i].startsWith('broken') ? `<div class="coin ${eCoinStates[i]}"></div>` : `<div class="coin flipping" id="e-coin-${i}"></div>`;
       }
 
       document.getElementById('p-result-skill-tag').innerHTML = `<span class="skill-badge ${pUsedType===5?'ego':(pUsedType===4?'s4':'s'+pUsedType)}">${getSkillName(true, pUsedType)}</span>`;
@@ -1919,7 +1901,7 @@
       document.getElementById('e-coins-stage').innerHTML = eHTML;
 
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
-      const stepDelay = getClashSpeedDelay(500);
+      const stepDelay = getClashSpeedDelay(300);
 
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
@@ -1930,7 +1912,6 @@
               const res = playerRolls[i];
               pCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
               pElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
-              pElem.innerHTML = `<span class="coin-val-main">${res.val}</span>`;
               playSFX(res.isHeads ? 'heads' : 'tails');
             }
           }
@@ -1941,7 +1922,6 @@
               const res = enemyRolls[i];
               eCoinStates[coinIdx] = res.isHeads ? 'heads' : 'tails';
               eElem.className = `coin ${res.isHeads ? 'heads' : 'tails'}`;
-              eElem.innerHTML = `<span class="coin-val-main">${res.val}</span>`;
               playSFX(res.isHeads ? 'heads' : 'tails');
             }
           }
@@ -1958,7 +1938,7 @@
 
         triggerSparks();
 
-        const nextRoundDelay = getClashSpeedDelay(600);
+        const nextRoundDelay = getClashSpeedDelay(400);
 
         if (playerFinalPower === enemyFinalPower) {
           if(statusText) statusText.innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
@@ -1972,7 +1952,7 @@
           
           const isHeadsTarget = eCoinStates[breakCoinIdx] === 'heads';
           eCoinStates[breakCoinIdx] = isHeadsTarget ? 'broken-heads' : 'broken-tails';
-          if (breakTarget) { breakTarget.className = `coin ${eCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
+          if (breakTarget) { breakTarget.className = `coin ${eCoinStates[breakCoinIdx]}`; }
 
           eRemCoins--;
 
@@ -2004,9 +1984,9 @@
                 hitIndex++;
               } else {
                 clearInterval(hitInterval);
-                setTimeout(() => { finishMatch(); }, 1000);
+                setTimeout(() => { finishMatch(); }, 800);
               }
-            }, 400);
+            }, 300);
           }
 
         } else {
@@ -2016,7 +1996,7 @@
 
           const isHeadsTarget = pCoinStates[breakCoinIdx] === 'heads';
           pCoinStates[breakCoinIdx] = isHeadsTarget ? 'broken-heads' : 'broken-tails';
-          if (breakTarget) { breakTarget.className = `coin ${pCoinStates[breakCoinIdx]}`; breakTarget.innerHTML = ''; }
+          if (breakTarget) { breakTarget.className = `coin ${pCoinStates[breakCoinIdx]}`; }
 
           pRemCoins--;
 
@@ -2032,7 +2012,7 @@
 
             let hitInterval = setInterval(() => {
               if (hitIndex < activeWins.length) {
-                let idx = activeWins[idx];
+                let idx = activeWins[hitIndex];
                 let elem = document.getElementById(`e-coin-${idx}`);
                 if (elem) elem.classList.add('win-glow');
 
@@ -2048,9 +2028,9 @@
                 hitIndex++;
               } else {
                 clearInterval(hitInterval);
-                setTimeout(() => { finishMatch(); }, 1000);
+                setTimeout(() => { finishMatch(); }, 800);
               }
-            }, 400);
+            }, 300);
           }
         }
       }, roundFinishDelay);
