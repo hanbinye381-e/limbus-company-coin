@@ -862,9 +862,12 @@
     let pEgoHoldTimer = null;
     let eEgoHoldTimer = null;
 
-    function getClashSpeedDelay(baseDelay) {
+    // 10턴에 걸쳐 5배 가속되며, 코인 수가 많아도 1턴 기준 전체 결과가 1초(1000ms) 내에 끝나도록 동적 조절하는 함수
+    function getClashSpeedDelay(maxStep) {
       let speedFactor = 1 + (Math.min(10, currentClashRound) - 1) * (4 / 9);
-      return Math.max(80, Math.round(baseDelay / speedFactor));
+      let targetTotalTime = 1000; 
+      let delayPerCoin = targetTotalTime / Math.max(1, maxStep);
+      return Math.max(30, Math.round(delayPerCoin / speedFactor));
     }
 
     function changeTheme(themeName) {
@@ -1901,7 +1904,7 @@
       document.getElementById('e-coins-stage').innerHTML = eHTML;
 
       const maxStep = Math.max(activePIndices.length, activeEIndices.length);
-      const stepDelay = getClashSpeedDelay(300);
+      const stepDelay = getClashSpeedDelay(maxStep);
 
       for (let i = 0; i < maxStep; i++) {
         setTimeout(() => {
@@ -1938,7 +1941,7 @@
 
         triggerSparks();
 
-        const nextRoundDelay = getClashSpeedDelay(400);
+        const nextRoundDelay = getClashSpeedDelay(maxStep);
 
         if (playerFinalPower === enemyFinalPower) {
           if(statusText) statusText.innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
