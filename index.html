@@ -1753,7 +1753,6 @@
 
               if (enemyAccumulatedPower <= currentEvadePower) {
                 playSFX('shield');
-                triggerSparks();
                 if (statusText) statusText.innerHTML = `<div class="result-banner player">EVADE SUCCESS! (회피 ${currentEvadePower} ≥ 적 위력 ${enemyAccumulatedPower})</div>`;
               } else {
                 playSFX('break');
