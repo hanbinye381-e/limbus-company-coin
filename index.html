@@ -1038,12 +1038,18 @@
             }
           });
         }
-
         const currentStaggerLvl = isPlayer ? pStaggerLevel : eStaggerLevel;
         const stageElem = document.getElementById(`${prefix}-coins-stage`);
         if (currentStaggerLvl > 0 && stageElem) {
           const imgName = currentStaggerLvl === 1 ? 'stagger.png' : (currentStaggerLvl === 2 ? 'stagger1.png' : 'stagger2.png');
           stageElem.innerHTML = `<img src="images/${imgName}" class="stagger-img" alt="STAGGER ${currentStaggerLvl}">`;
+          stageElem.style.border = 'none';
+          stageElem.style.boxShadow = 'none';
+          stageElem.style.background = 'transparent';
+        } else if (stageElem) {
+          stageElem.style.border = '';
+          stageElem.style.boxShadow = '';
+          stageElem.style.background = '';
         }
       });
 
