@@ -1062,28 +1062,26 @@
     }
 
     function showResultOverlay(isVictory) {
-     const overlay = document.getElementById('result-overlay');
-     const content = document.getElementById('result-overlay-content');
-     if (!overlay || !content) return;
- 
-     if (isVictory) {
-       content.innerHTML = `
-         <div class="victory-box">
-           <div class="sprite-victory"></div>
-           <div class="sprite-laurel"></div>
-         </div>
-       `;
-     } else {
-       content.innerHTML = `
-         <div class="defeat-box">
-           <div class="sprite-defeat"></div>
-           <div class="sprite-redline"></div>
-         </div>
-      ` ;
-     }
-     overlay.classList.add('active'); 
-    }
-      overlay.classList.add('active');
+      const overlay = document.getElementById('result-overlay');
+      const content = document.getElementById('result-overlay-content');
+      if (!overlay || !content) return;
+      
+      if (isVictory) {
+        content.innerHTML = `
+        <div class="victory-box">
+        <div class="sprite-victory"></div>
+        <div class="sprite-laurel"></div>
+        </div>
+        ;
+        } else {
+        content.innerHTML = `
+          <div class="defeat-box">
+          <div class="sprite-defeat"></div>
+          <div class="sprite-redline"></div>
+          </div>
+          ;
+      }
+      overlay.classList.add('active'); 
     }
 
     function closeResultOverlay() {
