@@ -1023,25 +1023,25 @@
         showResultOverlay(false);
       }
     }
-    
-    function showResultOverlay(isVictory) {
+    function showResult(isVictory) {
+      const contentDiv = document.getElementById('result-overlay-content');
       const overlay = document.getElementById('result-overlay');
-      const content = document.getElementById('result-overlay-content');
-      if (!overlay || !content) return;
 
       if (isVictory) {
-        content.innerHTML = `
-          <div class="victory-box">
-            <img src="images/victory.png" class="img-victory" alt="VICTORY">
-            <img src="images/laurel.png" class="img-laurel" alt="LAUREL">
-          </div>
+        // 승리 시: 월계수 장식과 VICTORY 글자가 겹쳐서 들어가도록 설정
+        contentDiv.innerHTML = `
+        <div class="result-overlay victory">
+        <img src="images/laurel.png" alt="월계수 장식" class="decoration-laurel">
+        <img src="images/victory.jpg" alt="VICTORY" class="result-title">
+        </div>
         `;
       } else {
-        content.innerHTML = `
-          <div class="defeat-box">
-            <img src="images/defeat.png" class="img-defeat" alt="DEFEAT">
-            <img src="images/redline.png" class="img-redline" alt="REDLINE">
-          </div>
+        // 패배 시: 붉은 사슬 장식과 DEFEAT 글자가 겹쳐서 들어가도록 설정
+        contentDiv.innerHTML = `
+        <div class="result-overlay defeat">
+        <img src="images/redline.png" alt="붉은 사슬" class="decoration-redline">
+        <img src="images/defeat.png" alt="DEFEAT" class="result-title">
+        </div>
         `;
       }
       overlay.classList.add('active'); 
