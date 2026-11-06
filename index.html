@@ -399,43 +399,61 @@
       0% { opacity: 1; transform: translate(0,0) scale(1); }
       100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
     }
-    /* 1. 중앙 결과창을 감싸는 박스를 기준점(relative)으로 지정 */
-    .result-overlay {
+    .battle-result-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(5, 5, 7, 0.85);
+      display: none; /* 평소에는 숨김 */
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      cursor: pointer;
+    }
+
+    /* active 클래스가 붙으면 화면에 표시 */
+    .battle-result-overlay.active {
+      display: flex;
+    }
+
+    /* 결과창 내부 컨테이너 (정중앙 포개기) */
+    .result-overlay-box {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
       width: 100%;
-      height: 120px; /* 오버레이 전체 높이 제한 */
-      margin: 10px 0;
-      pointer-events: none;
+      max-width: 320px;
+      height: 140px;
     }
 
-    /* 2. 장식 이미지 (월계수 / 붉은 사슬)를 글자 뒤에 포개어 배치 */
-    .result-overlay .decoration-laurel,
-    .result-overlay .decoration-redline {
+    /* 장식 이미지 (월계수 / 붉은 사슬) */
+    .result-overlay-box .decoration-laurel,
+    .result-overlay-box .decoration-redline {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 220px; /* 장식의 최대 너비 제한 */
-      max-width: 80%;
+      width: 240px;
+      max-width: 85%;
       height: auto;
-      opacity: 0.8;
-      z-index: 1; /* 글자 바로 뒤 */
+      opacity: 0.85;
+      z-index: 1;
     }
 
-    /* 3. 글자 이미지 (VICTORY / DEFEAT) 크기 및 위치 설정 */
-    .result-overlay .result-title {
+    /* 글자 이미지 (VICTORY / DEFEAT) */
+    .result-overlay-box .result-title {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 180px; /* VICTORY / DEFEAT 글자가 덮지 않도록 콤팩트하게 조절 */
-      max-width: 70%;
+      width: 190px;
+      max-width: 75%;
       height: auto;
       object-fit: contain;
-      z-index: 2; /* 장식 위에 겹쳐짐 */
+      z-index: 2;
     }
     @keyframes defeatPulse {
       0% { transform: scale(1); }
@@ -588,8 +606,9 @@
       <div class="center-stage" id="center-stage">
       </div>
         <!-- 전투 승리 / 패배 오버레이 -->
-        <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
-          <div id="result-overlay-content"></div>
+      <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
+        <div id="result-overlay-content"></div>
+      </div>
           <!-- VICTORY 연출 예시 -->
           <div class="result-overlay victory">
             <img src="images/laurel.png" alt="월계수 장식" class="decoration-laurel">
@@ -1039,20 +1058,18 @@
       const overlay = document.getElementById('result-overlay');
 
       if (isVictory) {
-        // 승리 시: 월계수 장식과 VICTORY 글자가 겹쳐서 들어가도록 설정
         contentDiv.innerHTML = `
-        <div class="result-overlay victory">
-        <img src="images/laurel.png" alt="월계수 장식" class="decoration-laurel">
-        <img src="images/victory.jpg" alt="VICTORY" class="result-title">
-        </div>
+          <div class="result-overlay-box">
+            <img src="images/laurel.png" alt="월계수 장식" class="decoration-laurel">
+            <img src="images/victory.jpg" alt="VICTORY" class="result-title">
+          </div>
         `;
       } else {
-        // 패배 시: 붉은 사슬 장식과 DEFEAT 글자가 겹쳐서 들어가도록 설정
         contentDiv.innerHTML = `
-        <div class="result-overlay defeat">
-        <img src="images/redline.png" alt="붉은 사슬" class="decoration-redline">
-        <img src="images/defeat.png" alt="DEFEAT" class="result-title">
-        </div>
+          <div class="result-overlay-box">
+            <img src="images/redline.png" alt="붉은 사슬" class="decoration-redline">
+            <img src="images/defeat.png" alt="DEFEAT" class="result-title">
+          </div>
         `;
       }
       overlay.classList.add('active'); 
