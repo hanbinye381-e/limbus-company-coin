@@ -399,49 +399,43 @@
       0% { opacity: 1; transform: translate(0,0) scale(1); }
       100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
     }
-    
-    /* 오버레이 전체 컨테이너 */
+    /* 1. 중앙 결과창을 감싸는 박스를 기준점(relative)으로 지정 */
     .result-overlay {
+      position: relative;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+      height: 120px; /* 오버레이 전체 높이 제한 */
+      margin: 10px 0;
+      pointer-events: none;
+    }
+
+    /* 2. 장식 이미지 (월계수 / 붉은 사슬)를 글자 뒤에 포개어 배치 */
+    .result-overlay .decoration-laurel,
+    .result-overlay .decoration-redline {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      width: 100%;
-      max-width: 320px; /* 중앙 영역 폭 규격 */
-      pointer-events: none;
-      z-index: 100;
-    }
-    
-    /* 메인 타이틀 (VICTORY / DEFEAT) 크기 조절 */
-    .result-overlay .result-title {
-      width: 260px;       /* 화면을 가리지 않는 적정 규격 */
-      max-width: 85%;
-      height: auto;
-      object-fit: contain;
-      margin: 8px 0;
-    }
-
-    /* VICTORY 상단/배경 월계수 장식 위치 지정 */
-    .result-overlay.victory .decoration-laurel {
-      width: 240px;
+      width: 220px; /* 장식의 최대 너비 제한 */
       max-width: 80%;
       height: auto;
-      opacity: 0.9;
-      margin-bottom: -10px; /* 텍스트와의 간격 밀착 */
+      opacity: 0.8;
+      z-index: 1; /* 글자 바로 뒤 */
     }
 
-    /* DEFEAT 배경 붉은 사슬/라인 장식 위치 지정 */
-    .result-overlay.defeat .decoration-redline {
+    /* 3. 글자 이미지 (VICTORY / DEFEAT) 크기 및 위치 설정 */
+    .result-overlay .result-title {
       position: absolute;
-      width: 280px;
-      max-width: 90%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 180px; /* VICTORY / DEFEAT 글자가 덮지 않도록 콤팩트하게 조절 */
+      max-width: 70%;
       height: auto;
-      opacity: 0.85;
-      z-index: -1; /* DEFEAT 글자 뒤로 배치 */
+      object-fit: contain;
+      z-index: 2; /* 장식 위에 겹쳐짐 */
     }
     @keyframes defeatPulse {
       0% { transform: scale(1); }
