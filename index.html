@@ -418,53 +418,32 @@
       opacity: 1;
       pointer-events: auto;
     }
-
-    /* 🏆 승리 시: 중앙 VICTORY + 맨 아래 월계수 가지 🏆 */
-    .victory-box {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-      gap: 2.2rem;
-    }
-    .sprite-victory {
-      width: 420px;
-      height: 110px;
-      background-image: url('images/BattleUI_Result.png');
-      background-position: 50% 12%; /* 세로 위치 조절 (숫자를 조절해보세요) */
-      background-size: 350% 350%; /* 전체 크기 조절 */
-      background-repeat: no-repeat;
+    /* 🏆 승리 오버레이 박스 *
+    .img-victory {
+      max-width: 440px; /* 크기를 살짝 키웠습니다 */
+      height: auto;
       filter: drop-shadow(0 0 18px rgba(255, 215, 0, 0.8));
       animation: victoryPulse 1.5s infinite alternate ease-in-out;
     }
-    .sprite-laurel {
-      width: 460px;
-      height: 90px;
-      background-image: url('images/BattleUI_Result.png'); /* .jpg -> .png 변경 */
-      background-position: 32% 28%;
-      background-size: 550% 550%;
-      background-repeat: no-repeat;
+    .img-laurel {
+      max-width: 480px; /* 크기를 살짝 키웠습니다 */
+      height: auto;
       filter: drop-shadow(0 0 10px rgba(230, 161, 0, 0.6));
+      margin-top: -10px; /* 월계수를 글자 쪽으로 살짝 붙입니다 */
     }
-    .sprite-defeat {
-      width: 420px;
-      height: 110px;
-      background-image: url('images/BattleUI_Result.png'); /* .jpg -> .png 변경 */
-      background-position: 7% 4%;
-      background-size: 420% 420%;
-      background-repeat: no-repeat;
+
+    /* 💀 패배 오버레이 박스 */
+    .img-defeat {
+      max-width: 440px; /* 크기를 살짝 키웠습니다 */
+      height: auto;
       filter: drop-shadow(0 0 18px rgba(255, 51, 34, 0.8));
       animation: defeatPulse 1.5s infinite alternate ease-in-out;
     }
-    .sprite-redline {
-      width: 420px;
-      height: 40px;
-      background-image: url('images/BattleUI_Result.png'); /* .jpg -> .png 변경 */
-      background-position: 12% 82%;
-      background-size: 700% 700%;
-      background-repeat: no-repeat;
+    .img-redline {
+      max-width: 440px; /* 크기를 살짝 키웠습니다 */
+      height: auto;
       filter: drop-shadow(0 0 12px rgba(255, 51, 34, 0.9));
+      margin-top: -5px; /* 선을 글자 쪽으로 살짝 붙입니다 */
     }
     @keyframes defeatPulse {
       0% { transform: scale(1); }
@@ -1052,8 +1031,8 @@
         showResultOverlay(false);
       }
     }
-
-function showResultOverlay(isVictory) {
+    
+    function showResultOverlay(isVictory) {
       const overlay = document.getElementById('result-overlay');
       const content = document.getElementById('result-overlay-content');
       if (!overlay || !content) return;
@@ -1061,15 +1040,15 @@ function showResultOverlay(isVictory) {
       if (isVictory) {
         content.innerHTML = `
           <div class="victory-box">
-            <div class="sprite-victory"></div>
-            <div class="sprite-laurel"></div>
+            <img src="images/victory.png" class="img-victory" alt="VICTORY">
+            <img src="images/laurel.png" class="img-laurel" alt="LAUREL">
           </div>
         `;
       } else {
         content.innerHTML = `
           <div class="defeat-box">
-            <div class="sprite-defeat"></div>
-            <div class="sprite-redline"></div>
+            <img src="images/defeat.png" class="img-defeat" alt="DEFEAT">
+            <img src="images/redline.png" class="img-redline" alt="REDLINE">
           </div>
         `;
       }
