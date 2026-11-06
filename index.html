@@ -405,17 +405,15 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(5, 5, 7, 0.85);
-      display: none; /* 평소에는 숨김 */
+      background: rgba(5, 5, 7, 0.9);
+      display: none;
       justify-content: center;
       align-items: center;
-      z-index: 1000;
-      cursor: pointer;
+      z-index: 9999; /* 다른 요소들보다 맨 위에 오도록 설정 */
     }
 
-    /* active 클래스가 붙으면 화면에 표시 */
     .battle-result-overlay.active {
-      display: flex;
+      display: flex !important;
     }
 
     /* 결과창 내부 컨테이너 (정중앙 포개기) */
