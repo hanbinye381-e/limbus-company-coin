@@ -1591,6 +1591,15 @@
 
       let step = 0;
       let interval = setInterval(() => {
+        // [추가] 타격 시작 전 적/아군 체력이 이미 0 이하인지 체크
+        let currentEnemyHp = parseInt(document.getElementById('e-hp').value) || 0;
+        let currentPlayerHp = parseInt(document.getElementById('p-hp').value) || 0;
+        if (currentEnemyHp <= 0 || currentPlayerHp <= 0) {
+          clearInterval(interval);
+          checkBattleEnd();
+          return;
+        }
+
         if (step < coinsCount) {
           let isHeads = Math.random() * 100 < chance;
           let coinDmg = basePower + (isHeads ? coinPower : 0);
@@ -1603,6 +1612,12 @@
 
           applyDamage(isPlayerStaggered, coinDmg);
 
+          // [추가] 데미지가 들어간 직후 적/아군 체력이 0 이하가 되면 즉시 중단
+          if (parseInt(document.getElementById('e-hp').value) <= 0 || parseInt(document.getElementById('p-hp').value) <= 0) {
+            clearInterval(interval);
+            checkBattleEnd();
+            return;
+          }
           const statusText = document.getElementById('clash-status-text');
           if(statusText) {
             statusText.innerHTML = `
@@ -1954,6 +1969,13 @@
 
                 let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
                 applyDamage(false, coinDmg);
+
+                // [추가] 적 체력이 0 이하가 되면 연속 타격을 즉시 멈추고 승리 오버레이 호출
+                if (parseInt(document.getElementById('e-hp').value) <= 0) {
+                  clearInterval(hitInterval);
+                  showResult(true);
+                  return;
+                }
 
                 if(statusText) {
                   statusText.innerHTML = `
