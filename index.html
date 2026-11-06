@@ -586,10 +586,21 @@
 
       <!-- 2. 중앙 대결 무대 -->
       <div class="center-stage" id="center-stage">
+      </div>
         <!-- 전투 승리 / 패배 오버레이 -->
         <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
           <div id="result-overlay-content"></div>
-        </div>
+          <!-- VICTORY 연출 예시 -->
+          <div class="result-overlay victory">
+            <img src="images/laurel.png" alt="월계수 장식" class="decoration-laurel">
+            <img src="images/victory.jpg" alt="VICTORY" class="result-title">
+          </div>
+
+          <!-- DEFEAT 연출 예시 -->
+          <div class="result-overlay defeat">
+            <img src="images/redline.png" alt="붉은 사슬/라인 장식" class="decoration-redline">
+            <img src="images/defeat.png" alt="DEFEAT" class="result-title">
+          </div>
 
         <div class="spark-container" id="spark-layer"></div>
 
