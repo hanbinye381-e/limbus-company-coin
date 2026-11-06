@@ -603,7 +603,7 @@
       <!-- 2. 중앙 대결 무대 -->
       <div class="center-stage" id="center-stage">
         
-        <!-- 전투 승리 / 패배 오버레이 (센터 무대 안으로 이동) -->
+        <!-- [수정] 오버레이를 반드시 center-stage 내부 맨 위에 배치 -->
         <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
           <div id="result-overlay-content"></div>
         </div>
@@ -656,7 +656,6 @@
         </div>
 
       </div>
-
       <!-- 3. 적군 설정창 -->
       <div class="side-box enemy">
         <div class="side-title">ENEMY</div>
