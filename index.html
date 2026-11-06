@@ -1118,6 +1118,48 @@
           }
         });
       }
+      
+      updateHpDisplay();
+
+      // [핵심 추가] 데미지가 들어간 직후 양측 체력을 확인하여 0 이하이면 즉시 오버레이 발동
+      let pHpVal = parseInt(document.getElementById('p-hp').value) || 0;
+      let eHpVal = document.getElementById('e-hp') ? (parseInt(document.getElementById('e-hp').value) || 0) : 0;
+
+      if (eHpVal <= 0 && pHpVal > 0) {
+        showResult(true); // 적 체력이 0 이하면 아군 승리!
+      } else if (pHpVal <= 0) {
+        showResult(false); // 아군 체력이 0 이하면 패배!
+      }
+    }
+
+      if (amount > 0) {
+        playSFX('hit');
+        let hpElem = document.getElementById(`${prefix}-hp`);
+        let maxHp = parseInt(document.getElementById(`${prefix}-max-hp`).value) || 100;
+        let hp = parseInt(hpElem.value) || 0;
+        let oldPct = (hp / maxHp) * 100;
+        hp = Math.max(0, hp - amount);
+        if(hpElem) hpElem.value = hp;
+        let newPct = (hp / maxHp) * 100;
+
+        const stCount = isPlayer ? pStaggerCount : eStaggerCount;
+        let thresholds = [];
+        for (let i = 1; i <= stCount; i++) {
+          let val = parseFloat(document.getElementById(`${prefix}-stagger-${i}`)?.value);
+          if (!isNaN(val)) thresholds.push(val);
+        }
+        thresholds.sort((a, b) => b - a);
+
+        thresholds.forEach((th) => {
+          if (th > 0 && oldPct > th && newPct <= th) {
+            if (isPlayer) {
+              pStaggerLevel = Math.min(3, pStaggerLevel + 1);
+            } else {
+              eStaggerLevel = Math.min(3, eStaggerLevel + 1);
+            }
+          }
+        });
+      }
       updateHpDisplay();
     }
 
