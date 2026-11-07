@@ -63,9 +63,10 @@
       margin: 0;
       padding: 1.5rem 2rem;
       overflow-x: hidden;
+      position: relative;
     }
     
-    .main-wrapper { width: 100%; max-width: 1800px; }
+    .main-wrapper { width: 100%; max-width: 1800px; position: relative; }
 
     .header-bar {
       display: flex;
@@ -348,7 +349,7 @@
     .stagger-control-btn { padding: 0.2rem 0.5rem; font-size: 0.7rem; background: #1f1a14; color: #e6a100; border: 1px solid #e6a100; cursor: pointer; font-weight: bold; }
     .stagger-control-btn:hover { background: #3d3121; }
 
-    /* 코인 UI (중앙 텍스트 완전 제거) */
+    /* 코인 UI */
     .coin {
       position: relative;
       width: 60px;
@@ -399,67 +400,66 @@
       0% { opacity: 1; transform: translate(0,0) scale(1); }
       100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
     }
+
+    /* 화면 전체를 덮는 승패 결과 오버레이 (무대 밖으로 독립) */
     .battle-result-overlay {
-      position: absolute;
+      position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(5, 5, 7, 0.9);
+      width: 100vw;
+      height: 100vh;
+      background: rgba(5, 5, 7, 0.88);
       display: none;
       justify-content: center;
       align-items: center;
-      z-index: 9999; /* 다른 요소들보다 맨 위에 오도록 설정 */
+      z-index: 99999;
     }
 
     .battle-result-overlay.active {
       display: flex !important;
     }
 
-    /* 결과창 내부 컨테이너 (정중앙 포개기) */
     .result-overlay-box {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 100%;
-      max-width: 320px;
-      height: 140px;
+      width: 320px;
+      height: 160px;
     }
 
-    /* 장식 이미지 (월계수 / 붉은 사슬) */
     .result-overlay-box .decoration-laurel,
     .result-overlay-box .decoration-redline {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 240px;
-      max-width: 85%;
+      width: 260px;
+      max-width: 90%;
       height: auto;
-      opacity: 0.85;
+      opacity: 0.9;
       z-index: 1;
     }
 
-    /* 글자 이미지 (VICTORY / DEFEAT) */
     .result-overlay-box .result-title {
       position: absolute;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 190px;
-      max-width: 75%;
+      width: 200px;
+      max-width: 80%;
       height: auto;
       object-fit: contain;
       z-index: 2;
     }
-    @keyframes defeatPulse {
-      0% { transform: scale(1); }
-      100% { transform: scale(1.04); }
-    }
   </style>
 </head>
 <body>
+
+  <!-- 화면 전체를 덮도록 바깥으로 이동한 결과 오버레이 -->
+  <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
+    <div id="result-overlay-content"></div>
+  </div>
 
   <div class="main-wrapper">
     <div class="header-bar">
@@ -603,10 +603,6 @@
       <!-- 2. 중앙 대결 무대 -->
       <div class="center-stage" id="center-stage">
         
-        <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
-          <div id="result-overlay-content"></div>
-        </div>
-
         <div class="spark-container" id="spark-layer"></div>
 
         <div>
@@ -1065,6 +1061,9 @@
     function closeResultOverlay() {
       const overlay = document.getElementById('result-overlay');
       if (overlay) overlay.classList.remove('active');
+
+      const clashBtn = document.getElementById('clash-btn');
+      if(clashBtn) clashBtn.disabled = false;
     }
 
     function applyDamage(isPlayer, amount) {
@@ -1469,7 +1468,7 @@
       if(eCoinPrev) {
         eCoinPrev.innerHTML = [1, 2, 3, 4, 5].map(s => {
           const cpVal = getSkillCoinPower(false, s);
-          const cpStr = cpVal >= 0 ? `+${cpVal}` : `${cpStr}`;
+          const cpStr = cpVal >= 0 ? `+${cpVal}` : `${cpVal}`;
           if(s === 5) {
             return `<div class="coin-preview-item" style="border-color:#aa1133;">E.G.O<br>위력 ${getSkillBasePower(false, 5)}${cpStr}<br><strong>${getSkillCoins(false, 5)}C</strong></div>`;
           }
