@@ -66,7 +66,7 @@
       position: relative;
     }
     
-    .main-wrapper { width: 100%; max-width: 1800px; position: relative; }
+    .main-wrapper { width: 100%; max-width: 1800px; }
 
     .header-bar {
       display: flex;
@@ -401,7 +401,7 @@
       100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
     }
 
-    /* 화면 전체를 덮는 승패 결과 오버레이 (무대 밖으로 독립) */
+    /* 화면 전체를 덮는 결과창 오버레이 (fixed로 변경하여 무대 밖으로 탈출) */
     .battle-result-overlay {
       position: fixed;
       top: 0;
@@ -413,19 +413,21 @@
       justify-content: center;
       align-items: center;
       z-index: 99999;
+      cursor: pointer;
     }
 
     .battle-result-overlay.active {
       display: flex !important;
     }
 
+    /* 결과창 내부 컨테이너 (정중앙 배치) */
     .result-overlay-box {
       position: relative;
       display: flex;
       justify-content: center;
       align-items: center;
-      width: 320px;
-      height: 160px;
+      width: 400px;
+      height: 220px;
     }
 
     .result-overlay-box .decoration-laurel,
@@ -434,11 +436,11 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 260px;
-      max-width: 90%;
+      width: 320px;
       height: auto;
       opacity: 0.9;
       z-index: 1;
+      pointer-events: none;
     }
 
     .result-overlay-box .result-title {
@@ -446,17 +448,17 @@
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
-      width: 200px;
-      max-width: 80%;
+      width: 240px;
       height: auto;
       object-fit: contain;
       z-index: 2;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- 화면 전체를 덮도록 바깥으로 이동한 결과 오버레이 -->
+  <!-- 최상단 전체 화면 결과 오버레이 (fixed 적용) -->
   <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
     <div id="result-overlay-content"></div>
   </div>
@@ -1061,7 +1063,7 @@
     function closeResultOverlay() {
       const overlay = document.getElementById('result-overlay');
       if (overlay) overlay.classList.remove('active');
-
+      
       const clashBtn = document.getElementById('clash-btn');
       if(clashBtn) clashBtn.disabled = false;
     }
