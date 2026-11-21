@@ -1028,14 +1028,6 @@
     }
 
     function checkBattleEnd() {
-      let pHp = parseInt(document.getElementById('p-hp').value) || 0;
-      let eHp = parseInt(document.getElementById('e-hp').value) || 0;
-
-      if (eHp <= 0 && pHp > 0) {
-        showResult(true);
-      } else if (pHp <= 0) {
-        showResult(false);
-      }
     }
 
     function showResult(isVictory) {
@@ -1121,16 +1113,6 @@
       }
       
       updateHpDisplay();
-
-      let pHpVal = parseInt(document.getElementById('p-hp').value) || 0;
-      let eHpVal = document.getElementById('e-hp') ? (parseInt(document.getElementById('e-hp').value) || 0) : 0;
-
-      if (eHpVal <= 0 && pHpVal > 0) {
-        showResult(true);
-      } else if (pHpVal <= 0) {
-        showResult(false);
-      }
-    }
 
     function validateInputs() {
       let ps = document.getElementById('p-sanity');
