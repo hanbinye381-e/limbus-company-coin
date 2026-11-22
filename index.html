@@ -400,68 +400,9 @@
       0% { opacity: 1; transform: translate(0,0) scale(1); }
       100% { opacity: 0; transform: translate(var(--sdx), var(--sdy)) scale(0.1); }
     }
-
-    /* 화면 전체를 덮는 결과창 오버레이 (fixed로 변경하여 무대 밖으로 탈출) */
-    .battle-result-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100vw;
-      height: 100vh;
-      background: rgba(5, 5, 7, 0.88);
-      display: none;
-      justify-content: center;
-      align-items: center;
-      z-index: 99999;
-      cursor: pointer;
-    }
-
-    .battle-result-overlay.active {
-      display: flex !important;
-    }
-
-    /* 결과창 내부 컨테이너 (정중앙 배치) */
-    .result-overlay-box {
-      position: relative;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      width: 400px;
-      height: 220px;
-    }
-
-    .result-overlay-box .decoration-laurel,
-    .result-overlay-box .decoration-redline {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 320px;
-      height: auto;
-      opacity: 0.9;
-      z-index: 1;
-      pointer-events: none;
-    }
-
-    .result-overlay-box .result-title {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      width: 240px;
-      height: auto;
-      object-fit: contain;
-      z-index: 2;
-      pointer-events: none;
-    }
   </style>
 </head>
 <body>
-
-  <!-- 최상단 전체 화면 결과 오버레이 (fixed 적용) -->
-  <div class="battle-result-overlay" id="result-overlay" onclick="closeResultOverlay()">
-    <div id="result-overlay-content"></div>
-  </div>
 
   <div class="main-wrapper">
     <div class="header-bar">
@@ -1023,37 +964,6 @@
           stageElem.style.background = '';
         }
       });
-      
-    }
-
-    function showResult(isVictory) {
-      const contentDiv = document.getElementById('result-overlay-content');
-      const overlay = document.getElementById('result-overlay');
-
-      if (isVictory) {
-        contentDiv.innerHTML = `
-          <div class="result-overlay-box">
-            <img src="images/laurel.png" alt="월계수 장식" class="decoration-laurel">
-            <img src="images/victory.jpg" alt="VICTORY" class="result-title">
-          </div>
-        `;
-      } else {
-        contentDiv.innerHTML = `
-          <div class="result-overlay-box">
-            <img src="images/redline.png" alt="붉은 사슬" class="decoration-redline">
-            <img src="images/defeat.png" alt="DEFEAT" class="result-title">
-          </div>
-        `;
-      }
-      overlay.classList.add('active'); 
-    }
-
-    function closeResultOverlay() {
-      const overlay = document.getElementById('result-overlay');
-      if (overlay) overlay.classList.remove('active');
-      
-      const clashBtn = document.getElementById('clash-btn');
-      if(clashBtn) clashBtn.disabled = false;
     }
 
     function applyDamage(isPlayer, amount) {
@@ -1109,6 +1019,7 @@
       }
       
       updateHpDisplay();
+    }
 
     function validateInputs() {
       let ps = document.getElementById('p-sanity');
@@ -1511,7 +1422,6 @@
 
     function startMatch() {
       validateInputs();
-      closeResultOverlay();
       pShield = 0; eShield = 0;
       updateHpDisplay();
 
@@ -1580,13 +1490,6 @@
 
       let step = 0;
       let interval = setInterval(() => {
-        let currentEnemyHp = parseInt(document.getElementById('e-hp').value) || 0;
-        let currentPlayerHp = parseInt(document.getElementById('p-hp').value) || 0;
-        if (currentEnemyHp <= 0 || currentPlayerHp <= 0) {
-          clearInterval(interval);
-          return;
-        }
-
         if (step < coinsCount) {
           let isHeads = Math.random() * 100 < chance;
           let coinDmg = basePower + (isHeads ? coinPower : 0);
@@ -1599,10 +1502,6 @@
 
           applyDamage(isPlayerStaggered, coinDmg);
 
-          if (parseInt(document.getElementById('e-hp').value) <= 0 || parseInt(document.getElementById('p-hp').value) <= 0) {
-            clearInterval(interval);
-            return;
-          }
           const statusText = document.getElementById('clash-status-text');
           if(statusText) {
             statusText.innerHTML = `
@@ -1954,10 +1853,6 @@
 
                 let coinDmg = pBase + (pCoinStates[idx] === 'heads' ? pCP : 0);
                 applyDamage(false, coinDmg);
-
-                if (parseInt(document.getElementById('e-hp').value) <= 0) {
-                  clearInterval(hitInterval);
-                }
 
                 if(statusText) {
                   statusText.innerHTML = `
