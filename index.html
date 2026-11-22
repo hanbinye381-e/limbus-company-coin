@@ -1023,11 +1023,7 @@
           stageElem.style.background = '';
         }
       });
-
-      checkBattleEnd();
-    }
-
-    function checkBattleEnd() {
+      
     }
 
     function showResult(isVictory) {
@@ -1588,7 +1584,6 @@
         let currentPlayerHp = parseInt(document.getElementById('p-hp').value) || 0;
         if (currentEnemyHp <= 0 || currentPlayerHp <= 0) {
           clearInterval(interval);
-          checkBattleEnd();
           return;
         }
 
@@ -1606,7 +1601,6 @@
 
           if (parseInt(document.getElementById('e-hp').value) <= 0 || parseInt(document.getElementById('p-hp').value) <= 0) {
             clearInterval(interval);
-            checkBattleEnd();
             return;
           }
           const statusText = document.getElementById('clash-status-text');
@@ -1963,8 +1957,6 @@
 
                 if (parseInt(document.getElementById('e-hp').value) <= 0) {
                   clearInterval(hitInterval);
-                  showResult(true);
-                  return;
                 }
 
                 if(statusText) {
