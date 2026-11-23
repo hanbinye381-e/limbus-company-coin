@@ -104,6 +104,7 @@
       background: var(--sub-card-bg);
       color: var(--text-color);
       border: 1px solid rgba(255,255,255,0.2);
+      cursor: pointer;
     }
 
     .battle-layout {
@@ -290,6 +291,7 @@
       width: 100%; padding: 0.5rem 0.6rem; background: var(--sub-card-bg); border: var(--border-style);
       color: #fff; font-size: 0.85rem; font-family: var(--font-body);
     }
+    select { cursor: pointer; }
     
     .info-badge {
       width: 100%; background: var(--sub-card-bg); border: var(--border-style);
@@ -724,23 +726,69 @@
   </div>
 
   <script>
+    // =========================================================================
+    // [사운드 매니저] 모든 UI 상호작용, 호버, 전투 효과음 통합 관리
+    // =========================================================================
     const soundEffects = {
-      spin: new Audio('sounds/coin-spin.mp3'),
-      heads: new Audio('sounds/coin-heads.mp3'),
-      tails: new Audio('sounds/coin-tails.mp3'),
-      break: new Audio('sounds/coin-break.mp3'),
-      hit: new Audio('sounds/hit.mp3'),
-      shield: new Audio('sounds/shield.mp3'),
-      counter: new Audio('sounds/counter.mp3')
+      // 1. UI 상호작용 & 호버 사운드
+      uiHover: new Audio('sounds/ui-hover.mp3'),             // 모든 상호작용 요소 마우스 호버
+      uiClick: new Audio('sounds/ui-click.mp3'),             // 일반 버튼 클릭 (프리셋, 흐트러짐 선 추가/삭제 등)
+      uiSelect: new Audio('sounds/ui-select.mp3'),           // 스킬 슬롯 선택 / 드롭다운 변경
+      uiToggle: new Audio('sounds/ui-toggle.mp3'),           // 수비 버튼 토글
+      egoCharge: new Audio('sounds/ego-charge.mp3'),         // E.G.O 버튼 1초 홀드 차징 중
+      egoActivate: new Audio('sounds/ego-activate.mp3'),     // E.G.O 장착/해제 완료
+      clashStart: new Audio('sounds/clash-start.mp3'),       // START CLASH 대결 개시
+
+      // 2. 전투 및 코인 판정 사운드
+      spin: new Audio('sounds/coin-spin.mp3'),               // 코인 회전
+      heads: new Audio('sounds/coin-heads.mp3'),             // 코인 앞면
+      tails: new Audio('sounds/coin-tails.mp3'),             // 코인 뒷면
+      clashWin: new Audio('sounds/clash-win.mp3'),           // 합 승리 (상대 코인 파괴 시)
+      clashDraw: new Audio('sounds/clash-draw.mp3'),         // 합 무승부 (동점 재시도)
+      break: new Audio('sounds/coin-break.mp3'),             // 코인 파괴
+      hit: new Audio('sounds/hit.mp3'),                      // 일반 타격 피격
+      shieldGain: new Audio('sounds/shield-gain.mp3'),       // 방어(Guard) 보호막 생성
+      shield: new Audio('sounds/shield.mp3'),                // 보호막 피격 흡수
+      evadeSuccess: new Audio('sounds/evade-success.mp3'),   // 회피(Evade) 성공
+      counter: new Audio('sounds/counter.mp3'),              // 반격(Counter) 타격
+      stagger: new Audio('sounds/stagger.mp3')               // 흐트러짐(STAGGER) 돌입
     };
 
-    function playSFX(key) {
+    function playSFX(key, volume = 1.0) {
       if (soundEffects[key]) {
         const sound = soundEffects[key].cloneNode();
+        sound.volume = volume;
         sound.play().catch(() => {});
       }
     }
 
+    // 모든 상호작용 요소에 호버(mouseenter) 사운드 자동 연결 (이벤트 위임)
+    let lastHoveredElem = null;
+    document.addEventListener('mouseover', (e) => {
+      const interactiveTarget = e.target.closest(
+        'button:not(:disabled), select, input, .skill-badge:not(.next-badge)'
+      );
+      if (interactiveTarget && interactiveTarget !== lastHoveredElem) {
+        lastHoveredElem = interactiveTarget;
+        playSFX('uiHover', 0.45);
+      } else if (!interactiveTarget) {
+        lastHoveredElem = null;
+      }
+    });
+
+    // 일반 설정 버튼 및 드롭다운 클릭 사운드 연결
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.preset-btn, .stagger-control-btn').forEach(btn => {
+        btn.addEventListener('click', () => playSFX('uiClick', 0.8));
+      });
+      document.querySelectorAll('select').forEach(sel => {
+        sel.addEventListener('change', () => playSFX('uiSelect', 0.8));
+      });
+    });
+
+    // =========================================================================
+    // [게임 상태 및 시뮬레이션 로직]
+    // =========================================================================
     const baseCycle = [1, 1, 1, 2, 2, 3];
     let playerPool = [];
     let enemyPool = [];
@@ -774,6 +822,8 @@
     
     let pEgoHoldTimer = null;
     let eEgoHoldTimer = null;
+    let pEgoChargingSound = null;
+    let eEgoChargingSound = null;
 
     function getClashSpeedDelay(maxStep) {
       let speedFactor = 1 + (Math.min(10, currentClashRound) - 1) * (4 / 9);
@@ -838,6 +888,8 @@
       
       if (slots[1] === 5) return;
 
+      playSFX('uiToggle', 0.85);
+
       if (slots[1] === 4) {
         slots[1] = 2;
         if(btn) btn.classList.remove('active');
@@ -862,6 +914,14 @@
       const duration = 1000;
 
       if(progressElem) progressElem.style.width = '0%';
+
+      // 차징 사운드 재생
+      if (soundEffects.egoCharge) {
+        const chargeSfx = soundEffects.egoCharge.cloneNode();
+        chargeSfx.volume = 0.75;
+        chargeSfx.play().catch(() => {});
+        if (isPlayer) pEgoChargingSound = chargeSfx; else eEgoChargingSound = chargeSfx;
+      }
       
       const timer = setInterval(() => {
         let elapsed = Date.now() - startTime;
@@ -871,17 +931,19 @@
         if (elapsed >= duration) {
           clearInterval(timer);
           if(progressElem) progressElem.style.width = '0%';
+          stopEgoChargeSound(isPlayer);
           
           if (slots[1] === 5) {
             slots[1] = 2;
             if(btnElem) btnElem.classList.remove('active');
+            playSFX('uiToggle', 0.8);
           } else {
             slots[1] = 5;
             if(btnElem) btnElem.classList.add('active');
             const defBtn = document.getElementById(isPlayer ? 'p-def-btn' : 'e-def-btn');
             if(defBtn) defBtn.classList.remove('active');
             if (isPlayer) pSelectedIndex = 1; else eSelectedIndex = 1;
-            playSFX('spin');
+            playSFX('egoActivate', 0.95);
           }
           renderSlots();
         }
@@ -890,12 +952,22 @@
       if (isPlayer) pEgoHoldTimer = timer; else eEgoHoldTimer = timer;
     }
 
+    function stopEgoChargeSound(isPlayer) {
+      const sfx = isPlayer ? pEgoChargingSound : eEgoChargingSound;
+      if (sfx) {
+        sfx.pause();
+        sfx.currentTime = 0;
+        if (isPlayer) pEgoChargingSound = null; else eEgoChargingSound = null;
+      }
+    }
+
     function cancelEgoHold(isPlayer) {
       const timer = isPlayer ? pEgoHoldTimer : eEgoHoldTimer;
       if (timer) {
         clearInterval(timer);
         if (isPlayer) pEgoHoldTimer = null; else eEgoHoldTimer = null;
       }
+      stopEgoChargeSound(isPlayer);
       const progressElem = document.getElementById(isPlayer ? 'p-ego-progress' : 'e-ego-progress');
       if (progressElem) progressElem.style.width = '0%';
     }
@@ -1007,8 +1079,10 @@
         }
         thresholds.sort((a, b) => b - a);
 
+        let triggeredStagger = false;
         thresholds.forEach((th) => {
           if (th > 0 && oldPct > th && newPct <= th) {
+            triggeredStagger = true;
             if (isPlayer) {
               pStaggerLevel = Math.min(3, pStaggerLevel + 1);
             } else {
@@ -1016,6 +1090,10 @@
             }
           }
         });
+
+        if (triggeredStagger) {
+          playSFX('stagger', 0.95);
+        }
       }
       
       updateHpDisplay();
@@ -1137,6 +1215,7 @@
 
     function selectSkill(isPlayer, index) {
       if ((isPlayer && pStaggerLevel > 0) || (!isPlayer && eStaggerLevel > 0)) return;
+      playSFX('uiSelect', 0.85);
       if (isPlayer) {
         pSelectedIndex = index;
         if (playerSlots[index] !== 4) {
@@ -1368,7 +1447,7 @@
             const typeMap = { guard: '방어', evade: '회피', counter: '반격' };
             return `<div class="coin-preview-item" style="border-color:#e6a100;">수비(${typeMap[subType]})<br>위력 ${getSkillBasePower(false, 4)}${cpStr}<br><strong>${getSkillCoins(false, 4)}C</strong></div>`;
           }
-          return `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}${cpStr}<br><strong>${getSkillCoins(false, 5)}C</strong></div>`;
+          return `<div class="coin-preview-item">${getSkillName(false, s)}<br>위력 ${getSkillBasePower(false, s)}${cpStr}<br><strong>${getSkillCoins(false, s)}C</strong></div>`;
         }).join('');
       }
 
@@ -1422,6 +1501,7 @@
 
     function startMatch() {
       validateInputs();
+      playSFX('clashStart', 0.9);
       pShield = 0; eShield = 0;
       updateHpDisplay();
 
@@ -1563,6 +1643,7 @@
         document.getElementById(`${defPrefix}-result-count-text`).innerText = `HEADS ${defHeads} / ${defCoinsCount}`;
 
         if (defenderIsPlayer) pShield = defRollSum; else eShield = defRollSum;
+        playSFX('shieldGain', 0.9);
         updateHpDisplay();
 
         let statusText = document.getElementById('clash-status-text');
@@ -1629,7 +1710,7 @@
               document.getElementById(`${defPrefix}-power-score`).innerText = `EVADE POWER: ${currentEvadePower}`;
 
               if (enemyAccumulatedPower <= currentEvadePower) {
-                playSFX('shield');
+                playSFX('evadeSuccess', 0.9);
                 if (statusText) statusText.innerHTML = `<div class="result-banner player">EVADE SUCCESS! (회피 ${currentEvadePower} ≥ 적 위력 ${enemyAccumulatedPower})</div>`;
               } else {
                 playSFX('break');
@@ -1820,11 +1901,13 @@
         const nextRoundDelay = getClashSpeedDelay(maxStep);
 
         if (playerFinalPower === enemyFinalPower) {
+          playSFX('clashDraw', 0.85);
           if(statusText) statusText.innerHTML = `<div class="result-banner clash">DRAW (RE-TRY)</div>`;
           currentClashRound++; 
           setTimeout(() => { runClashRound(); }, nextRoundDelay);
 
         } else if (playerFinalPower > enemyFinalPower) {
+          playSFX('clashWin', 0.85);
           const breakCoinIdx = activeEIndices[activeEIndices.length - 1];
           const breakTarget = document.getElementById(`e-coin-${breakCoinIdx}`);
           triggerShatterEffect(breakTarget);
@@ -1869,6 +1952,7 @@
           }
 
         } else {
+          playSFX('clashWin', 0.85);
           const breakCoinIdx = activePIndices[activePIndices.length - 1];
           const breakTarget = document.getElementById(`p-coin-${breakCoinIdx}`);
           triggerShatterEffect(breakTarget);
